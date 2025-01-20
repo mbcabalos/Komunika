@@ -66,11 +66,11 @@ Steps to Contribute:
 5. Open a pull request in the main repository if you a main collaborator.
 
 🧑‍💻 Authors
-Mark Benedict Abalos
-Marvin John Macam
-David Aldrin Mondero
-Kobe Roca
-Lana Sison
+1. Mark Benedict Abalos
+2. Marvin John Macam
+3. David Aldrin Mondero
+4. Kobe Roca
+5. Sweet Lana Sison
 
 🌐 Acknowledgements
 Special thanks to the open-source community and AI researchers for providing tools and insights that made this project possible.
