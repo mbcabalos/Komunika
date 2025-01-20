@@ -82,4 +82,3 @@ Flask Documentation
 Komunika Repository
 💡 "Breaking communication barriers, fostering inclusivity, and connecting worlds—one conversation at a time."
 
-Let me know if you'd like any adjustments or additional details!
