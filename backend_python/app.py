@@ -4,6 +4,10 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+@app.route('/')
+def index():
+    return "Hello World"
+
 @app.route('/api/data', methods=['GET'])
 def get_data():
     # Example of sending data to the Flutter app
@@ -23,4 +27,4 @@ def submit_data():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
