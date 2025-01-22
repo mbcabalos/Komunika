@@ -1,17 +1,18 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:path_provider/path_provider.dart';  // Required to get the file path in your device
 import 'package:just_audio/just_audio.dart';  
 
 class TextToSpeechScreen extends StatefulWidget {
+  const TextToSpeechScreen({super.key});
+
   @override
-  _TextToSpeechScreenState createState() => _TextToSpeechScreenState();
+  TextToSpeechScreenState createState() => TextToSpeechScreenState();
 }
 
-class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
+class TextToSpeechScreenState extends State<TextToSpeechScreen> {
   final TextEditingController _textController = TextEditingController();
 
   Future<void> sendTextToSpeech(String text) async {

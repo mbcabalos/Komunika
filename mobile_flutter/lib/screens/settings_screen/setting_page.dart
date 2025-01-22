@@ -12,7 +12,7 @@ class _SettingPageState extends State<SettingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBarWidget(title: "Settings", isBackButton: true, isSettingButton: false),
+      appBar: AppBarWidget(title: "Settings", isBackButton: false, isSettingButton: false),
       
     );
   }

@@ -20,12 +20,11 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         child: Text(
           title,
           style: const TextStyle(
-              fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 5),
+              fontSize: 25, fontWeight: FontWeight.bold, letterSpacing: 5),
         ),
       ),
-      backgroundColor: ColorsPalette.black.withOpacity(0.6),
-      foregroundColor: Colors.white,
-      centerTitle: true,
+      backgroundColor: ColorsPalette.appBar,
+      foregroundColor: ColorsPalette.black,
       automaticallyImplyLeading: isBackButton,
       leading: isBackButton
           ? Padding(

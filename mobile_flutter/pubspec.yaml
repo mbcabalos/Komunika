@@ -65,6 +65,10 @@ flutter:
     - assets/
     - assets/images/
     - assets/images/ishkolarium.png
+    - assets/images/text_to_speech.png
+    - assets/images/speech_to_text.png
+    - assets/images/sign_transcriber.png
+    - assets/images/on_screen_captions.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
