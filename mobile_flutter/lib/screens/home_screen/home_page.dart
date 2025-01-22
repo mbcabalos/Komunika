@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
+import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/widgets/home_widgets/home_card.dart';
@@ -19,7 +21,7 @@ class _HomePageState extends State<HomePage> {
       appBar: const AppBarWidget(
         title: 'Komunika',
         isBackButton: false,
-        isSettingButton: true,
+        isSettingButton: false,
       ),
       body: Center(
         child: Container(
@@ -32,7 +34,7 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const TextToSpeechScreen()));
+                          builder: (context) => const SpeechToTextPage()));
                 },
                 child: const HomeCard(
                   imagePath: 'assets/images/speech_to_text.png',
@@ -40,9 +42,17 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 16),
-              const HomeCard(
-                imagePath: 'assets/images/text_to_speech.png',
-                text: 'Text To Speech',
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const VoiceMessagePage()));
+                },
+                child: const HomeCard(
+                  imagePath: 'assets/images/text_to_speech.png',
+                  text: 'Text to Speech',
+                ),
               ),
               const SizedBox(height: 16),
               const HomeCard(

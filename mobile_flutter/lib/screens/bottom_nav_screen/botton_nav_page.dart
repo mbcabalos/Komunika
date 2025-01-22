@@ -17,8 +17,8 @@ class _BottomNavPageState extends State<BottomNavPage> {
   int _currentPageIndex = 0;
 
   final List<Widget> _screens = [
-    const NavigationPage(),
     const HomePage(),
+    const NavigationPage(),
     const SettingPage(),
   ];
   @override
@@ -38,12 +38,12 @@ class _BottomNavPageState extends State<BottomNavPage> {
         
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.location_on),
-            label: 'Navigation',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.location_on),
+            label: 'Navigation',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.category_rounded),

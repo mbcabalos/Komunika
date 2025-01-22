@@ -1,78 +1,134 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:http/io_client.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
+import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_event.dart';
+import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
+import 'package:komunika/services/api/global_repository_impl.dart';
+import 'package:komunika/utils/colors.dart';
 import 'package:komunika/widgets/app_bar.dart';
-import 'package:path_provider/path_provider.dart';  // Required to get the file path in your device
-import 'package:just_audio/just_audio.dart';  
 
 class TextToSpeechScreen extends StatefulWidget {
   const TextToSpeechScreen({super.key});
 
   @override
-  TextToSpeechScreenState createState() => TextToSpeechScreenState();
+  State<TextToSpeechScreen> createState() => _TextToSpeechScreenState();
 }
 
-class TextToSpeechScreenState extends State<TextToSpeechScreen> {
+class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
+  late TextToSpeechBloc textToSpeechBloc;
   final TextEditingController _textController = TextEditingController();
 
-  Future<void> sendTextToSpeech(String text) async {
-    try {
-      // Create an HttpClient with the SSL certificate verification disabled
-      final ioClient = HttpClient();
-      ioClient.badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
-      final client = IOClient(ioClient);
+  @override
+  void initState() {
+    super.initState();
+    final globalService = GlobalRepositoryImpl();
+    textToSpeechBloc = TextToSpeechBloc(globalService);
+    _initialize();
+  }
 
-      final response = await client.post(
-        // Uri.parse('https://127.0.0.1:5000/api/text-to-speech'),
-        Uri.parse('https://192.168.1.133:5000/api/text-to-speech'),
-        headers: {HttpHeaders.contentTypeHeader: 'application/json'},
-        body: '{"text": "$text"}',
-      );
-
-      if (response.statusCode == 200) {
-        // final tempDir = await getTemporaryDirectory();
-        // final filePath = '${tempDir.path}/output.mp3';
-        // final file = File(filePath);
-        final directory = await getExternalStorageDirectory();
-        final downloadDir = Directory('${directory?.parent.path}/Downloads'); // Get Download directory
-        await downloadDir.create(recursive: true); // Create directory if it doesn't exist
-
-        final filePath = '${downloadDir.path}/output.mp3';
-        final file = File(filePath);
-
-        // Save the file to the Downloads folder
-        await file.writeAsBytes(response.bodyBytes);
-        print('Audio file saved at $filePath');
-
-        // Play the audio after saving it
-        final player = AudioPlayer();
-        await player.setFilePath(filePath);
-        await player.play();
-      } else {
-        print('Error: ${response.body}');
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
+  Future<void> _initialize() async {
+    textToSpeechBloc.add(TextToSpeechLoadingEvent());
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarWidget(title: 'Text To Speech', isBackButton: true, isSettingButton: true),
-      body: Padding(
+    return BlocProvider<TextToSpeechBloc>(
+      create: (context) => textToSpeechBloc,
+      child: Scaffold(
+        backgroundColor: ColorsPalette.background,
+        appBar: const AppBarWidget(
+          title: 'Text To Speech',
+          isBackButton: true,
+          isSettingButton: false,
+        ),
+        body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
+          listener: (context, state) {
+            if (state is TextToSpeechErrorState) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
+            }
+          },
+          builder: (context, state) {
+            if (state is TextToSpeechLoadingState) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is TextToSpeechLoadedSuccessState) {
+              return _buildContent();
+            } else if (state is TextToSpeechErrorState) {
+              return const Text('Error processing text to speech!');
+            } else {
+              return _buildContent();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    final double phoneHeight = MediaQuery.of(context).size.height * 0.6;
+    final double phoneWidth = MediaQuery.of(context).size.width * 0.9;
+    return RefreshIndicator.adaptive(
+      onRefresh: _initialize,
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
+        child: ListView(
           children: [
-            TextField(
-              controller: _textController,
-              decoration: InputDecoration(labelText: 'Enter text'),
+            Container(
+              width: phoneWidth,
+              height: phoneHeight,
+              child: TextField(
+                controller: _textController,
+                style: const TextStyle(color: Colors.black, fontSize: 20),
+                decoration: const InputDecoration(
+                  hintText: 'Type Something .....',
+                  border: OutlineInputBorder(),
+                  fillColor: ColorsPalette.whiteYellow,
+                  filled: true,
+                ),
+                textAlignVertical: TextAlignVertical.center,
+                maxLines: phoneHeight.toInt(),
+              ),
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => sendTextToSpeech(_textController.text),
-              child: Text('Convert to Speech'),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorsPalette.blue,
+                    minimumSize:
+                        Size(MediaQuery.of(context).size.width * 0.3, 50),
+                  ),
+                  onPressed: () {
+                    final text = _textController.text.trim();
+                    if (text.isNotEmpty) {
+                      textToSpeechBloc.add(CreateTextToSpeechEvent(text: text));
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Text field is empty!')),
+                      );
+                    }
+                  },
+                  child: const Text(
+                    "Play",
+                    style: TextStyle(fontSize: 20, color: ColorsPalette.black),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorsPalette.green,
+                    minimumSize:
+                        Size(MediaQuery.of(context).size.width * 0.3, 50),
+                  ),
+                  onPressed: () {},
+                  child: const Text(
+                    "Save",
+                    style: TextStyle(fontSize: 20, color: ColorsPalette.black),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
