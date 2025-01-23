@@ -5,6 +5,7 @@ import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_event.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/utils/colors.dart';
+import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/widgets/app_bar.dart';
 
 class TextToSpeechScreen extends StatefulWidget {
@@ -97,7 +98,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
               children: [
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorsPalette.blue,
+                    backgroundColor: ColorsPalette.buttonSecondary,
                     minimumSize:
                         Size(MediaQuery.of(context).size.width * 0.3, 50),
                   ),
@@ -113,19 +114,19 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   },
                   child: const Text(
                     "Play",
-                    style: TextStyle(fontSize: 20, color: ColorsPalette.black),
+                    style: TextStyle(fontFamily: Fonts.main, fontSize: 20, color: ColorsPalette.black),
                   ),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorsPalette.green,
+                    backgroundColor: ColorsPalette.buttonPrimary,
                     minimumSize:
                         Size(MediaQuery.of(context).size.width * 0.3, 50),
                   ),
                   onPressed: () {},
                   child: const Text(
                     "Save",
-                    style: TextStyle(fontSize: 20, color: ColorsPalette.black),
+                    style: TextStyle(fontFamily: Fonts.main, fontSize: 20, color: ColorsPalette.black),
                   ),
                 ),
               ],

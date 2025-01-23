@@ -42,7 +42,7 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: ColorsPalette.buttonPrimary,
                 minimumSize: Size(phoneWidth, 50),
               ),
               onPressed: () {

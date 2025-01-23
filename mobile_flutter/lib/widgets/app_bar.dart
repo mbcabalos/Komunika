@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:komunika/screens/settings_screen/setting_page.dart';
 import 'package:komunika/utils/colors.dart';
+import 'package:komunika/utils/fonts.dart';
 
 class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -20,6 +21,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         child: Text(
           title,
           style: const TextStyle(
+            fontFamily: Fonts.main,
               fontSize: 25, fontWeight: FontWeight.bold, letterSpacing: 5),
         ),
       ),
