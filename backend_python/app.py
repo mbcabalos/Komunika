@@ -14,7 +14,9 @@ def create_app():
 
     # Import and register blueprints
     from controllers.text_to_speech import tts_app
+    from controllers.speech_to_text import stt_app
     app.register_blueprint(tts_app)
+    app.register_blueprint(stt_app)
 
     return app
 

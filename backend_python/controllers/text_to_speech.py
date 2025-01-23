@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, send_file
 import pyttsx3
 import os
 
-tts_app = Blueprint('main', __name__)
+tts_app = Blueprint('tts_app', __name__)
 
 @tts_app.route('/')
 def index():

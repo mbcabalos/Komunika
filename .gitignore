@@ -1,0 +1,2 @@
+# Ignore the Vosk model folder
+backend_python/models/vosk-model-en-us-0.22/
