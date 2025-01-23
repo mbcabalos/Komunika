@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/io_client.dart';
@@ -6,7 +7,8 @@ import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/services/repositories/global_repository.dart';
 import 'package:path_provider/path_provider.dart';
 
-class GlobalRepositoryImpl extends GlobalRepository{
+class GlobalRepositoryImpl extends GlobalRepository {
+  final baseURL = "https://192.168.1.133:5000/api/";
   @override
   Future<void> sendTextToSpeech(String text, String title, bool save) async {
     try {
@@ -19,8 +21,8 @@ class GlobalRepositoryImpl extends GlobalRepository{
       final response = await client.post(
         // Uri.parse('https://127.0.0.1:5000/api/text-to-speech'),
         // Uri.parse('https://192.168.1.133:5000/api/text-to-speech'),
-        Uri.parse('https://192.168.254.103:5000/api/text-to-speech'), //David Endpoint
-        // Uri.parse('https://192.168.1.133:5000/api/text-to-speech'),
+        // Uri.parse('https://192.168.254.103:5000/api/text-to-speech'), //David Endpoint
+        Uri.parse('https://192.168.1.133:5000/api/text-to-speech'),
         headers: {HttpHeaders.contentTypeHeader: 'application/json'},
         body: '{"text": "$text"}',
       );
@@ -49,6 +51,28 @@ class GlobalRepositoryImpl extends GlobalRepository{
           await player.play();
           print('Playing audio: $filePath');
         }
+      } else {
+        print('Error: ${response.body}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  Future<void> startLiveTranscription() async {
+    try {
+      // Create an HttpClient with SSL verification disabled
+      final ioClient = HttpClient();
+      ioClient.badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
+      final client = IOClient(ioClient);
+
+      final response = await client.post(
+        Uri.parse('${baseURL}live-transcription'),
+      );
+
+      if (response.statusCode == 200) {
+        print('Transcription started: ${jsonDecode(response.body)}');
       } else {
         print('Error: ${response.body}');
       }

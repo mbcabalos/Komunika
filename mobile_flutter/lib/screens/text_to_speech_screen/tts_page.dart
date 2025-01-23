@@ -77,7 +77,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            Container(
+            SizedBox(
               width: phoneWidth,
               height: phoneHeight,
               child: Column(

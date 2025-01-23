@@ -1,6 +1,6 @@
 ## Setting Up the Vosk Model
 
 1. Download the Vosk model from the official website:
-   - [English Model](https://alphacephei.com/vosk/models/vosk-model-en-us-0.22.zip)
+   - [English Model](https://alphacephei.com/vosk/models/vosk-model-en-us-0.15.zip)
 
 2. Extract the model into the `backend_python/models/` directory:
