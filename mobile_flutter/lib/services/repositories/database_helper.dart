@@ -4,13 +4,11 @@ import 'package:path/path.dart';
 class DatabaseHelper {
   static Database? _database;
 
-  // Get the database instance
   Future<Database> get database async {
     if (_database != null) return _database!;
 
-    // If the database is not initialized, create it
-    _database = await _initDatabase();  // Wait for the database to be created
-    return _database!;  // Return the created database
+    _database = await _initDatabase();  
+    return _database!; 
   }
 
 
@@ -30,6 +28,10 @@ class DatabaseHelper {
   );
 }
 
+  Future<List<Map<String, dynamic>>> fetchAudioItems() async {
+    final db = await database;
+    return await db.query('audio_items');
+  }
 
   // Insert an audio item (just the audioPath for now)
   Future<void> insertAudioItem(String audioPath) async {
