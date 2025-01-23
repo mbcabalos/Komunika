@@ -1,4 +1,4 @@
-#  Create a env first by typing python -m venv .venv, Activate the env first using venv\Scripts\activate before using pip install -r flask_modules.
+#  Create a env first by typing python -m venv .venv, Activate the env first using venv\Scripts\activate before using pip install -r flask_modules.txt.
 # To know if you have install the modules type pip freeze and if you added a new modules type pip freeze > flask_modules.txt
 
 from flask import Flask
