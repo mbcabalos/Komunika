@@ -25,7 +25,7 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
   FutureOr<void> createTextToSpeechLoadingEvent(
       CreateTextToSpeechEvent event, Emitter<TextToSpeechState> emit) async {
     try {
-      await _globalService.sendTextToSpeech(event.text);
+      await _globalService.sendTextToSpeech(event.text, event.title, event.save);
       emit(TextToSpeechLoadedSuccessState());
     } catch (e) {
       emit(TextToSpeechErrorState(message: '$e'));

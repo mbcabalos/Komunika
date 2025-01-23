@@ -33,11 +33,13 @@ dependencies:
   http:
   just_audio:
   path_provider: 
+  path:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   flutter_native_splash: ^2.4.1
   flutter_bloc: ^9.0.0
+  sqflite: ^2.0.0+4
 
 dev_dependencies:
   flutter_test:

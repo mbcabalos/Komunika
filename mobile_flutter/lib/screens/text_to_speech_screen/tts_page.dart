@@ -18,6 +18,8 @@ class TextToSpeechScreen extends StatefulWidget {
 class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   late TextToSpeechBloc textToSpeechBloc;
   final TextEditingController _textController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  bool save = false;
 
   @override
   void initState() {
@@ -78,20 +80,36 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
             Container(
               width: phoneWidth,
               height: phoneHeight,
-              child: TextField(
-                controller: _textController,
-                style: const TextStyle(color: Colors.black, fontSize: 20),
-                decoration: const InputDecoration(
-                  hintText: 'Type Something .....',
-                  border: OutlineInputBorder(),
-                  fillColor: ColorsPalette.whiteYellow,
-                  filled: true,
-                ),
-                textAlignVertical: TextAlignVertical.center,
-                maxLines: phoneHeight.toInt(),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _titleController,
+                    style: const TextStyle(color: Colors.black, fontSize: 20),
+                    decoration: const InputDecoration(
+                      hintText: 'Speech',
+                      border: OutlineInputBorder(),
+                      fillColor: ColorsPalette.whiteYellow,
+                      filled: true,
+                    ),
+                    textAlignVertical: TextAlignVertical.center,
+                    maxLines: 1,
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _textController,
+                    style: const TextStyle(color: Colors.black, fontSize: 20),
+                    decoration: const InputDecoration(
+                      hintText: 'Type Something .....',
+                      border: OutlineInputBorder(),
+                      fillColor: ColorsPalette.whiteYellow,
+                      filled: true,
+                    ),
+                    textAlignVertical: TextAlignVertical.center,
+                    maxLines: 10,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -103,9 +121,10 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                         Size(MediaQuery.of(context).size.width * 0.3, 50),
                   ),
                   onPressed: () {
+                    final title = _titleController.text.trim();
                     final text = _textController.text.trim();
                     if (text.isNotEmpty) {
-                      textToSpeechBloc.add(CreateTextToSpeechEvent(text: text));
+                      textToSpeechBloc.add(CreateTextToSpeechEvent(text: text, title: title, save: false));
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Text field is empty!')),
@@ -123,7 +142,17 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     minimumSize:
                         Size(MediaQuery.of(context).size.width * 0.3, 50),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    final title = _titleController.text.trim();
+                    final text = _textController.text.trim();
+                    if (text.isNotEmpty) {
+                      textToSpeechBloc.add(CreateTextToSpeechEvent(text: text, title: title, save: true));
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Text field is empty!')),
+                      );
+                    }
+                  },
                   child: const Text(
                     "Save",
                     style: TextStyle(fontFamily: Fonts.main, fontSize: 20, color: ColorsPalette.black),
