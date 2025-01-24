@@ -12,7 +12,6 @@ Future<void> main() async {
 Future<void> checkDatabaseExistence() async {
   String path = join(await getDatabasesPath(), 'audio_database.db');
   bool exists = await databaseExists(path);
-  await deleteDatabase(path);
   if (!exists) {
     await openDatabase(path, version: 1, onCreate: (db, version) {
       db.execute('CREATE TABLE audio_items(id INTEGER PRIMARY KEY, audioName TEXT)');
