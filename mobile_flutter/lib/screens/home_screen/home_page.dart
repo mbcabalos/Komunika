@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
-import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:komunika/utils/colors.dart';
@@ -23,49 +22,65 @@ class _HomePageState extends State<HomePage> {
         isBackButton: false,
         isSettingButton: false,
       ),
-      body: Center(
-        child: Container(
-          margin: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SpeechToTextPage()));
-                },
-                child: const HomeCard(
-                  imagePath: 'assets/images/speech_to_text.png',
-                  text: 'Speech To Text',
+      body: Container(
+        margin: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Container(
+                  child: Text("Breaking Barriers, \n Connecting Hearts. "),
                 ),
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const VoiceMessagePage()));
-                },
-                child: const HomeCard(
-                  imagePath: 'assets/images/text_to_speech.png',
-                  text: 'Text to Speech',
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const SpeechToTextPage()));
+                      },
+                      child: const HomeCard(
+                        imagePath: 'assets/images/speech_to_text.png',
+                        text: 'Speech To Text',
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const VoiceMessagePage()));
+                      },
+                      child: const HomeCard(
+                        imagePath: 'assets/images/text_to_speech.png',
+                        text: 'Text to Speech',
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              const HomeCard(
-                imagePath: 'assets/images/sign_transcriber.png',
-                text: 'Sign Transcriber',
-              ),
-              const SizedBox(height: 16),
-              const HomeCard(
-                imagePath: 'assets/images/on_screen_captions.png',
-                text: 'On-Screen Captions',
-              ),
-            ],
-          ),
+                const SizedBox(height: 16),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    HomeCard(
+                      imagePath: 'assets/images/sign_transcriber.png',
+                      text: 'Sign Transcriber',
+                    ),
+                    SizedBox(width: 16),
+                    HomeCard(
+                      imagePath: 'assets/images/on_screen_captions.png',
+                      text: 'Screen Captions',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

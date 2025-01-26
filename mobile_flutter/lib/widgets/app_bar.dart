@@ -15,65 +15,50 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(10),
-          bottomRight: Radius.circular(10), 
-        ),
-        boxShadow: [BoxShadow(
-          color:Colors.black.withOpacity(0.3),
-          blurRadius: 1,
-          offset: const Offset(0,2),
-        )]
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10),
-        bottomRight: Radius.circular(10),
-        ),
-        child: AppBar(
-          title: Padding(
-            padding: const EdgeInsets.only(top: 7.0),
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontFamily: Fonts.main,
-                  fontSize: 25, fontWeight: FontWeight.bold, letterSpacing: 5),
-            ),
-          ),
-          backgroundColor: ColorsPalette.appBar,
-          foregroundColor: ColorsPalette.black,
-          automaticallyImplyLeading: isBackButton,
-          leading: isBackButton
-              ? Padding(
-                  padding: const EdgeInsets.only(top: 7.0),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: 10,
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                )
-              : null,
-          actions: [
-            if (isSettingButton)
-              Padding(
-                padding: const EdgeInsets.only(top: 7.0, right: 8.0),
-                child: IconButton(
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const SettingPage()));
-                    },
-                    icon: const Icon(Icons.settings)),
-              )
-          ],
+    return AppBar(
+      title: Padding(
+        padding: const EdgeInsets.only(top: 7.0),
+        child: Text(
+          title,
+          style: const TextStyle(
+              color: ColorsPalette.white,
+              fontFamily: Fonts.main,
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 5),
         ),
       ),
+      backgroundColor: ColorsPalette.accent,
+      foregroundColor: ColorsPalette.black,
+      automaticallyImplyLeading: isBackButton,
+      leading: isBackButton
+          ? Padding(
+              padding: const EdgeInsets.only(top: 7.0),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 10,
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            )
+          : null,
+      actions: [
+        if (isSettingButton)
+          Padding(
+            padding: const EdgeInsets.only(top: 7.0, right: 8.0),
+            child: IconButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SettingPage()));
+                },
+                icon: const Icon(Icons.settings)),
+          )
+      ],
     );
   }
 

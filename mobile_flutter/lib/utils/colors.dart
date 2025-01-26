@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class ColorsPalette {
-  static const Color background = Color(0xffE4DC9D);
-  static const Color appBar = Color(0xffF4D793);
-  static const Color whiteYellow = Color.fromARGB(255, 241, 237, 208);
+  static const Color background = Color(0xffF6F0DA);
+  static const Color card = Color(0xffF1EDD0);
+  static const Color accent = Color(0xff4C7B8C);
+  static const Color tertiary = Color(0xffB6B6B6);
   static const Color black = Color(0xFF1B1717);
   static const Color white = Color(0xFFFFFFFF);
   static const Color blue = Colors.blue;

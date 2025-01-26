@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:komunika/utils/colors.dart';
 import 'package:komunika/widgets/app_bar.dart';
 
 class NavigationPage extends StatefulWidget {
@@ -12,7 +13,8 @@ class _NavigationPageState extends State<NavigationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBarWidget(title: "Komunika", isBackButton: false, isSettingButton: false),
+      backgroundColor: ColorsPalette.background,
+      appBar: AppBarWidget(title: "Navigation", isBackButton: false, isSettingButton: false),
       
     );
   }

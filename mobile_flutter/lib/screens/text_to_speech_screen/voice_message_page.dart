@@ -23,34 +23,32 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
 
   // Fetch audio paths from the database
   Future<void> fetchAudioPaths() async {
-    List<Map<String, dynamic>> data = await DatabaseHelper().fetchAudioItems(); // Assuming this fetches all items
+    List<Map<String, dynamic>> data = await DatabaseHelper()
+        .fetchAudioItems(); // Assuming this fetches all items
     setState(() {
       audioItems = data; // Store the fetched data in the state
     });
   }
 
-   Future<void> playAudio(String path) async {
+  Future<void> playAudio(String path) async {
     final directory = await getExternalStorageDirectory();
     final downloadDir = Directory('${directory?.parent.path}/files/audio');
     final filePath = '${downloadDir.path}/$path.mp3';
     final player = AudioPlayer();
-    print('Playing audio from: $filePath');
-    await player.setFilePath(filePath);  // Set file path (local file or URL)
-    await player.play();  // Play the audio
+    await player.setFilePath(filePath); // Set file path (local file or URL)
+    await player.play(); // Play the audio
   }
 
   @override
   void initState() {
-    fetchAudioPaths();
     super.initState();
+    fetchAudioPaths();
   }
 
   @override
   Widget build(BuildContext context) {
     final double phoneHeight = MediaQuery.of(context).size.height * 0.8;
     final double phoneWidth = MediaQuery.of(context).size.width * 0.9;
-    
-    
     return Scaffold(
       backgroundColor: ColorsPalette.background,
       appBar: const AppBarWidget(
@@ -74,7 +72,6 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
                         return GestureDetector(
                           onTap: () {
                             playAudio(audioPath);
-                            print('Audio tapped: $audioPath');
                           },
                           child: TTSCard(
                             text: audioPath,
@@ -91,13 +88,20 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
                 backgroundColor: ColorsPalette.buttonPrimary,
                 minimumSize: Size(phoneWidth, 50),
               ),
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                print("pop");
+                final bool isSaved = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const TextToSpeechScreen(),
                   ),
                 );
+
+                // Check if the returned value is true
+                if (isSaved) {
+                  // After the navigation, refresh the audio list
+                  fetchAudioPaths(); // Re-fetch audio items after returning
+                }
               },
               child: const Text(
                 "Add New Speech",

@@ -26,8 +26,8 @@ class _BottomNavPageState extends State<BottomNavPage> {
     return Scaffold(
       body: _screens[_currentPageIndex], // Display the selected screen
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: ColorsPalette.whiteYellow,
-        selectedItemColor: ColorsPalette.appBar,
+        backgroundColor: ColorsPalette.card,
+        selectedItemColor: ColorsPalette.accent,
         unselectedItemColor: ColorsPalette.black, 
         currentIndex: _currentPageIndex,
         onTap: (index) {

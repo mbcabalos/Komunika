@@ -3,20 +3,22 @@
 
 from flask import Flask
 from flask_cors import CORS
+from flask_socketio import SocketIO
 import pyttsx3
 import os
 
 from datetime import datetime
+socketio = SocketIO(cors_allowed_origins="*")
 
 def create_app():
     app = Flask(__name__)
     CORS(app)  # Enable CORS for all routes
 
     # Import and register blueprints
-    from controllers.text_to_speech import tts_app
-    from controllers.speech_to_text import stt_app
-    app.register_blueprint(tts_app)
-    app.register_blueprint(stt_app)
+    from controllers.text_to_speech import tts_blueprint
+    from controllers.speech_to_text import stt_blueprint
+    app.register_blueprint(tts_blueprint)
+    app.register_blueprint(stt_blueprint)
 
     return app
 

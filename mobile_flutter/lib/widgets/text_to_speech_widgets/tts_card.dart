@@ -18,7 +18,7 @@ class _TTSCardState extends State<TTSCard> {
       width: cardWidth,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ColorsPalette.whiteYellow,
+        color: ColorsPalette.card,
         borderRadius: BorderRadius.circular(5),
         boxShadow: [
           BoxShadow(

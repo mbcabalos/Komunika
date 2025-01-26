@@ -1,3 +1,3 @@
 class Fonts {
-static const String main = 'Itim';
+  static const String main = 'Montserrat';
 }

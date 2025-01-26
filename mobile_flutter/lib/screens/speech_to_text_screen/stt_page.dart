@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:komunika/bloc/bloc_speech_to_text/bloc/speech_to_text_bloc.dart';
+import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
@@ -75,7 +75,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
           children: [
             GestureDetector(
               onTap: () async {
-                
+                speechToTextBloc.add(CreateSpeechToTextEvent());
               },
               child: Container(
                 width: 200,
@@ -90,7 +90,11 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text("Tap to Record", style: TextStyle(fontSize: 25, fontFamily: Fonts.main, fontWeight: FontWeight.bold)),
+            const Text("Tap to Record",
+                style: TextStyle(
+                    fontSize: 25,
+                    fontFamily: Fonts.main,
+                    fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             SizedBox(
               width: phoneWidth,
@@ -101,7 +105,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                 decoration: const InputDecoration(
                   hintText: 'Message Here',
                   border: OutlineInputBorder(),
-                  fillColor: ColorsPalette.whiteYellow,
+                  fillColor: ColorsPalette.card,
                   filled: true,
                 ),
                 textAlignVertical: TextAlignVertical.center,

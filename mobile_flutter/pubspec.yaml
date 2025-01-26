@@ -2,7 +2,7 @@ name: komunika
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -32,14 +32,15 @@ dependencies:
     sdk: flutter
   http:
   just_audio:
-  path_provider: 
+  path_provider:
   path:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  flutter_native_splash: ^2.4.1
   flutter_bloc: ^9.0.0
   sqflite: ^2.0.0+4
+  web_socket_channel: ^2.3.0
+  lottie: ^2.2.0
 
 dev_dependencies:
   flutter_test:
@@ -57,7 +58,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -86,17 +86,20 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: Itim
+    - family: Montserrat
       fonts:
-        - asset: assets/fonts/Itim-Regular.ttf
+        - asset: assets/fonts/Montserrat-Black.ttf
+        - asset: assets/fonts/Montserrat-BlackItalic.ttf
+        - asset: assets/fonts/Montserrat-Bold.ttf
+        - asset: assets/fonts/Montserrat-BoldItalic.ttf
+        - asset: assets/fonts/Montserrat-Italic.ttf
+        - asset: assets/fonts/Montserrat-Light.ttf
+        - asset: assets/fonts/Montserrat-Medium.ttf
+        - asset: assets/fonts/Montserrat-Regular.ttf
+        - asset: assets/fonts/Montserrat-SemiBold.ttf
+        - asset: assets/fonts/Montserrat-Thin.ttf
 
   #
   # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
-flutter_native_splash:
-  color: "#0C7FD0"
-  image: assets/images/ishkolarium.png
-
-  android_12:
-    color: "#5271FF"
-    image: assets/images/ishkolarium.png
+  # see https://flutter.dev/to/font-from-
+  

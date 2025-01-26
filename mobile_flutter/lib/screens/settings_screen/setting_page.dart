@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:komunika/utils/colors.dart';
 import 'package:komunika/widgets/app_bar.dart';
 
 class SettingPage extends StatefulWidget {
@@ -12,6 +13,7 @@ class _SettingPageState extends State<SettingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: ColorsPalette.background,
       appBar: AppBarWidget(title: "Settings", isBackButton: false, isSettingButton: false),
       
     );
