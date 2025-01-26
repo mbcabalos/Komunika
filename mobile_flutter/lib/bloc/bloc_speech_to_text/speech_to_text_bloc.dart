@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:bloc/bloc.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
-import 'package:meta/meta.dart';
-
 part 'speech_to_text_event.dart';
 part 'speech_to_text_state.dart';
 

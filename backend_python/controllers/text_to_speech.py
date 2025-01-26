@@ -2,9 +2,9 @@ from flask import Blueprint, request, jsonify, send_file
 import pyttsx3
 import os
 
-tts_app = Blueprint('tts_app', __name__)
+tts_blueprint = Blueprint('tts_app', __name__)
 
-@tts_app.route('/')
+@tts_blueprint.route('/')
 def index():
     return "Text-to-Speech API is running!"
 
@@ -12,7 +12,7 @@ def index():
 AUDIO_DIR = "audio_files"
 os.makedirs(AUDIO_DIR, exist_ok=True)
 
-@tts_app.route('/api/text-to-speech', methods=['POST'])
+@tts_blueprint.route('/api/text-to-speech', methods=['POST'])
 def text_to_speech():
     try:
         # Get the text from the request

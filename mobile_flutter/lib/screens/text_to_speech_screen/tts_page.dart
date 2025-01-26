@@ -86,9 +86,9 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     controller: _titleController,
                     style: const TextStyle(color: Colors.black, fontSize: 20),
                     decoration: const InputDecoration(
-                      hintText: 'Speech',
+                      hintText: 'Title',
                       border: OutlineInputBorder(),
-                      fillColor: ColorsPalette.whiteYellow,
+                      fillColor: ColorsPalette.card,
                       filled: true,
                     ),
                     textAlignVertical: TextAlignVertical.center,
@@ -101,7 +101,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     decoration: const InputDecoration(
                       hintText: 'Type Something .....',
                       border: OutlineInputBorder(),
-                      fillColor: ColorsPalette.whiteYellow,
+                      fillColor: ColorsPalette.card,
                       filled: true,
                     ),
                     textAlignVertical: TextAlignVertical.center,
@@ -124,7 +124,8 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     final title = _titleController.text.trim();
                     final text = _textController.text.trim();
                     if (text.isNotEmpty) {
-                      textToSpeechBloc.add(CreateTextToSpeechEvent(text: text, title: title, save: false));
+                      textToSpeechBloc.add(CreateTextToSpeechEvent(
+                          text: text, title: title, save: false));
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Text field is empty!')),
@@ -133,7 +134,10 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   },
                   child: const Text(
                     "Play",
-                    style: TextStyle(fontFamily: Fonts.main, fontSize: 20, color: ColorsPalette.black),
+                    style: TextStyle(
+                        fontFamily: Fonts.main,
+                        fontSize: 20,
+                        color: ColorsPalette.black),
                   ),
                 ),
                 ElevatedButton(
@@ -146,7 +150,9 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     final title = _titleController.text.trim();
                     final text = _textController.text.trim();
                     if (text.isNotEmpty) {
-                      textToSpeechBloc.add(CreateTextToSpeechEvent(text: text, title: title, save: true));
+                      textToSpeechBloc.add(CreateTextToSpeechEvent(
+                          text: text, title: title, save: true));
+                      Navigator.pop(context, true);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Text field is empty!')),
@@ -155,7 +161,10 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   },
                   child: const Text(
                     "Save",
-                    style: TextStyle(fontFamily: Fonts.main, fontSize: 20, color: ColorsPalette.black),
+                    style: TextStyle(
+                        fontFamily: Fonts.main,
+                        fontSize: 20,
+                        color: ColorsPalette.black),
                   ),
                 ),
               ],

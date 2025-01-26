@@ -6,10 +6,11 @@ from vosk import Model, KaldiRecognizer
 from threading import Thread
 
 # Define Blueprint
-stt_app = Blueprint('stt_app', __name__)
+stt_blueprint = Blueprint('stt_app', __name__)
 
 # Path to the Vosk model
-MODEL_PATH = "./models/vosk-model-small-en-us-0.15"
+# MODEL_PATH = "./models/vosk-model-small-en-us-0.15"
+MODEL_PATH = "./models/vosk-model-tl-ph-generic-0.6"
 
 # Load Vosk model
 model = Model(MODEL_PATH)
@@ -39,7 +40,7 @@ def run_transcription():
         print(f"Error: {e}")
 
 # Flask route for real-time transcription
-@stt_app.route('/api/live-transcription', methods=['POST'])
+@stt_blueprint.route('/api/live-transcription', methods=['POST'])
 def live_transcription():
     try:
         # Start transcription in a new thread
