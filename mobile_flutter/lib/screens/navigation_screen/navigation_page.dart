@@ -14,8 +14,11 @@ class _NavigationPageState extends State<NavigationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ColorsPalette.background,
-      appBar: AppBarWidget(title: "Navigation", isBackButton: false, isSettingButton: false),
-      
+      appBar: AppBarWidget(
+          title: "Navigation",
+          titleSize: 25,
+          isBackButton: false,
+          isSettingButton: false),
     );
   }
 }

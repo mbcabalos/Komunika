@@ -36,10 +36,10 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
       child: Scaffold(
         backgroundColor: ColorsPalette.background,
         appBar: const AppBarWidget(
-          title: 'Speech To Text',
-          isBackButton: true,
-          isSettingButton: false,
-        ),
+            title: "Speech to Text",
+            titleSize: 25,
+            isBackButton: true,
+            isSettingButton: false),
         body: BlocConsumer<SpeechToTextBloc, SpeechToTextState>(
           listener: (context, state) {
             if (state is SpeechToTextErrorState) {

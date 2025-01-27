@@ -5,11 +5,13 @@ import 'package:komunika/utils/fonts.dart';
 
 class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final double titleSize;
   final bool isBackButton;
   final bool isSettingButton;
   const AppBarWidget(
       {super.key,
       required this.title,
+      required this.titleSize,
       required this.isBackButton,
       required this.isSettingButton});
 
@@ -20,10 +22,10 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         padding: const EdgeInsets.only(top: 7.0),
         child: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
               color: ColorsPalette.white,
               fontFamily: Fonts.main,
-              fontSize: 30,
+              fontSize: titleSize,
               fontWeight: FontWeight.bold,
               letterSpacing: 5),
         ),
