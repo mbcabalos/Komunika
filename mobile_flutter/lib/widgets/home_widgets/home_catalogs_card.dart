@@ -2,16 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 
-class HomeCard extends StatefulWidget {
+class HomeCatalogsCard extends StatelessWidget {
   final String imagePath;
-  final String text;
-  const HomeCard({super.key, required this.imagePath, required this.text});
+  final bool isImagePath;
+  final String content;
+  final double contentSize;
+  final double cardHeight;
+  final double cardWidth;
+  const HomeCatalogsCard(
+      {super.key,
+      this.imagePath = "",
+      required this.isImagePath,
+      required this.content,
+      required this.contentSize,
+      this.cardHeight = 0,
+      this.cardWidth = 0});
 
-  @override
-  State<HomeCard> createState() => _HomeCardState();
-}
-
-class _HomeCardState extends State<HomeCard> {
   @override
   Widget build(BuildContext context) {
     final double cardWidth = MediaQuery.of(context).size.width * 0.45;
@@ -31,25 +37,26 @@ class _HomeCardState extends State<HomeCard> {
       ),
       child: Row(
         children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: ColorsPalette.background,
-              borderRadius: BorderRadius.circular(25),
+          if (isImagePath == true)
+            Container(
+              width: 35,
+              height: 50,
+              decoration: BoxDecoration(
+                color: ColorsPalette.background,
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.contain,
+              ),
             ),
-            child: Image.asset(
-              widget.imagePath,
-              fit: BoxFit.contain,
-            ),
-          ),
           Container(
             margin: const EdgeInsets.only(left: 8),
             child: Text(
-              widget.text,
-              style: const TextStyle(
+              content,
+              style: TextStyle(
                 color: ColorsPalette.black,
-                fontSize: 16,
+                fontSize: contentSize,
                 fontWeight: FontWeight.bold,
                 fontFamily: Fonts.main,
               ),

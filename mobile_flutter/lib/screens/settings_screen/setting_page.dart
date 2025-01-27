@@ -14,7 +14,11 @@ class _SettingPageState extends State<SettingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ColorsPalette.background,
-      appBar: AppBarWidget(title: "Settings", isBackButton: false, isSettingButton: false),
+      appBar: const AppBarWidget(
+          title: "Settings",
+          titleSize: 25,
+          isBackButton: false,
+          isSettingButton: false),
       
     );
   }

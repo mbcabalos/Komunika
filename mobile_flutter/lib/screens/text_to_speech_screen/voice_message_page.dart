@@ -52,7 +52,10 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
     return Scaffold(
       backgroundColor: ColorsPalette.background,
       appBar: const AppBarWidget(
-          title: "Text To Speech", isBackButton: true, isSettingButton: false),
+          title: "Text to Speech",
+          titleSize: 20,
+          isBackButton: false,
+          isSettingButton: false),
       body: Center(
         child: Column(
           children: [
