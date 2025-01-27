@@ -71,30 +71,36 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
       onRefresh: _initialize,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
+        child: ListView(
           children: [
-            GestureDetector(
-              onTap: () async {
-                speechToTextBloc.add(CreateSpeechToTextEvent());
-              },
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/microphone.png'),
-                    fit: BoxFit.contain,
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () async {
+                    speechToTextBloc.add(CreateSpeechToTextEvent());
+                  },
+                  child: Container(
+                    width: 200,
+                    height: 200,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      image: DecorationImage(
+                        image: AssetImage('assets/icons/circle-microphone.png'),
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 20),
+                const Text("Tap to Record",
+                    style: TextStyle(
+                        fontSize: 25,
+                        fontFamily: Fonts.main,
+                        fontWeight: FontWeight.bold)),
+              ],
             ),
-            const SizedBox(height: 20),
-            const Text("Tap to Record",
-                style: TextStyle(
-                    fontSize: 25,
-                    fontFamily: Fonts.main,
-                    fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             SizedBox(
               width: phoneWidth,
@@ -115,7 +121,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
             const SizedBox(height: 20),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: ColorsPalette.buttonPrimary,
+                backgroundColor: ColorsPalette.accent,
                 minimumSize: Size(MediaQuery.of(context).size.width * 0.3, 50),
               ),
               onPressed: () {},
@@ -124,7 +130,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                 style: TextStyle(
                     fontFamily: Fonts.main,
                     fontSize: 20,
-                    color: ColorsPalette.black),
+                    color: ColorsPalette.white),
               ),
             ),
           ],
