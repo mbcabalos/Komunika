@@ -7,7 +7,6 @@ import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:komunika/widgets/text_to_speech_widgets/tts_card.dart';
-import 'package:komunika/widgets/text_to_speech_widgets/tts_card.dart';
 import 'package:path_provider/path_provider.dart'; // Import your custom card widget (if used)
 
 class VoiceMessagePage extends StatefulWidget {
@@ -54,8 +53,29 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
       appBar: const AppBarWidget(
           title: "Text to Speech",
           titleSize: 20,
-          isBackButton: false,
+          isBackButton: true,
           isSettingButton: false),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
+        child: FloatingActionButton(
+          backgroundColor: ColorsPalette.accent,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TextToSpeechScreen(),
+              ),
+            );
+          },
+          child: Image.asset(
+            'assets/icons/text-to-speech.png', 
+            fit:
+                BoxFit.contain,
+            height: MediaQuery.of(context).size.width * 0.07, 
+            width: MediaQuery.of(context).size.width * 0.07,
+          ),
+        ),
+      ),
       body: Center(
         child: Column(
           children: [
@@ -86,31 +106,6 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
                 ],
               ),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ColorsPalette.buttonPrimary,
-                minimumSize: Size(phoneWidth, 50),
-              ),
-              onPressed: () async {
-                print("pop");
-                final bool isSaved = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const TextToSpeechScreen(),
-                  ),
-                );
-
-                // Check if the returned value is true
-                if (isSaved) {
-                  // After the navigation, refresh the audio list
-                  fetchAudioPaths(); // Re-fetch audio items after returning
-                }
-              },
-              child: const Text(
-                "Add New Speech",
-                style: TextStyle(fontSize: 20, color: ColorsPalette.black),
-              ),
-            )
           ],
         ),
       ),

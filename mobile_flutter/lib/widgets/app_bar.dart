@@ -33,6 +33,9 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: ColorsPalette.accent,
       foregroundColor: ColorsPalette.black,
       automaticallyImplyLeading: isBackButton,
+      iconTheme: const IconThemeData(
+        color: ColorsPalette.white,
+      ),
       leading: isBackButton
           ? Padding(
               padding: const EdgeInsets.only(top: 7.0),

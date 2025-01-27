@@ -40,10 +40,10 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
       child: Scaffold(
         backgroundColor: ColorsPalette.background,
         appBar: const AppBarWidget(
-          title: "Text to Speech",
-          titleSize: 25,
-          isBackButton: true,
-          isSettingButton: false),
+            title: "Text to Speech",
+            titleSize: 25,
+            isBackButton: true,
+            isSettingButton: false),
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
           listener: (context, state) {
             if (state is TextToSpeechErrorState) {
@@ -105,69 +105,69 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                       filled: true,
                     ),
                     textAlignVertical: TextAlignVertical.center,
-                    maxLines: 10,
+                    maxLines: 20,
                   ),
                 ],
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorsPalette.buttonSecondary,
-                    minimumSize:
-                        Size(MediaQuery.of(context).size.width * 0.3, 50),
+            Container(
+              margin: const EdgeInsets.only(left: 32, right: 32, top: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.blue,
+                    ),
+                    child: IconButton(
+                      icon: Image.asset(
+                        'assets/icons/speaker-filled-audio-tool.png', 
+                        height: MediaQuery.of(context).size.width * 0.10, 
+                        width: MediaQuery.of(context).size.width * 0.10,
+                      ),
+                      onPressed: () {
+                        final title = _titleController.text.trim();
+                        final text = _textController.text.trim();
+                        if (text.isNotEmpty) {
+                          textToSpeechBloc.add(CreateTextToSpeechEvent(
+                              text: text, title: title, save: false));
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Text field is empty!')),
+                          );
+                        }
+                      },
+                    ),
                   ),
-                  onPressed: () {
-                    final title = _titleController.text.trim();
-                    final text = _textController.text.trim();
-                    if (text.isNotEmpty) {
-                      textToSpeechBloc.add(CreateTextToSpeechEvent(
-                          text: text, title: title, save: false));
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Text field is empty!')),
-                      );
-                    }
-                  },
-                  child: const Text(
-                    "Play",
-                    style: TextStyle(
-                        fontFamily: Fonts.main,
-                        fontSize: 20,
-                        color: ColorsPalette.black),
+                  Container(
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.blue,
+                    ),
+                    child: IconButton(
+                      icon: Image.asset(
+                        'assets/icons/diskette.png', 
+                        height: MediaQuery.of(context).size.width * 0.10, 
+                        width: MediaQuery.of(context).size.width * 0.10,
+                      ),
+                      onPressed: () {
+                        final title = _titleController.text.trim();
+                        final text = _textController.text.trim();
+                        if (text.isNotEmpty) {
+                          textToSpeechBloc.add(CreateTextToSpeechEvent(
+                              text: text, title: title, save: true));
+                          Navigator.pop(context, true);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Text field is empty!')),
+                          );
+                        }
+                      },
+                    ),
                   ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorsPalette.buttonPrimary,
-                    minimumSize:
-                        Size(MediaQuery.of(context).size.width * 0.3, 50),
-                  ),
-                  onPressed: () {
-                    final title = _titleController.text.trim();
-                    final text = _textController.text.trim();
-                    if (text.isNotEmpty) {
-                      textToSpeechBloc.add(CreateTextToSpeechEvent(
-                          text: text, title: title, save: true));
-                      Navigator.pop(context, true);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Text field is empty!')),
-                      );
-                    }
-                  },
-                  child: const Text(
-                    "Save",
-                    style: TextStyle(
-                        fontFamily: Fonts.main,
-                        fontSize: 20,
-                        color: ColorsPalette.black),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

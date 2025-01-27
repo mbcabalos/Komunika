@@ -73,6 +73,27 @@ flutter:
     - assets/images/sign_transcriber.png
     - assets/images/on_screen_captions.png
     - assets/images/microphone.png
+    - assets/icons/back.png
+    - assets/icons/call.png
+    - assets/icons/circle-microphone.png
+    - assets/icons/delete.png
+    - assets/icons/diskette.png
+    - assets/icons/ear.png
+    - assets/icons/edit.png
+    - assets/icons/hand-paper.png
+    - assets/icons/hello.png
+    - assets/icons/home.png
+    - assets/icons/location.png
+    - assets/icons/paint-palette.png
+    - assets/icons/pencil.png
+    - assets/icons/plus.png
+    - assets/icons/settings.png
+    - assets/icons/speaker-filled-audio-tool.png
+    - assets/icons/talk.png
+    - assets/icons/text-to-speech.png
+    - assets/icons/word-of-mouth.png
+    - assets/icons/world.png
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

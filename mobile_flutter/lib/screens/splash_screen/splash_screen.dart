@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:komunika/utils/fonts.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -61,6 +62,7 @@ class SplashScreenState extends State<SplashScreen> with SingleTickerProviderSta
                   color: Colors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  fontFamily: Fonts.main,
                   
                 ),
               ),
