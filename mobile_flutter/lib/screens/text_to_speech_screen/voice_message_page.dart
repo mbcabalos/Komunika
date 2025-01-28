@@ -47,12 +47,11 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
   @override
   Widget build(BuildContext context) {
     final double phoneHeight = MediaQuery.of(context).size.height * 0.8;
-    final double phoneWidth = MediaQuery.of(context).size.width * 0.9;
     return Scaffold(
       backgroundColor: ColorsPalette.background,
-      appBar: const AppBarWidget(
+      appBar: AppBarWidget(
           title: "Text to Speech",
-          titleSize: 20,
+          titleSize: getResponsiveFontSize(context, 15),
           isBackButton: true,
           isSettingButton: false),
       floatingActionButton: Padding(
@@ -68,10 +67,9 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
             );
           },
           child: Image.asset(
-            'assets/icons/text-to-speech.png', 
-            fit:
-                BoxFit.contain,
-            height: MediaQuery.of(context).size.width * 0.07, 
+            'assets/icons/text-to-speech.png',
+            fit: BoxFit.contain,
+            height: MediaQuery.of(context).size.width * 0.07,
             width: MediaQuery.of(context).size.width * 0.07,
           ),
         ),
@@ -110,5 +108,11 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
         ),
       ),
     );
+  }
+
+  double getResponsiveFontSize(BuildContext context, double size) {
+    double baseWidth = 375.0; // Reference width (e.g., iPhone 11 Pro)
+    double screenWidth = MediaQuery.of(context).size.width;
+    return size * (screenWidth / baseWidth);
   }
 }
