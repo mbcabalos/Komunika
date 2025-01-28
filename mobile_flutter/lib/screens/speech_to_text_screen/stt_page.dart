@@ -35,9 +35,9 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
       create: (context) => speechToTextBloc,
       child: Scaffold(
         backgroundColor: ColorsPalette.background,
-        appBar: const AppBarWidget(
+        appBar: AppBarWidget(
             title: "Speech to Text",
-            titleSize: 25,
+            titleSize: getResponsiveFontSize(context, 15),
             isBackButton: true,
             isSettingButton: false),
         body: BlocConsumer<SpeechToTextBloc, SpeechToTextState>(
@@ -137,5 +137,11 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
         ),
       ),
     );
+  }
+
+  double getResponsiveFontSize(BuildContext context, double size) {
+    double baseWidth = 375.0; // Reference width (e.g., iPhone 11 Pro)
+    double screenWidth = MediaQuery.of(context).size.width;
+    return size * (screenWidth / baseWidth);
   }
 }

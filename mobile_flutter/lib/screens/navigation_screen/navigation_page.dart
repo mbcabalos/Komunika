@@ -16,9 +16,14 @@ class _NavigationPageState extends State<NavigationPage> {
       backgroundColor: ColorsPalette.background,
       appBar: AppBarWidget(
           title: "Navigation",
-          titleSize: 25,
+          titleSize: getResponsiveFontSize(context, 15),
           isBackButton: false,
           isSettingButton: false),
     );
+  }
+  double getResponsiveFontSize(BuildContext context, double size) {
+    double baseWidth = 375.0; // Reference width (e.g., iPhone 11 Pro)
+    double screenWidth = MediaQuery.of(context).size.width;
+    return size * (screenWidth / baseWidth);
   }
 }

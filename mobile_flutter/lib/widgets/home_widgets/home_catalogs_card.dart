@@ -20,9 +20,8 @@ class HomeCatalogsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double cardWidth = MediaQuery.of(context).size.width * 0.45;
     return Container(
-      width: cardWidth,
+      width: MediaQuery.of(context).size.width * 0.45,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: ColorsPalette.card,
@@ -39,8 +38,8 @@ class HomeCatalogsCard extends StatelessWidget {
         children: [
           if (isImagePath == true)
             Container(
-              width: 35,
-              height: 50,
+              width: MediaQuery.of(context).size.width * 0.06,
+              height: MediaQuery.of(context).size.height * 0.06,
               decoration: BoxDecoration(
                 color: ColorsPalette.background,
                 borderRadius: BorderRadius.circular(25),
@@ -60,6 +59,9 @@ class HomeCatalogsCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 fontFamily: Fonts.main,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
             ),
           ),
         ],

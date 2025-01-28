@@ -39,9 +39,9 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
       create: (context) => textToSpeechBloc,
       child: Scaffold(
         backgroundColor: ColorsPalette.background,
-        appBar: const AppBarWidget(
+        appBar: AppBarWidget(
             title: "Text to Speech",
-            titleSize: 25,
+            titleSize: getResponsiveFontSize(context, 15),
             isBackButton: true,
             isSettingButton: false),
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
@@ -122,8 +122,8 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     ),
                     child: IconButton(
                       icon: Image.asset(
-                        'assets/icons/speaker-filled-audio-tool.png', 
-                        height: MediaQuery.of(context).size.width * 0.10, 
+                        'assets/icons/speaker-filled-audio-tool.png',
+                        height: MediaQuery.of(context).size.width * 0.10,
                         width: MediaQuery.of(context).size.width * 0.10,
                       ),
                       onPressed: () {
@@ -134,7 +134,8 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                               text: text, title: title, save: false));
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Text field is empty!')),
+                            const SnackBar(
+                                content: Text('Text field is empty!')),
                           );
                         }
                       },
@@ -147,8 +148,8 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     ),
                     child: IconButton(
                       icon: Image.asset(
-                        'assets/icons/diskette.png', 
-                        height: MediaQuery.of(context).size.width * 0.10, 
+                        'assets/icons/diskette.png',
+                        height: MediaQuery.of(context).size.width * 0.10,
                         width: MediaQuery.of(context).size.width * 0.10,
                       ),
                       onPressed: () {
@@ -160,7 +161,8 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                           Navigator.pop(context, true);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Text field is empty!')),
+                            const SnackBar(
+                                content: Text('Text field is empty!')),
                           );
                         }
                       },
@@ -173,5 +175,11 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
         ),
       ),
     );
+  }
+
+  double getResponsiveFontSize(BuildContext context, double size) {
+    double baseWidth = 375.0; // Reference width (e.g., iPhone 11 Pro)
+    double screenWidth = MediaQuery.of(context).size.width;
+    return size * (screenWidth / baseWidth);
   }
 }

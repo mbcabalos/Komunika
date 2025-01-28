@@ -3,16 +3,16 @@ import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 
 class HomeQuickSpeechCard extends StatelessWidget {
-  final String content;
+  final List<String> content;
   final double contentSize;
   const HomeQuickSpeechCard(
       {super.key, required this.content, required this.contentSize});
 
   @override
   Widget build(BuildContext context) {
-    final double cardWidth = MediaQuery.of(context).size.width * 0.95;
+    List<String> items = ['Greeting', 'Thank You', 'Sorry', 'Goobbye'];
     return Container(
-      width: cardWidth,
+      width: MediaQuery.of(context).size.width * 0.95,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: ColorsPalette.card,
@@ -47,31 +47,32 @@ class HomeQuickSpeechCard extends StatelessWidget {
               ),
             ],
           ),
-          Container(
-            width: cardWidth,
-            margin: const EdgeInsets.all(20),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: ColorsPalette.card,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 1,
-                  offset: const Offset(0, 2),
+          for (var item in items)
+            Container(
+              width: MediaQuery.of(context).size.width * 0.95,
+              margin: const EdgeInsets.only(left: 20, right: 20,top: 20),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: ColorsPalette.card,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 1,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                item,
+                style: TextStyle(
+                  color: ColorsPalette.black,
+                  fontSize: contentSize,
+                  fontWeight: FontWeight.normal,
+                  fontFamily: Fonts.main,
                 ),
-              ],
-            ),
-            child: Text(
-              content,
-              style: TextStyle(
-                color: ColorsPalette.black,
-                fontSize: contentSize,
-                fontWeight: FontWeight.normal,
-                fontFamily: Fonts.main,
               ),
             ),
-          ),
         ],
       ),
     );

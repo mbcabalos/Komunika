@@ -20,38 +20,42 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ColorsPalette.accent,
-      appBar: const AppBarWidget(
+      appBar: AppBarWidget(
         title: 'Komunika',
-        titleSize: 45,
+        titleSize: getResponsiveFontSize(context, 35),
         isBackButton: false,
         isSettingButton: false,
       ),
-      body: Column(
+      body: ListView(
         children: [
           // Header Section
           Container(
             margin: const EdgeInsets.all(16),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Breaking Barriers, \nConnecting \nHearts. ",
-                  style: TextStyle(
-                    fontFamily: Fonts.main,
-                    fontSize: 45,
-                    color: ColorsPalette.white,
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.95,
+                  height: MediaQuery.of(context).size.height * 0.18,
+                  child: Text(
+                    "Breaking Barriers, \nConnecting \nHearts. ",
+                    style: TextStyle(
+                      fontFamily: Fonts.main,
+                      fontSize: getResponsiveFontSize(context, 35),
+                      color: ColorsPalette.white,
+                    ),
                   ),
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                 HomeTipsCard(
                   content:
                       "“Ensure your phone’s microphone is not obstructed for optimal performance.”",
-                  contentSize: 24,
+                  contentSize: getResponsiveFontSize(context, 20),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: MediaQuery.of(context).size.height * 0.02),
 
           // Body Section with white background
           Expanded(
@@ -78,14 +82,15 @@ class _HomePageState extends State<HomePage> {
                               ),
                             );
                           },
-                          child: const HomeCatalogsCard(
+                          child: HomeCatalogsCard(
                             imagePath: 'assets/images/speech_to_text.png',
                             isImagePath: true,
                             content: 'Speech To Text',
-                            contentSize: 20,
+                            contentSize: getResponsiveFontSize(context, 14),
                           ),
                         ),
-                        const SizedBox(width: 20),
+                        SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.04),
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -95,36 +100,40 @@ class _HomePageState extends State<HomePage> {
                               ),
                             );
                           },
-                          child: const HomeCatalogsCard(
+                          child: HomeCatalogsCard(
                             imagePath: 'assets/images/text_to_speech.png',
                             isImagePath: true,
                             content: 'Text to Speech',
-                            contentSize: 20,
+                            contentSize: getResponsiveFontSize(context, 14),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    const Row(
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         HomeCatalogsCard(
                           imagePath: 'assets/images/sign_transcriber.png',
                           isImagePath: true,
                           content: 'Sign Transcribe',
-                          contentSize: 20,
+                          contentSize: getResponsiveFontSize(context, 14),
                         ),
-                        SizedBox(width: 20),
+                        SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.04),
                         HomeCatalogsCard(
                           imagePath: 'assets/images/on_screen_captions.png',
                           isImagePath: true,
                           content: 'Screen Captions',
-                          contentSize: 20,
+                          contentSize: getResponsiveFontSize(context, 14),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 30),
-                    const HomeQuickSpeechCard(content: "Hellooo", contentSize: 26)
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.04),
+                    HomeQuickSpeechCard(
+                      content: ["Good Morning"],
+                      contentSize: getResponsiveFontSize(context, 18),
+                    ),
                   ],
                 ),
               ),
@@ -133,5 +142,11 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  double getResponsiveFontSize(BuildContext context, double size) {
+    double baseWidth = 375.0; // Reference width (e.g., iPhone 11 Pro)
+    double screenWidth = MediaQuery.of(context).size.width;
+    return size * (screenWidth / baseWidth);
   }
 }

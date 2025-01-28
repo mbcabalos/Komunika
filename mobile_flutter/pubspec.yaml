@@ -84,6 +84,7 @@ flutter:
     - assets/icons/hello.png
     - assets/icons/home.png
     - assets/icons/location.png
+    - assets/icons/logo.png
     - assets/icons/paint-palette.png
     - assets/icons/pencil.png
     - assets/icons/plus.png

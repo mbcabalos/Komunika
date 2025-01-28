@@ -8,7 +8,8 @@ class SplashScreen extends StatefulWidget {
   SplashScreenState createState() => SplashScreenState();
 }
 
-class SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
 
@@ -19,7 +20,7 @@ class SplashScreenState extends State<SplashScreen> with SingleTickerProviderSta
     // Initialize Animation Controller
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2), // Animation duration
+      duration: const Duration(seconds: 2), 
     );
 
     // Fade-in animation
@@ -38,32 +39,39 @@ class SplashScreenState extends State<SplashScreen> with SingleTickerProviderSta
 
   @override
   void dispose() {
-    _controller.dispose(); // Clean up the animation controller
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue, // Background color
+      backgroundColor: Colors.blue, 
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: const Column(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Logo or Icon
-              Icon(Icons.flutter_dash, size: 100, color: Colors.white),
-              SizedBox(height: 20),
+              Image.asset(
+                'assets/icons/logo.png',
+                width: 100,
+                height: 100,
+                color: Colors.white,
+                colorBlendMode: BlendMode.srcIn,
+              ),
+
+              const SizedBox(height: 20),
               // App Name or Tagline
               Text(
                 'Komunika',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: getResponsiveFontSize(context, 25),
                   fontWeight: FontWeight.bold,
                   fontFamily: Fonts.main,
-                  
+                  letterSpacing: 5,
                 ),
               ),
             ],
@@ -71,5 +79,11 @@ class SplashScreenState extends State<SplashScreen> with SingleTickerProviderSta
         ),
       ),
     );
+  }
+
+  double getResponsiveFontSize(BuildContext context, double size) {
+    double baseWidth = 375.0; // Reference width (e.g., iPhone 11 Pro)
+    double screenWidth = MediaQuery.of(context).size.width;
+    return size * (screenWidth / baseWidth);
   }
 }
