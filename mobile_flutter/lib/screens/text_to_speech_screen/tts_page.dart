@@ -4,6 +4,7 @@ import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_event.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
+import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/widgets/app_bar.dart';
@@ -25,7 +26,8 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   void initState() {
     super.initState();
     final globalService = GlobalRepositoryImpl();
-    textToSpeechBloc = TextToSpeechBloc(globalService);
+    final databaseHelper = DatabaseHelper();
+    textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
     _initialize();
   }
 
