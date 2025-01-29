@@ -134,6 +134,7 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
                             _showOptionsMenu(context, audioPath, favorites);
                           },
                         ),
+                        
                       );
                     },
                   ),

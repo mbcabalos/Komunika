@@ -16,7 +16,7 @@ class _NavigationPageState extends State<NavigationPage> {
       backgroundColor: ColorsPalette.background,
       appBar: AppBarWidget(
           title: "Navigation",
-          titleSize: getResponsiveFontSize(context, 15),
+          titleSize: getResponsiveFontSize(context, 20),
           isBackButton: false,
           isSettingButton: false),
     );

@@ -21,9 +21,8 @@ class GlobalRepositoryImpl extends GlobalRepository {
       final response = await client.post(
         // Uri.parse('https://127.0.0.1:5000/api/text-to-speech'),
         // Uri.parse('https://192.168.1.133:5000/api/text-to-speech'),
-        Uri.parse(
-            'https://192.168.254.116:5000/api/text-to-speech'), //David Endpoint
-        // Uri.parse('https://192.168.1.133:5000/api/text-to-speech'),
+        // Uri.parse('https://192.168.254.116:5000/api/text-to-speech'), //David Endpoint
+        Uri.parse('https://192.168.1.133:5000/api/text-to-speech'),
         headers: {HttpHeaders.contentTypeHeader: 'application/json'},
         body: '{"text": "$text"}',
       );
