@@ -89,13 +89,13 @@ class _HomePageState extends State<HomePage> {
                 HomeTipsCard(
                   content:
                       "“Ensure your phone’s microphone is not obstructed for optimal performance.”",
-                  contentSize: getResponsiveFontSize(context, 20),
+                  contentSize: getResponsiveFontSize(context, 15),
                 ),
               ],
             ),
           ),
           SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-
+      
           // Body Section with white background
           Container(
             decoration: const BoxDecoration(

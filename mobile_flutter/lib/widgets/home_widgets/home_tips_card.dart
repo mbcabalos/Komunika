@@ -30,7 +30,7 @@ class HomeTipsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            margin: const EdgeInsets.only(left: 8, top: 8),
+            margin: const EdgeInsets.only(left: 8),
             child: Text(
               'Tips 💡',
               style: TextStyle(

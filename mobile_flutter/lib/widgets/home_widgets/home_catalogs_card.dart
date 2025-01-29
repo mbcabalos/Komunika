@@ -21,7 +21,7 @@ class HomeCatalogsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: MediaQuery.of(context).size.width * 0.45,
+      width: MediaQuery.of(context).size.width * 0.43,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: ColorsPalette.card,
@@ -35,6 +35,7 @@ class HomeCatalogsCard extends StatelessWidget {
         ],
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           if (isImagePath == true)
             Container(
@@ -49,19 +50,21 @@ class HomeCatalogsCard extends StatelessWidget {
                 fit: BoxFit.contain,
               ),
             ),
-          Container(
-            margin: const EdgeInsets.only(left: 8),
-            child: Text(
-              content,
-              style: TextStyle(
-                color: ColorsPalette.black,
-                fontSize: contentSize,
-                fontWeight: FontWeight.bold,
-                fontFamily: Fonts.main,
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.only(left: 8),
+              child: Text(
+                content,
+                style: TextStyle(
+                  color: ColorsPalette.black,
+                  fontSize: contentSize,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: Fonts.main,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                softWrap: true,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              softWrap: true,
             ),
           ),
         ],

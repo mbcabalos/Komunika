@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_event.dart';
@@ -34,6 +33,8 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
   FutureOr<void> createTextToSpeechLoadingEvent(
       CreateTextToSpeechEvent event, Emitter<TextToSpeechState> emit) async {
     try {
+      await _globalService.sendTextToSpeech(
+          event.text, event.title, event.save);
       await _globalService.sendTextToSpeech(
           event.text, event.title, event.save);
       emit(TextToSpeechLoadedSuccessState());

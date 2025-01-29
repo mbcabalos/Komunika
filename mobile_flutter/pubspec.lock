@@ -476,7 +476,19 @@ packages:
       sha256: f6be3ed8bd01289b34d679c2b62226f63c0e69f9fd2e50a6b3c1c729a961041b
       url: "https://pub.dev"
     source: hosted
+<<<<<<< Updated upstream
     version: "14.3.0"
+=======
+    version: "14.2.5"
+  volume_controller:
+    dependency: "direct main"
+    description:
+      name: volume_controller
+      sha256: b1a2e1a70119c36a11747ac75618cc8a18c4348d5b62b02cf356a926f744caf0
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.0"
+>>>>>>> Stashed changes
   web:
     dependency: transitive
     description:
