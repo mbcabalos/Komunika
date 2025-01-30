@@ -42,10 +42,11 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
       child: Scaffold(
         backgroundColor: ColorsPalette.background,
         appBar: AppBarWidget(
-            title: "Text to Speech",
-            titleSize: getResponsiveFontSize(context, 15),
-            isBackButton: true,
-            isSettingButton: false),
+          title: 'Text to Speech',
+          titleSize: getResponsiveFontSize(context, 20),
+          isBackButton: true,
+          isSettingButton: false,
+        ),
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
           listener: (context, state) {
             if (state is TextToSpeechErrorState) {

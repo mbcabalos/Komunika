@@ -49,10 +49,11 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
       child: Scaffold(
         backgroundColor: ColorsPalette.background,
         appBar: AppBarWidget(
-            title: "Text to Speech",
-            titleSize: getResponsiveFontSize(context, 15),
-            isBackButton: true,
-            isSettingButton: false),
+          title: 'Text to Speech',
+          titleSize: getResponsiveFontSize(context, 20),
+          isBackButton: true,
+          isSettingButton: false,
+        ),
         floatingActionButton: Padding(
           padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
           child: FloatingActionButton(
@@ -134,7 +135,6 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
                             _showOptionsMenu(context, audioPath, favorites);
                           },
                         ),
-                        
                       );
                     },
                   ),

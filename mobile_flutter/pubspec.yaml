@@ -43,6 +43,9 @@ dependencies:
   lottie: ^2.2.0
   volume_controller: ^3.1.0
   showcaseview: ^4.0.0
+  provider: ^6.1.2
+  url_launcher: ^6.3.1
+  shared_preferences: ^2.5.1
 
 dev_dependencies:
   flutter_test:
@@ -78,20 +81,24 @@ flutter:
     - assets/icons/back.png
     - assets/icons/call.png
     - assets/icons/circle-microphone.png
+    - assets/icons/communication.png
     - assets/icons/delete.png
     - assets/icons/diskette.png
     - assets/icons/ear.png
     - assets/icons/edit.png
+    - assets/icons/github.png
     - assets/icons/hand-paper.png
     - assets/icons/hello.png
     - assets/icons/home.png
     - assets/icons/location.png
     - assets/icons/logo.png
+    - assets/icons/mail.png
     - assets/icons/paint-palette.png
     - assets/icons/pencil.png
     - assets/icons/plus.png
     - assets/icons/settings.png
     - assets/icons/speaker-filled-audio-tool.png
+    - assets/icons/transcription.png
     - assets/icons/talk.png
     - assets/icons/text-to-speech.png
     - assets/icons/word-of-mouth.png

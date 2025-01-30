@@ -35,8 +35,6 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
     try {
       await _globalService.sendTextToSpeech(
           event.text, event.title, event.save);
-      await _globalService.sendTextToSpeech(
-          event.text, event.title, event.save);
       emit(TextToSpeechLoadedSuccessState());
     } catch (e) {
       emit(TextToSpeechErrorState(message: '$e'));

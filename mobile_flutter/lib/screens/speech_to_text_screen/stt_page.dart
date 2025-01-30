@@ -27,12 +27,11 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
     speechToTextBloc = SpeechToTextBloc(globalService);
     _initialize();
     if (!_isShowcaseSeen) {
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    ShowCaseWidget.of(context).startShowCase([_microphoneKey]);
-    _isShowcaseSeen = true;
-  });
-}
-
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ShowCaseWidget.of(context).startShowCase([_microphoneKey]);
+        _isShowcaseSeen = true;
+      });
+    }
   }
 
   Future<void> _initialize() async {
@@ -46,10 +45,11 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
       child: Scaffold(
         backgroundColor: ColorsPalette.background,
         appBar: AppBarWidget(
-            title: "Speech to Text",
-            titleSize: getResponsiveFontSize(context, 15),
-            isBackButton: true,
-            isSettingButton: false),
+          title: 'Speech to text',
+          titleSize: getResponsiveFontSize(context, 20),
+          isBackButton: true,
+          isSettingButton: false,
+        ),
         body: BlocConsumer<SpeechToTextBloc, SpeechToTextState>(
           listener: (context, state) {
             if (state is SpeechToTextErrorState) {
@@ -100,7 +100,8 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         image: DecorationImage(
-                          image: AssetImage('assets/icons/circle-microphone.png'),
+                          image:
+                              AssetImage('assets/icons/circle-microphone.png'),
                           fit: BoxFit.contain,
                         ),
                       ),

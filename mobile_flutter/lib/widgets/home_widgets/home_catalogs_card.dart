@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
+import 'package:komunika/utils/themes.dart';
 
 class HomeCatalogsCard extends StatelessWidget {
   final String imagePath;
@@ -9,6 +10,7 @@ class HomeCatalogsCard extends StatelessWidget {
   final double contentSize;
   final double cardHeight;
   final double cardWidth;
+  final ThemeProvider themeProvider;
   const HomeCatalogsCard(
       {super.key,
       this.imagePath = "",
@@ -16,7 +18,8 @@ class HomeCatalogsCard extends StatelessWidget {
       required this.content,
       required this.contentSize,
       this.cardHeight = 0,
-      this.cardWidth = 0});
+      this.cardWidth = 0,
+      required this.themeProvider});
 
   @override
   Widget build(BuildContext context) {
@@ -24,11 +27,11 @@ class HomeCatalogsCard extends StatelessWidget {
       width: MediaQuery.of(context).size.width * 0.43,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: ColorsPalette.card,
+        color:  themeProvider.themeData.cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: themeProvider.themeData.scaffoldBackgroundColor.withOpacity(0.3),
             blurRadius: 1,
             offset: const Offset(0, 2),
           ),
@@ -38,13 +41,9 @@ class HomeCatalogsCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isImagePath == true)
-            Container(
+            SizedBox(
               width: MediaQuery.of(context).size.width * 0.06,
               height: MediaQuery.of(context).size.height * 0.06,
-              decoration: BoxDecoration(
-                color: ColorsPalette.background,
-                borderRadius: BorderRadius.circular(25),
-              ),
               child: Image.asset(
                 imagePath,
                 fit: BoxFit.contain,
@@ -56,7 +55,7 @@ class HomeCatalogsCard extends StatelessWidget {
               child: Text(
                 content,
                 style: TextStyle(
-                  color: ColorsPalette.black,
+                  color: themeProvider.themeData.textTheme.bodyMedium?.color,
                   fontSize: contentSize,
                   fontWeight: FontWeight.bold,
                   fontFamily: Fonts.main,

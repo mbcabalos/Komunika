@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
+import 'package:komunika/utils/themes.dart';
 
 class HomeTipsCard extends StatelessWidget {
   final String content;
   final double contentSize;
+  final ThemeProvider themeProvider;
   const HomeTipsCard(
-      {super.key, required this.content, required this.contentSize});
+      {super.key,
+      required this.content,
+      required this.contentSize,
+      required this.themeProvider});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +20,7 @@ class HomeTipsCard extends StatelessWidget {
       width: cardWidth,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: ColorsPalette.card,
+        color: themeProvider.themeData.cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -34,7 +39,7 @@ class HomeTipsCard extends StatelessWidget {
             child: Text(
               'Tips 💡',
               style: TextStyle(
-                color: ColorsPalette.black,
+                color: themeProvider.themeData.textTheme.bodyMedium?.color,
                 fontSize: contentSize,
                 fontWeight: FontWeight.bold,
                 fontFamily: Fonts.main,
@@ -46,7 +51,7 @@ class HomeTipsCard extends StatelessWidget {
             child: Text(
               content,
               style: TextStyle(
-                color: ColorsPalette.black,
+                color: themeProvider.themeData.textTheme.bodyMedium?.color,
                 fontSize: contentSize,
                 fontWeight: FontWeight.normal,
                 fontFamily: Fonts.main,

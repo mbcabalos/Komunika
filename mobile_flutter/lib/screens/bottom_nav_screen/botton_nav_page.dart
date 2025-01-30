@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:komunika/screens/home_screen/home_page.dart';
 import 'package:komunika/screens/navigation_screen/navigation_page.dart';
-import 'package:komunika/screens/settings_screen/setting_page.dart';
+import 'package:komunika/screens/settings_screen/settings_page.dart';
 import 'package:komunika/utils/colors.dart';
 
 class BottomNavPage extends StatefulWidget {
