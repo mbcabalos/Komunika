@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
+import 'package:komunika/utils/themes.dart';
 
 class HomeQuickSpeechCard extends StatelessWidget {
   final List<String> content;
   final double contentSize;
+  final ThemeProvider themeProvider;
   final Function(String) onTap;
 
   const HomeQuickSpeechCard({
     super.key,
     required this.content,
     required this.contentSize,
+    required this.themeProvider,
     required this.onTap,
   });
 
@@ -20,11 +24,12 @@ class HomeQuickSpeechCard extends StatelessWidget {
       width: MediaQuery.of(context).size.width * 0.95,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: ColorsPalette.card,
+        color: themeProvider.themeData.cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: themeProvider.themeData.scaffoldBackgroundColor
+                .withOpacity(0.3),
             blurRadius: 1,
             offset: const Offset(0, 2),
           ),
@@ -38,20 +43,25 @@ class HomeQuickSpeechCard extends StatelessWidget {
                 Text(
                   "No quick speech items available",
                   style: TextStyle(
-                    color: ColorsPalette.black,
+                    color: themeProvider.themeData.textTheme.titleMedium?.color,
                     fontSize: contentSize,
                     fontWeight: FontWeight.normal,
                     fontFamily: Fonts.main,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(
-                    height: 16), // Add spacing between text and button
+                const SizedBox(height: 16),
                 TextButton(
-                  onPressed: null, // Callback when the button is pressed
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const VoiceMessagePage(),
+                      ),
+                    );
+                  }, // Callback when the button is pressed
                   style: TextButton.styleFrom(
-                    padding:
-                        EdgeInsets.zero, // Remove padding for better alignment
+                    padding: EdgeInsets.zero,
                   ),
                   child: Text(
                     "Add One Now",
@@ -59,10 +69,8 @@ class HomeQuickSpeechCard extends StatelessWidget {
                       fontSize: contentSize,
                       fontWeight: FontWeight.bold,
                       fontFamily: Fonts.main,
-                      color: ColorsPalette
-                          .accent, // Use primary color for the text
-                      decoration: TextDecoration
-                          .underline, // Add underline for emphasis
+                      color: ColorsPalette.accent,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ),
@@ -81,7 +89,8 @@ class HomeQuickSpeechCard extends StatelessWidget {
                       child: Text(
                         "Quick Speech",
                         style: TextStyle(
-                          color: ColorsPalette.black,
+                          color: themeProvider
+                              .themeData.textTheme.bodyMedium?.color,
                           fontSize: contentSize,
                           fontWeight: FontWeight.bold,
                           fontFamily: Fonts.main,
@@ -101,7 +110,7 @@ class HomeQuickSpeechCard extends StatelessWidget {
                           const EdgeInsets.only(left: 20, right: 20, top: 20),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: ColorsPalette.card,
+                        color: themeProvider.themeData.cardColor,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
@@ -114,7 +123,8 @@ class HomeQuickSpeechCard extends StatelessWidget {
                       child: Text(
                         item,
                         style: TextStyle(
-                          color: ColorsPalette.black,
+                          color: themeProvider
+                              .themeData.textTheme.bodyMedium?.color,
                           fontSize: contentSize,
                           fontWeight: FontWeight.normal,
                           fontFamily: Fonts.main,
