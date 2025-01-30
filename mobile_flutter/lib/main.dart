@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:komunika/screens/bottom_nav_screen/botton_nav_page.dart';
 import 'package:komunika/screens/splash_screen/splash_screen.dart';
 import 'package:path/path.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:sqflite/sqflite.dart';
 
 Future<void> main() async {
@@ -27,14 +28,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Komunika',
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const SplashScreen(),
-        '/home': (context) => const BottomNavPage(),
-      },
+    return ShowCaseWidget(
+      builder: (context) => MaterialApp( //showcase widget builder context
+        debugShowCheckedModeBanner: false,
+        title: 'Komunika',
+        initialRoute: '/',
+        routes: {
+          '/': (context) => const SplashScreen(),
+          '/home': (context) => const BottomNavPage(),
+        },
+      ),
     );
   }
 }
