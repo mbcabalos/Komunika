@@ -5,6 +5,7 @@ import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/widgets/app_bar.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class SpeechToTextPage extends StatefulWidget {
   const SpeechToTextPage({super.key});
@@ -16,6 +17,8 @@ class SpeechToTextPage extends StatefulWidget {
 class SpeechToTextPageState extends State<SpeechToTextPage> {
   late SpeechToTextBloc speechToTextBloc;
   final TextEditingController _textController = TextEditingController();
+  GlobalKey _microphoneKey = GlobalKey();
+  bool _isShowcaseSeen = false;
 
   @override
   void initState() {
@@ -23,6 +26,13 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
     final globalService = GlobalRepositoryImpl();
     speechToTextBloc = SpeechToTextBloc(globalService);
     _initialize();
+    if (!_isShowcaseSeen) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    ShowCaseWidget.of(context).startShowCase([_microphoneKey]);
+    _isShowcaseSeen = true;
+  });
+}
+
   }
 
   Future<void> _initialize() async {
@@ -77,18 +87,22 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                GestureDetector(
-                  onTap: () async {
-                    speechToTextBloc.add(CreateSpeechToTextEvent());
-                  },
-                  child: Container(
-                    width: 200,
-                    height: 200,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: AssetImage('assets/icons/circle-microphone.png'),
-                        fit: BoxFit.contain,
+                Showcase(
+                  key: _microphoneKey,
+                  description: "Tap to start recording",
+                  child: GestureDetector(
+                    onTap: () async {
+                      speechToTextBloc.add(CreateSpeechToTextEvent());
+                    },
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: AssetImage('assets/icons/circle-microphone.png'),
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),
