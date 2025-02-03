@@ -12,13 +12,13 @@ import 'package:komunika/widgets/app_bar.dart';
 import 'package:komunika/widgets/home_widgets/home_catalogs_card.dart';
 import 'package:komunika/widgets/home_widgets/home_quick_speech_card.dart';
 import 'package:komunika/widgets/home_widgets/home_tips_card.dart';
-import 'package:path/path.dart'
-    as p; //renamed as p to avoid conflict with showcase context eme
+import 'package:path/path.dart'as p; //renamed as p to avoid conflict with showcase context eme
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -38,12 +38,15 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     loadFavorites();
     theme = PreferencesUtils.getTheme().toString();
-    if (!_isShowcaseSeen) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ShowCaseWidget.of(context).startShowCase([_speechToTextKey]);
-        _isShowcaseSeen = true;
-      });
-    }
+
+    PreferencesUtils.getShowcaseSeen('speechToTextShowcase').then((seen) {
+      if (!seen) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ShowCaseWidget.of(context).startShowCase([_speechToTextKey]);
+          PreferencesUtils.storeShowcaseSeen('speechToTextShowcase', true);
+        });
+      }
+    });
   }
 
   Future<void> loadFavorites() async {

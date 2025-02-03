@@ -4,6 +4,7 @@ import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
+import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:showcaseview/showcaseview.dart';
 
@@ -26,12 +27,16 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
     final globalService = GlobalRepositoryImpl();
     speechToTextBloc = SpeechToTextBloc(globalService);
     _initialize();
-    if (!_isShowcaseSeen) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ShowCaseWidget.of(context).startShowCase([_microphoneKey]);
-        _isShowcaseSeen = true;
-      });
-    }
+    
+    PreferencesUtils.getShowcaseSeen('microphoneShowcase').then((seen) {
+      if (!seen) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ShowCaseWidget.of(context).startShowCase([_microphoneKey]);
+          PreferencesUtils.storeShowcaseSeen('microphoneShowcase', true);
+        });
+      }
+    });
+
   }
 
   Future<void> _initialize() async {
@@ -45,11 +50,10 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
       child: Scaffold(
         backgroundColor: ColorsPalette.background,
         appBar: AppBarWidget(
-          title: 'Speech to text',
-          titleSize: getResponsiveFontSize(context, 20),
-          isBackButton: true,
-          isSettingButton: false,
-        ),
+            title: "Speech to Text",
+            titleSize: getResponsiveFontSize(context, 15),
+            isBackButton: true,
+            isSettingButton: false),
         body: BlocConsumer<SpeechToTextBloc, SpeechToTextState>(
           listener: (context, state) {
             if (state is SpeechToTextErrorState) {
@@ -100,8 +104,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         image: DecorationImage(
-                          image:
-                              AssetImage('assets/icons/circle-microphone.png'),
+                          image: AssetImage('assets/icons/circle-microphone.png'),
                           fit: BoxFit.contain,
                         ),
                       ),

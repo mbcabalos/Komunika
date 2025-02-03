@@ -25,4 +25,14 @@ class PreferencesUtils {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('theme').toString();
   }
+
+  static Future<void> storeShowcaseSeen(String key, bool seen) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, seen);
+  }
+
+  static Future<bool> getShowcaseSeen(String key) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(key) ?? false;
+  }
 }
