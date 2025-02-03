@@ -7,8 +7,10 @@ import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/colors.dart';
+import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:komunika/widgets/text_to_speech_widgets/tts_card.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class VoiceMessagePage extends StatefulWidget {
   const VoiceMessagePage({super.key});
@@ -21,6 +23,7 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
   late TextToSpeechBloc textToSpeechBloc;
   // List to store the fetched audioPaths
   List<Map<String, dynamic>> audioItems = [];
+  GlobalKey _fabKey = GlobalKey();
 
   // Fetch audio paths from the database
   Future<void> fetchAudioPaths() async {
@@ -39,6 +42,20 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
     textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
     textToSpeechBloc.add(TextToSpeechLoadingEvent());
     fetchAudioPaths();
+
+    PreferencesUtils.getSpeechToTextCompleted().then((sttCompleted) {
+      if (sttCompleted) {
+        PreferencesUtils.getShowcaseSeen('fabVoiceMessageShowcase').then((seen) {
+          if (!seen) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ShowCaseWidget.of(context).startShowCase([_fabKey]);
+              PreferencesUtils.storeShowcaseSeen('fabVoiceMessageShowcase', true);
+            });
+          }
+        });
+      }
+    });
+    
   }
 
   @override
@@ -56,21 +73,25 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
         ),
         floatingActionButton: Padding(
           padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
-          child: FloatingActionButton(
-            backgroundColor: ColorsPalette.accent,
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const TextToSpeechScreen(),
-                ),
-              );
-            },
-            child: Image.asset(
-              'assets/icons/text-to-speech.png',
-              fit: BoxFit.contain,
-              height: MediaQuery.of(context).size.width * 0.07,
-              width: MediaQuery.of(context).size.width * 0.07,
+          child: Showcase(
+            key: _fabKey,
+            description: "Tap here to add voice message",
+            child: FloatingActionButton(
+              backgroundColor: ColorsPalette.accent,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TextToSpeechScreen(),
+                  ),
+                );
+              },
+              child: Image.asset(
+                'assets/icons/text-to-speech.png',
+                fit: BoxFit.contain,
+                height: MediaQuery.of(context).size.width * 0.07,
+                width: MediaQuery.of(context).size.width * 0.07,
+              ),
             ),
           ),
         ),
