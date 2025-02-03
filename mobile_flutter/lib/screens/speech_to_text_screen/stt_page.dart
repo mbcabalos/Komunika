@@ -19,6 +19,8 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
   late SpeechToTextBloc speechToTextBloc;
   final TextEditingController _textController = TextEditingController();
   GlobalKey _microphoneKey = GlobalKey();
+  GlobalKey _textFieldKey = GlobalKey();
+  GlobalKey _doneButtonKey = GlobalKey();
   bool _isShowcaseSeen = false;
 
   @override
@@ -33,6 +35,25 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ShowCaseWidget.of(context).startShowCase([_microphoneKey]);
           PreferencesUtils.storeShowcaseSeen('microphoneShowcase', true);
+        });
+      }
+    });
+
+    PreferencesUtils.getShowcaseSeen('textfieldShowcase').then((seen) {
+      if (!seen) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          // You can start both showcases here if needed, or separately later
+          ShowCaseWidget.of(context).startShowCase([_textFieldKey]);
+          PreferencesUtils.storeShowcaseSeen('textfieldShowcase', true);
+        });
+      }
+    });
+
+    PreferencesUtils.getShowcaseSeen('doneButtonShowcase').then((seen) {
+      if (!seen) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ShowCaseWidget.of(context).startShowCase([_doneButtonKey]);
+          PreferencesUtils.storeShowcaseSeen('doneButtonShowcase', true);
         });
       }
     });
@@ -123,32 +144,46 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
             SizedBox(
               width: phoneWidth,
               height: phoneHeight,
-              child: TextField(
-                controller: _textController,
-                style: const TextStyle(color: Colors.black, fontSize: 20),
-                decoration: const InputDecoration(
-                  hintText: 'Message Here',
-                  border: OutlineInputBorder(),
-                  fillColor: ColorsPalette.card,
-                  filled: true,
+              child: Showcase(
+                  key: _textFieldKey,
+                  description: "Wait for your message to be translated",
+                  child: SizedBox(
+                    width: phoneWidth,
+                    height: phoneHeight,
+                    child: TextField(
+                      controller: _textController,
+                      style: const TextStyle(color: Colors.black, fontSize: 20),
+                      decoration: const InputDecoration(
+                        hintText: 'Message Here',
+                        border: OutlineInputBorder(),
+                        fillColor: ColorsPalette.card,
+                        filled: true,
+                      ),
+                      textAlignVertical: TextAlignVertical.center,
+                      maxLines: phoneHeight.toInt(),
+                    ),
+                  ),
                 ),
-                textAlignVertical: TextAlignVertical.center,
-                maxLines: phoneHeight.toInt(),
-              ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
+            Showcase(
+              key: _doneButtonKey,
+              description: "Click here to return to the home page",
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
                 backgroundColor: ColorsPalette.accent,
                 minimumSize: Size(MediaQuery.of(context).size.width * 0.3, 50),
-              ),
-              onPressed: () {},
-              child: const Text(
-                "Done",
-                style: TextStyle(
-                    fontFamily: Fonts.main,
-                    fontSize: 20,
-                    color: ColorsPalette.white),
+                ),
+                onPressed: () {
+                  Navigator.pop(context); // Go back to Home Page
+                },
+                child: const Text(
+                  "Done",
+                  style: TextStyle(
+                  fontFamily: Fonts.main,
+                  fontSize: 20,
+                  color: ColorsPalette.white),
+                ),
               ),
             ),
           ],
