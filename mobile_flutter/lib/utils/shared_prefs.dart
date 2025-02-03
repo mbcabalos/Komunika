@@ -35,4 +35,15 @@ class PreferencesUtils {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(key) ?? false;
   }
+
+  static Future<void> storeSpeechToTextCompleted(bool completed) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('speechToTextCompleted', completed);
+  }
+
+  static Future<bool> getSpeechToTextCompleted() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('speechToTextCompleted') ?? false;
+  }
+
 }

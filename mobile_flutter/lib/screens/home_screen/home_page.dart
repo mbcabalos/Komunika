@@ -30,6 +30,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final List<String> quickSpeechItems = [];
   GlobalKey _speechToTextKey = GlobalKey();
+  GlobalKey _textToSpeechKey = GlobalKey();
   bool _isShowcaseSeen = false;
   String theme = "";
 
@@ -39,14 +40,28 @@ class _HomePageState extends State<HomePage> {
     loadFavorites();
     theme = PreferencesUtils.getTheme().toString();
 
-    PreferencesUtils.getShowcaseSeen('speechToTextShowcase').then((seen) {
-      if (!seen) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ShowCaseWidget.of(context).startShowCase([_speechToTextKey]);
-          PreferencesUtils.storeShowcaseSeen('speechToTextShowcase', true);
+    PreferencesUtils.getSpeechToTextCompleted().then((sttCompleted) {
+      if (!sttCompleted) {
+        PreferencesUtils.getShowcaseSeen('speechToTextShowcase').then((seen) {
+          if (!seen) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ShowCaseWidget.of(context).startShowCase([_speechToTextKey]);
+              PreferencesUtils.storeShowcaseSeen('speechToTextShowcase', true);
+            });
+          }
+        });
+      } else {
+        PreferencesUtils.getShowcaseSeen('textToSpeechShowcase').then((seen) {
+          if (!seen) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ShowCaseWidget.of(context).startShowCase([_textToSpeechKey]);
+              PreferencesUtils.storeShowcaseSeen('textToSpeechShowcase', true);
+            });
+          }
         });
       }
     });
+
   }
 
   Future<void> loadFavorites() async {
@@ -167,24 +182,26 @@ class _HomePageState extends State<HomePage> {
                           ),
                           SizedBox(
                               width: MediaQuery.of(context).size.width * 0.04),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const VoiceMessagePage(),
-                                ),
-                              );
-                            },
-                            child: HomeCatalogsCard(
-                              imagePath: 'assets/icons/text-to-speech.png',
-                              isImagePath: true,
-                              content: 'Text to Speech',
-                              contentSize:
-                                  ResponsiveUtils.getResponsiveFontSize(
-                                      context, 14),
-                              themeProvider: themeProvider,
+                          Showcase(
+                            key: _textToSpeechKey,
+                            description: "Tap here to test text-to-speech functionality",
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const VoiceMessagePage(),
+                                  ),
+                                );
+                              },
+                              child: HomeCatalogsCard(
+                                imagePath: 'assets/icons/text-to-speech.png',
+                                isImagePath: true,
+                                content: 'Text to Speech',
+                                contentSize:
+                                    ResponsiveUtils.getResponsiveFontSize(context, 14),
+                                themeProvider: themeProvider,
+                              ),
                             ),
                           ),
                         ],

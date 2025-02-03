@@ -174,8 +174,11 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                 backgroundColor: ColorsPalette.accent,
                 minimumSize: Size(MediaQuery.of(context).size.width * 0.3, 50),
                 ),
-                onPressed: () {
-                  Navigator.pop(context); // Go back to Home Page
+                onPressed: () async {
+                  await PreferencesUtils.storeSpeechToTextCompleted(true);
+                  if (mounted) {
+                    Navigator.of(context).pop();   
+                  } 
                 },
                 child: const Text(
                   "Done",
