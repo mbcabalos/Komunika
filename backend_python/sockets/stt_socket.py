@@ -16,15 +16,12 @@ def register_transcription_events(socketio):
     @socketio.on("audio_stream")
     def handle_audio_stream(audio_data):
         global audio_buffer
-        print("✅ Received audio chunk!")
-        print(f"📏 Data length: {len(audio_data)} bytes")
 
         # Append new chunk
         audio_buffer.extend(audio_data)
 
         # ✅ Process every 3 seconds of audio
         if len(audio_buffer) >= 16000 * 2 * 3:  
-            print("⏳ Processing 3-second audio chunk...")
 
             try:
                 # Convert raw PCM to WAV
@@ -47,23 +44,24 @@ def register_transcription_events(socketio):
 
                 with wave.open(wav_data, "rb") as wf:
                     while True:
-                        data = wf.readframes(4000)
+                        data = wf.readframes(3000)
                         if len(data) == 0:
                             break
                         if recognizer.AcceptWaveform(data):
                             result = json.loads(recognizer.Result())
-                            print(f"🔍 Intermediate result: {result}")  # Debugging
                             text += " " + result.get("text", "")
 
                 # ✅ Get final text result
                 final_result = json.loads(recognizer.FinalResult())
-                print(f"🔍 Final result: {final_result}")  # Debugging
                 text += " " + final_result.get("text", "")
 
                 text = text.strip() if text.strip() else "[No speech detected]"
 
                 print(f"📝 Transcription: {text}")
-                socketio.emit("transcription_result", {"text": text})
+                if text != "" or text != "[No speech detected]":
+                    socketio.emit("transcription_result", {"text": text})
+                else:
+                    print("Audio is empty")
 
             except Exception as e:
                 print(f"❌ Error processing audio: {e}")

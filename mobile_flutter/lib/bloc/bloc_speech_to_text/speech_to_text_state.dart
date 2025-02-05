@@ -9,22 +9,21 @@ final class SpeechToTextLoadingState extends SpeechToTextState {}
 
 final class SpeechToTextLoadedSuccessState extends SpeechToTextState {}
 
-final class SpeechToTextErrorState extends SpeechToTextState {
-  final String message;
-
-  SpeechToTextErrorState({required this.message});
-}
-
-class SpeechInitial extends SpeechToTextState {}
-
 class SpeechRecording extends SpeechToTextState {}
 
 class SpeechStopped extends SpeechToTextState {}
 
-class SpeechTranscribed extends SpeechToTextState {
+class TranscriptionUpdated extends SpeechToTextState {
   final String text;
-  SpeechTranscribed(this.text);
+
+  TranscriptionUpdated(this.text);
 
   @override
   List<Object> get props => [text];
+}
+
+class SpeechToTextErrorState extends SpeechToTextState {
+  final String message;
+
+  SpeechToTextErrorState({required this.message});
 }
