@@ -25,9 +25,9 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
   @override
   void initState() {
     super.initState();
-    final globalService = GlobalRepositoryImpl();
+    final socketService = SocketService();
 
-    speechToTextBloc = SpeechToTextBloc(globalService);
+    speechToTextBloc = SpeechToTextBloc(socketService);
     _initialize();
     if (!_isShowcaseSeen) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -95,7 +95,8 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                   description: "Tap to start recording",
                   child: GestureDetector(
                     onTap: () async {
-                      speechToTextBloc.add(StartRecording());
+                      speechToTextBloc
+                          .add(StartRecording()); // Trigger start recording
                     },
                     child: Container(
                       width: 200,
@@ -123,17 +124,29 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
             SizedBox(
               width: phoneWidth,
               height: phoneHeight,
-              child: TextField(
-                controller: _textController,
-                style: const TextStyle(color: Colors.black, fontSize: 20),
-                decoration: const InputDecoration(
-                  hintText: 'Message Here',
-                  border: OutlineInputBorder(),
-                  fillColor: ColorsPalette.card,
-                  filled: true,
-                ),
-                textAlignVertical: TextAlignVertical.center,
-                maxLines: phoneHeight.toInt(),
+              child: BlocBuilder<SpeechToTextBloc, SpeechToTextState>(
+                builder: (context, state) {
+                  if (state is TranscriptionUpdated) {
+                    _textController.text += state.text;
+
+                    _textController.selection = TextSelection.fromPosition(
+                        TextPosition(offset: _textController.text.length));
+                  }
+
+                  return TextField(
+                    // readOnly: true,
+                    controller: _textController,
+                    style: const TextStyle(color: Colors.black, fontSize: 20),
+                    decoration: const InputDecoration(
+                      hintText: 'Message Here',
+                      border: OutlineInputBorder(),
+                      fillColor: ColorsPalette.card,
+                      filled: true,
+                    ),
+                    textAlignVertical: TextAlignVertical.center,
+                    maxLines: phoneHeight.toInt(),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 20),

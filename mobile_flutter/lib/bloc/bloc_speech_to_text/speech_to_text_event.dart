@@ -13,10 +13,13 @@ class StartRecording extends SpeechToTextEvent {}
 
 class StopRecording extends SpeechToTextEvent {}
 
-class AudioDataReceived extends SpeechToTextEvent {
-  final String transcript;
-  AudioDataReceived(this.transcript);
+class StartListeningEvent extends SpeechToTextEvent {}
+
+class NewTranscriptionEvent extends SpeechToTextEvent {
+  final String text;
+
+  NewTranscriptionEvent(this.text);
 
   @override
-  List<Object> get props => [transcript];
+  List<Object> get props => [text];
 }

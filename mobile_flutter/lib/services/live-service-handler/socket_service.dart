@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:socket_io_client/socket_io_client.dart' as IO;
@@ -8,8 +9,11 @@ class SocketService {
 
   IO.Socket? socket;
   bool isSocketInitialized = false;
+  Stream<String> get transcriptionStream => _transcriptionController.stream;
 
   SocketService._internal();
+
+  final _transcriptionController = StreamController<String>.broadcast();
 
   Future<void> initSocket() async {
     String serverUrl = 'http://192.168.254.116:5000'; // Your Flask server
@@ -23,7 +27,7 @@ class SocketService {
 
     socket = IO.io(serverUrl, <String, dynamic>{
       'transports': ['websocket'],
-      'autoConnect': false,
+      'autoConnect': true,
     });
 
     socket?.clearListeners();
@@ -32,6 +36,12 @@ class SocketService {
     socket?.onConnect((_) {
       print("✅ Connected to WebSocket Server");
       isSocketInitialized = true;
+    });
+
+    socket?.on("transcription_result", (data) {
+      if (data != null && data["text"] != null) {
+        _transcriptionController.add(data["text"]);
+      }
     });
 
     socket?.onDisconnect((_) {
@@ -43,19 +53,10 @@ class SocketService {
       print("⚠️ Socket Error: $error");
       isSocketInitialized = false;
     });
-
-    socket?.on('transcription_data', (data) {
-      if (data['text'] != null) {
-        print("📝 Transcription: ${data['text']}");
-      } else if (data['error'] != null) {
-        print("❌ Transcription Error: ${data['error']}");
-      }
-    });
   }
 
   Future<void> sendAudio(Uint8List audioChunk) async {
     if (isSocketInitialized) {
-      print("🎤 Sending audio stream...");
       socket?.emit('audio_stream', audioChunk);
     } else {
       print("❌ Socket is not connected yet!");
