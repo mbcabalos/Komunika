@@ -1,32 +1,48 @@
-#  Create a env first by typing python -m venv .venv, Activate the env first using venv\Scripts\activate before using pip install -r flask_modules.txt.
-# To know if you have install the modules type pip freeze and if you added a new modules type pip freeze > flask_modules.txt
-
+import eventlet
+import socket
 from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
 import pyttsx3
 import os
-
 from datetime import datetime
-socketio = SocketIO(cors_allowed_origins="*")
+
+from sockets.stt_socket import register_transcription_events
 
 def create_app():
-    app = Flask(__name__)
-    CORS(app)  # Enable CORS for all routes
+    app = Flask(__name__)  # App instance should only be created here
+    CORS(app)
+
+    # Initialize SocketIO inside the function
+    socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
     # Import and register blueprints
     from controllers.text_to_speech import tts_blueprint
-    from controllers.speech_to_text import stt_blueprint
     app.register_blueprint(tts_blueprint)
-    app.register_blueprint(stt_blueprint)
 
-    return app
+    # Sockets
+    register_transcription_events(socketio)
 
+    @app.route("/")
+    def home():
+        return "Flask SocketIO Server is Running!"
 
+    @socketio.on("connect")
+    def handle_connect():
+        print("Client Connected!")
+        socketio.emit("message", {"data": "Connected Successfully!"})
+
+    @socketio.on("disconnect")
+    def handle_disconnect():
+        print("Client Disconnected!")
+
+    return app, socketio  # Return both app and socketio
 
 if __name__ == '__main__':
-    app = create_app()
-    # Use HTTPS in production
-    # To create a self-signed certificate type openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes
-    #ssl_context=('cert.pem', 'key.pem')
-    app.run(host='0.0.0.0', ssl_context=('cert.pem', 'key.pem')) 
+    app, socketio = create_app()
+    local_ip = socket.gethostbyname(socket.gethostname())
+    print(f"Server running on:")
+    print(f"Local: http://127.0.0.1:5000")
+    print(f"Network: http://{local_ip}:5000 (for mobile access)")
+    eventlet.monkey_patch() 
+    socketio.run(app, debug=True, host="0.0.0.0", port=5000)
