@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
+import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SpeechToTextPage extends StatefulWidget {
   const SpeechToTextPage({super.key});
@@ -24,6 +26,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
   void initState() {
     super.initState();
     final globalService = GlobalRepositoryImpl();
+
     speechToTextBloc = SpeechToTextBloc(globalService);
     _initialize();
     if (!_isShowcaseSeen) {
@@ -92,7 +95,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                   description: "Tap to start recording",
                   child: GestureDetector(
                     onTap: () async {
-                      speechToTextBloc.add(CreateSpeechToTextEvent());
+                      speechToTextBloc.add(StartRecording());
                     },
                     child: Container(
                       width: 200,
