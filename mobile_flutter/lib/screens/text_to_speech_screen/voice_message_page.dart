@@ -10,6 +10,7 @@ import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:komunika/widgets/text_to_speech_widgets/tts_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 class VoiceMessagePage extends StatefulWidget {
@@ -42,20 +43,19 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
     textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
     textToSpeechBloc.add(TextToSpeechLoadingEvent());
     fetchAudioPaths();
+    _checkThenShowcase();
+  }
 
-    PreferencesUtils.getSpeechToTextCompleted().then((sttCompleted) {
-      if (sttCompleted) {
-        PreferencesUtils.getShowcaseSeen('fabVoiceMessageShowcase').then((seen) {
-          if (!seen) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              ShowCaseWidget.of(context).startShowCase([_fabKey]);
-              PreferencesUtils.storeShowcaseSeen('fabVoiceMessageShowcase', true);
-            });
-          }
-        });
-      }
-    });
-    
+  Future<void> _checkThenShowcase() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool pageTwoDone = prefs.getBool('pageTwoDone') ?? false;
+
+    if (!pageTwoDone) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ShowCaseWidget.of(context).startShowCase([_fabKey]);
+        prefs.setBool('pageTwoDone', true); 
+      });
+    }
   }
 
   @override

@@ -6,6 +6,7 @@ import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/widgets/app_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 class SpeechToTextPage extends StatefulWidget {
@@ -21,7 +22,6 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
   GlobalKey _microphoneKey = GlobalKey();
   GlobalKey _textFieldKey = GlobalKey();
   GlobalKey _doneButtonKey = GlobalKey();
-  bool _isShowcaseSeen = false;
 
   @override
   void initState() {
@@ -29,35 +29,19 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
     final globalService = GlobalRepositoryImpl();
     speechToTextBloc = SpeechToTextBloc(globalService);
     _initialize();
-    
-    PreferencesUtils.getShowcaseSeen('microphoneShowcase').then((seen) {
-      if (!seen) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ShowCaseWidget.of(context).startShowCase([_microphoneKey]);
-          PreferencesUtils.storeShowcaseSeen('microphoneShowcase', true);
-        });
-      }
-    });
+    _checkThenShowcase();
+  }
 
-    PreferencesUtils.getShowcaseSeen('textfieldShowcase').then((seen) {
-      if (!seen) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          // You can start both showcases here if needed, or separately later
-          ShowCaseWidget.of(context).startShowCase([_textFieldKey]);
-          PreferencesUtils.storeShowcaseSeen('textfieldShowcase', true);
-        });
-      }
-    });
+  Future<void> _checkThenShowcase() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool pageOneDone = prefs.getBool('pageOneDone') ?? false;
 
-    PreferencesUtils.getShowcaseSeen('doneButtonShowcase').then((seen) {
-      if (!seen) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ShowCaseWidget.of(context).startShowCase([_doneButtonKey]);
-          PreferencesUtils.storeShowcaseSeen('doneButtonShowcase', true);
-        });
-      }
-    });
-
+    if (!pageOneDone) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ShowCaseWidget.of(context).startShowCase([_microphoneKey, _textFieldKey, _doneButtonKey]);
+        prefs.setBool('pageOneDone', true); 
+      });
+    }
   }
 
   Future<void> _initialize() async {
@@ -174,11 +158,8 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                 backgroundColor: ColorsPalette.accent,
                 minimumSize: Size(MediaQuery.of(context).size.width * 0.3, 50),
                 ),
-                onPressed: () async {
-                  await PreferencesUtils.storeSpeechToTextCompleted(true);
-                  if (mounted) {
-                    Navigator.of(context).pop();   
-                  } 
+                onPressed: () {
+                  Navigator.of(context).pop("speechToTextCompleted");
                 },
                 child: const Text(
                   "Done",

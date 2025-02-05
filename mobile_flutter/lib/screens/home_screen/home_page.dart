@@ -31,7 +31,6 @@ class _HomePageState extends State<HomePage> {
   final List<String> quickSpeechItems = [];
   GlobalKey _speechToTextKey = GlobalKey();
   GlobalKey _textToSpeechKey = GlobalKey();
-  bool _isShowcaseSeen = false;
   String theme = "";
 
   @override
@@ -39,29 +38,10 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     loadFavorites();
     theme = PreferencesUtils.getTheme().toString();
-
-    PreferencesUtils.getSpeechToTextCompleted().then((sttCompleted) {
-      if (!sttCompleted) {
-        PreferencesUtils.getShowcaseSeen('speechToTextShowcase').then((seen) {
-          if (!seen) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              ShowCaseWidget.of(context).startShowCase([_speechToTextKey]);
-              PreferencesUtils.storeShowcaseSeen('speechToTextShowcase', true);
-            });
-          }
-        });
-      } else {
-        PreferencesUtils.getShowcaseSeen('textToSpeechShowcase').then((seen) {
-          if (!seen) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              ShowCaseWidget.of(context).startShowCase([_textToSpeechKey]);
-              PreferencesUtils.storeShowcaseSeen('textToSpeechShowcase', true);
-            });
-          }
-        });
-      }
+    PreferencesUtils.resetShowcaseFlags();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ShowCaseWidget.of(context).startShowCase([_speechToTextKey]);
     });
-
   }
 
   Future<void> loadFavorites() async {
@@ -160,14 +140,17 @@ class _HomePageState extends State<HomePage> {
                             description:
                                 "Tap here to test speech to text functionality",
                             child: GestureDetector(
-                              onTap: () {
-                                Navigator.push(
+                              onTap: () async {
+                                final result = await Navigator.push(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const SpeechToTextPage(),
-                                  ),
+                                  MaterialPageRoute(builder: (context) => const SpeechToTextPage()),
                                 );
+                                if (result == "speechToTextCompleted") {
+                                  print("Speech to Text process completed!");
+                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    ShowCaseWidget.of(context).startShowCase([_textToSpeechKey]);
+                                  });
+                                }
                               },
                               child: HomeCatalogsCard(
                                 imagePath: 'assets/icons/word-of-mouth.png',
@@ -240,7 +223,7 @@ class _HomePageState extends State<HomePage> {
                         onTap: (audioName) {
                           playAudio(audioName);
                         },
-themeProvider: themeProvider,  
+                      themeProvider: themeProvider,  
                       ),
                       SizedBox(
                           height: MediaQuery.of(context).size.height * 0.04),

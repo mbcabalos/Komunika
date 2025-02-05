@@ -26,24 +26,11 @@ class PreferencesUtils {
     return prefs.getString('theme').toString();
   }
 
-  static Future<void> storeShowcaseSeen(String key, bool seen) async {
+   static Future<void> resetShowcaseFlags() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(key, seen);
-  }
-
-  static Future<bool> getShowcaseSeen(String key) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(key) ?? false;
-  }
-
-  static Future<void> storeSpeechToTextCompleted(bool completed) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('speechToTextCompleted', completed);
-  }
-
-  static Future<bool> getSpeechToTextCompleted() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('speechToTextCompleted') ?? false;
+      await prefs.remove('pageOneDone'); // Remove specific flags
+      await prefs.remove('pageTwoDone');
+      await prefs.remove('pageThreeDone');
   }
 
 }
