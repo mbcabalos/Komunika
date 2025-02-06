@@ -6,6 +6,7 @@ import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/widgets/app_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -20,6 +21,8 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
   late SpeechToTextBloc speechToTextBloc;
   final TextEditingController _textController = TextEditingController();
   GlobalKey _microphoneKey = GlobalKey();
+  GlobalKey _textFieldKey = GlobalKey();
+  GlobalKey _doneButtonKey = GlobalKey();
   bool _isShowcaseSeen = false;
 
   @override
@@ -29,10 +32,17 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
 
     speechToTextBloc = SpeechToTextBloc(socketService);
     _initialize();
-    if (!_isShowcaseSeen) {
+    _checkThenShowcase();
+  }
+
+  Future<void> _checkThenShowcase() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool pageOneDone = prefs.getBool('pageOneDone') ?? false;
+
+    if (!pageOneDone) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ShowCaseWidget.of(context).startShowCase([_microphoneKey]);
-        _isShowcaseSeen = true;
+        ShowCaseWidget.of(context).startShowCase([_microphoneKey, _textFieldKey, _doneButtonKey]);
+        prefs.setBool('pageOneDone', true); 
       });
     }
   }
@@ -133,35 +143,44 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                         TextPosition(offset: _textController.text.length));
                   }
 
-                  return TextField(
-                    // readOnly: true,
-                    controller: _textController,
-                    style: const TextStyle(color: Colors.black, fontSize: 20),
-                    decoration: const InputDecoration(
-                      hintText: 'Message Here',
-                      border: OutlineInputBorder(),
-                      fillColor: ColorsPalette.card,
-                      filled: true,
+                  return Showcase(
+                  key: _textFieldKey,
+                  description: "Wait for your message to be translated",
+                  child: TextField(
+                      controller: _textController,
+                      style: const TextStyle(color: Colors.black, fontSize: 20),
+                      decoration: const InputDecoration(
+                        hintText: 'Message Here',
+                        border: OutlineInputBorder(),
+                        fillColor: ColorsPalette.card,
+                        filled: true,
+                      ),
+                      textAlignVertical: TextAlignVertical.center,
+                      maxLines: phoneHeight.toInt(),
                     ),
-                    textAlignVertical: TextAlignVertical.center,
-                    maxLines: phoneHeight.toInt(),
                   );
                 },
               ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
+            Showcase(
+              key: _doneButtonKey,
+              description: "Click here to return to the home page",
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
                 backgroundColor: ColorsPalette.accent,
                 minimumSize: Size(MediaQuery.of(context).size.width * 0.3, 50),
-              ),
-              onPressed: () {},
-              child: const Text(
-                "Done",
-                style: TextStyle(
-                    fontFamily: Fonts.main,
-                    fontSize: 20,
-                    color: ColorsPalette.white),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop("speechToTextCompleted");
+                },
+                child: const Text(
+                  "Done",
+                  style: TextStyle(
+                  fontFamily: Fonts.main,
+                  fontSize: 20,
+                  color: ColorsPalette.white),
+                ),
               ),
             ),
           ],
