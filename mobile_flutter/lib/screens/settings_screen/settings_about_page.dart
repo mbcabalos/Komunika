@@ -128,7 +128,8 @@ class AboutPage extends StatelessWidget {
                       assetPath: 'assets/icons/communication.png',
                       themeProvider: themeProvider,
                       onPressed: () {
-                        // Open website link
+                        launchUrl(
+                            Uri.parse('https://www.facebook.com/yourpage'));
                       },
                       size: ResponsiveUtils.getResponsiveSize(context, 25),
                     ),
@@ -138,7 +139,7 @@ class AboutPage extends StatelessWidget {
                       themeProvider: themeProvider,
                       onPressed: () {
                         launchUrl(
-                            Uri.parse('https://www.facebook.com/yourpage'));
+                            Uri.parse('https://github.com/Yakage/Komunika'));
                       },
                       size: ResponsiveUtils.getResponsiveSize(context, 25),
                     ),

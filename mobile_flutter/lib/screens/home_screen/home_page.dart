@@ -1,9 +1,9 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
-import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/shared_prefs.dart';
@@ -18,7 +18,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -37,6 +36,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    loadTheme();
     loadFavorites();
     theme = PreferencesUtils.getTheme().toString();
     PreferencesUtils.resetShowcaseFlags();
@@ -45,13 +45,16 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> loadTheme() async {
+    String storedTheme = await PreferencesUtils.getTheme();
+    print("Stored Theme: $storedTheme"); // Debugging line
+    setState(() {
+      theme = storedTheme;
+    });
+  }
+
   Future<void> loadFavorites() async {
-    theme = await PreferencesUtils.getTheme();
-    print('Current Theme: $theme');
     // Get the database path
-    final databasePath = await getDatabasesPath();
-    //final path = join(databasePath, 'audio_database.db');
-    //will now use p.join
     String path = p.join(await getDatabasesPath(), 'audio_database.db');
     final database = await openDatabase(path);
     final List<Map<String, dynamic>> favorites = await database.query(
@@ -78,6 +81,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
+        theme = themeProvider.selectedTheme;
         return Scaffold(
           backgroundColor: themeProvider.themeData.primaryColor,
           appBar: AppBarWidget(
@@ -144,12 +148,17 @@ class _HomePageState extends State<HomePage> {
                               onTap: () async {
                                 final result = await Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const SpeechToTextPage()),
+                                  MaterialPageRoute(
+                                      builder: (context) => SpeechToTextPage(
+                                            themeProvider: themeProvider,
+                                          )),
                                 );
                                 if (result == "speechToTextCompleted") {
                                   print("Speech to Text process completed!");
-                                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                                    ShowCaseWidget.of(context).startShowCase([_textToSpeechKey]);
+                                  WidgetsBinding.instance
+                                      .addPostFrameCallback((_) {
+                                    ShowCaseWidget.of(context)
+                                        .startShowCase([_textToSpeechKey]);
                                   });
                                 }
                               },
@@ -168,13 +177,16 @@ class _HomePageState extends State<HomePage> {
                               width: MediaQuery.of(context).size.width * 0.04),
                           Showcase(
                             key: _textToSpeechKey,
-                            description: "Tap here to test text-to-speech functionality",
+                            description:
+                                "Tap here to test text-to-speech functionality",
                             child: GestureDetector(
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const VoiceMessagePage(),
+                                    builder: (context) => VoiceMessagePage(
+                                      themeProvider: themeProvider,
+                                    ),
                                   ),
                                 );
                               },
@@ -183,7 +195,8 @@ class _HomePageState extends State<HomePage> {
                                 isImagePath: true,
                                 content: 'Text to Speech',
                                 contentSize:
-                                    ResponsiveUtils.getResponsiveFontSize(context, 14),
+                                    ResponsiveUtils.getResponsiveFontSize(
+                                        context, 14),
                                 themeProvider: themeProvider,
                               ),
                             ),
@@ -224,7 +237,7 @@ class _HomePageState extends State<HomePage> {
                         onTap: (audioName) {
                           playAudio(audioName);
                         },
-themeProvider: themeProvider,  
+                        themeProvider: themeProvider,
                       ),
                       SizedBox(
                           height: MediaQuery.of(context).size.height * 0.04),

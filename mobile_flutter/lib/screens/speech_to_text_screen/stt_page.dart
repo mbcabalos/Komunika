@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
-import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
+import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SpeechToTextPage extends StatefulWidget {
-  const SpeechToTextPage({super.key});
+  final ThemeProvider themeProvider;
+  const SpeechToTextPage({super.key, required this.themeProvider});
 
   @override
   State<SpeechToTextPage> createState() => SpeechToTextPageState();
@@ -41,8 +41,9 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
 
     if (!pageOneDone) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ShowCaseWidget.of(context).startShowCase([_microphoneKey, _textFieldKey, _doneButtonKey]);
-        prefs.setBool('pageOneDone', true); 
+        ShowCaseWidget.of(context)
+            .startShowCase([_microphoneKey, _textFieldKey, _doneButtonKey]);
+        prefs.setBool('pageOneDone', true);
       });
     }
   }
@@ -56,7 +57,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
     return BlocProvider<SpeechToTextBloc>(
       create: (context) => speechToTextBloc,
       child: Scaffold(
-        backgroundColor: ColorsPalette.background,
+        backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
           title: 'Speech to text',
           titleSize: getResponsiveFontSize(context, 20),
@@ -75,11 +76,11 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
             if (state is SpeechToTextLoadingState) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is SpeechToTextLoadedSuccessState) {
-              return _buildContent();
+              return _buildContent(widget.themeProvider);
             } else if (state is SpeechToTextErrorState) {
               return const Text('Error processing text to speech!');
             } else {
-              return _buildContent();
+              return _buildContent(widget.themeProvider);
             }
           },
         ),
@@ -87,7 +88,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(ThemeProvider themeProvider) {
     final double phoneHeight = MediaQuery.of(context).size.height * 0.5;
     final double phoneWidth = MediaQuery.of(context).size.width * 0.9;
     return RefreshIndicator.adaptive(
@@ -144,15 +145,18 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                   }
 
                   return Showcase(
-                  key: _textFieldKey,
-                  description: "Wait for your message to be translated",
-                  child: TextField(
+                    key: _textFieldKey,
+                    description: "Wait for your message to be translated",
+                    child: TextField(
                       controller: _textController,
-                      style: const TextStyle(color: Colors.black, fontSize: 20),
-                      decoration: const InputDecoration(
+                      style: TextStyle(
+                          color: themeProvider
+                              .themeData.textTheme.bodyMedium?.color,
+                          fontSize: 20),
+                      decoration: InputDecoration(
                         hintText: 'Message Here',
-                        border: OutlineInputBorder(),
-                        fillColor: ColorsPalette.card,
+                        border: const OutlineInputBorder(),
+                        fillColor: themeProvider.themeData.cardColor,
                         filled: true,
                       ),
                       textAlignVertical: TextAlignVertical.center,
@@ -168,18 +172,19 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
               description: "Click here to return to the home page",
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                backgroundColor: ColorsPalette.accent,
-                minimumSize: Size(MediaQuery.of(context).size.width * 0.3, 50),
+                  backgroundColor: themeProvider.themeData.primaryColor,
+                  minimumSize:
+                      Size(MediaQuery.of(context).size.width * 0.3, 50),
                 ),
                 onPressed: () {
                   Navigator.of(context).pop("speechToTextCompleted");
                 },
-                child: const Text(
+                child:  Text(
                   "Done",
                   style: TextStyle(
-                  fontFamily: Fonts.main,
-                  fontSize: 20,
-                  color: ColorsPalette.white),
+                      fontFamily: Fonts.main,
+                      fontSize: 20,
+                      color: themeProvider.themeData.textTheme.bodyMedium?.color),
                 ),
               ),
             ),
