@@ -16,7 +16,8 @@ class SocketService {
   final _transcriptionController = StreamController<String>.broadcast();
 
   Future<void> initSocket() async {
-    String serverUrl = 'http://192.168.254.116:5000'; // Your Flask server
+    // String serverUrl = 'http://192.168.254.116:5000'; // David server
+    String serverUrl = 'http://192.168.1.133:5000'; // Benedict server
 
     if (socket != null && isSocketInitialized) {
       print("✅ Socket already initialized!");

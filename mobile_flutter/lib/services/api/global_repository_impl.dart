@@ -8,7 +8,8 @@ import 'package:komunika/services/repositories/global_repository.dart';
 import 'package:path_provider/path_provider.dart';
 
 class GlobalRepositoryImpl extends GlobalRepository {
-  final baseURL = "http://192.168.254.116:5000/api";
+  // final baseURL = "http://192.168.254.116:5000/api"; // David
+  final baseURL = "http://192.168.1.133:5000/api"; // BEnedict
   @override
   Future<void> sendTextToSpeech(String text, String title, bool save) async {
     try {
@@ -19,9 +20,6 @@ class GlobalRepositoryImpl extends GlobalRepository {
       final client = IOClient(ioClient);
 
       final response = await client.post(
-        // Uri.parse('https://127.0.0.1:5000/api/text-to-speech'),
-        // Uri.parse('https://192.168.1.133:5000/api/text-to-speech'),
-        // Uri.parse('https://192.168.254.116:5000/api/text-to-speech'), //David Endpoint
         Uri.parse("$baseURL/text-to-speech"),
         headers: {HttpHeaders.contentTypeHeader: 'application/json'},
         body: '{"text": "$text"}',

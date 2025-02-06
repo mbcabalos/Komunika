@@ -6,8 +6,17 @@ from flask_socketio import SocketIO
 from vosk import Model, KaldiRecognizer
 
 socketio = SocketIO()
-vosk_model_path = "models/vosk-model-tl-ph-generic-0.6"  # Path to the downloaded Vosk model
-model = Model(vosk_model_path)
+print("Hello")
+from vosk import Model
+
+vosk_model_path = r"D:\VS Code for Flutter\Large Project\Komunika\backend_python\models\vosk-model-tl-ph-generic-0.6"
+
+try:
+    model = Model(vosk_model_path)
+    print("✅ Model loaded successfully!")
+except Exception as e:
+    print(f"❌ Model loading failed: {e}")
+
 
 recognizer = sr.Recognizer()
 audio_buffer = bytearray()  # ✅ Collect chunks in a buffer

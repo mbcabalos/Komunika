@@ -1,3 +1,4 @@
+audioop-lts==0.2.1
 bidict==0.23.1
 blinker==1.9.0
 certifi==2024.12.14
@@ -12,7 +13,6 @@ Flask==3.1.0
 Flask-Cors==5.0.0
 Flask-SocketIO==5.5.1
 greenlet==3.1.1
-gTTS==2.5.4
 h11==0.14.0
 idna==3.10
 itsdangerous==2.2.0
@@ -27,8 +27,12 @@ pywin32==308
 requests==2.32.3
 simple-websocket==1.1.0
 sounddevice==0.5.1
+SpeechRecognition==3.14.1
 srt==3.5.3
+standard-aifc==3.13.0
+standard-chunk==3.13.0
 tqdm==4.67.1
+typing_extensions==4.12.2
 urllib3==2.3.0
 vosk==0.3.45
 websockets==14.2
