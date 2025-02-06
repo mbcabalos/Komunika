@@ -8,6 +8,8 @@ import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/app_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class TextToSpeechScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
@@ -22,6 +24,10 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   final TextEditingController _textController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   bool save = false;
+  GlobalKey _titleKey = GlobalKey();
+  GlobalKey _typeSomethingKey = GlobalKey();
+  GlobalKey _soundKey = GlobalKey();
+  GlobalKey _saveKey = GlobalKey();
 
   @override
   void initState() {
@@ -30,6 +36,20 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     final databaseHelper = DatabaseHelper();
     textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
     _initialize();
+    _checkThenShowcase();
+  }
+
+  Future<void> _checkThenShowcase() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool pageTwoDone = prefs.getBool('pageThreeDone') ?? false;
+
+    if (!pageTwoDone) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ShowCaseWidget.of(context)
+            .startShowCase([_titleKey, _typeSomethingKey, _soundKey, _saveKey]);
+        prefs.setBool('pageThreeDone', true);
+      });
+    }
   }
 
   Future<void> _initialize() async {
@@ -86,36 +106,39 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
               height: phoneHeight,
               child: Column(
                 children: [
-                  TextField(
-                    controller: _titleController,
-                    style: TextStyle(
-                        color:
-                            themeProvider.themeData.textTheme.bodyMedium?.color,
-                        fontSize: 20),
-                    decoration: InputDecoration(
-                      hintText: 'Title',
-                      border: const OutlineInputBorder(),
-                      fillColor: themeProvider.themeData.cardColor,
-                      filled: true,
+                  Showcase(
+                    key: _titleKey,
+                    description: "Enter a title for your speech.",
+                    child: TextField(
+                      controller: _titleController,
+                      decoration: InputDecoration(
+                        hintText: 'Title',
+                        border: const OutlineInputBorder(),
+                        fillColor: themeProvider.themeData.cardColor,
+                        filled: true,
+                      ),
                     ),
-                    textAlignVertical: TextAlignVertical.center,
-                    maxLines: 1,
                   ),
                   const SizedBox(height: 10),
-                  TextField(
-                    controller: _textController,
-                    style: TextStyle(
-                        color:
-                            themeProvider.themeData.textTheme.bodyMedium?.color,
-                        fontSize: 20),
-                    decoration: InputDecoration(
-                      hintText: 'Type Something .....',
-                      border: const OutlineInputBorder(),
-                      fillColor: themeProvider.themeData.cardColor,
-                      filled: true,
+                  Showcase(
+                    key: _typeSomethingKey,
+                    description:
+                        "Type the message you want to convert to speech.",
+                    child: TextField(
+                      controller: _textController,
+                      style: TextStyle(
+                          color: themeProvider
+                              .themeData.textTheme.bodyMedium?.color,
+                          fontSize: 20),
+                      decoration: InputDecoration(
+                        hintText: 'Type Something .....',
+                        border: const OutlineInputBorder(),
+                        fillColor: themeProvider.themeData.cardColor,
+                        filled: true,
+                      ),
+                      textAlignVertical: TextAlignVertical.center,
+                      maxLines: 12,
                     ),
-                    textAlignVertical: TextAlignVertical.center,
-                    maxLines: 12,
                   ),
                 ],
               ),
@@ -130,25 +153,29 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                       shape: BoxShape.circle,
                       color: themeProvider.themeData.primaryColor,
                     ),
-                    child: IconButton(
-                      icon: Image.asset(
-                        'assets/icons/speaker-filled-audio-tool.png',
-                        height: MediaQuery.of(context).size.width * 0.10,
-                        width: MediaQuery.of(context).size.width * 0.10,
+                    child: Showcase(
+                      key: _soundKey,
+                      description: "Tap here to hear the speech output.",
+                      child: IconButton(
+                        icon: Image.asset(
+                          'assets/icons/speaker-filled-audio-tool.png',
+                          height: MediaQuery.of(context).size.width * 0.10,
+                          width: MediaQuery.of(context).size.width * 0.10,
+                        ),
+                        onPressed: () {
+                          final title = _titleController.text.trim();
+                          final text = _textController.text.trim();
+                          if (text.isNotEmpty) {
+                            textToSpeechBloc.add(CreateTextToSpeechEvent(
+                                text: text, title: title, save: false));
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Text field is empty!')),
+                            );
+                          }
+                        },
                       ),
-                      onPressed: () {
-                        final title = _titleController.text.trim();
-                        final text = _textController.text.trim();
-                        if (text.isNotEmpty) {
-                          textToSpeechBloc.add(CreateTextToSpeechEvent(
-                              text: text, title: title, save: false));
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Text field is empty!')),
-                          );
-                        }
-                      },
                     ),
                   ),
                   Container(
@@ -156,26 +183,30 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                       shape: BoxShape.circle,
                       color: themeProvider.themeData.primaryColor,
                     ),
-                    child: IconButton(
-                      icon: Image.asset(
-                        'assets/icons/diskette.png',
-                        height: MediaQuery.of(context).size.width * 0.10,
-                        width: MediaQuery.of(context).size.width * 0.10,
+                    child: Showcase(
+                      key: _saveKey,
+                      description: "Tap here to save the generated speech.",
+                      child: IconButton(
+                        icon: Image.asset(
+                          'assets/icons/diskette.png',
+                          height: MediaQuery.of(context).size.width * 0.10,
+                          width: MediaQuery.of(context).size.width * 0.10,
+                        ),
+                        onPressed: () {
+                          final title = _titleController.text.trim();
+                          final text = _textController.text.trim();
+                          if (text.isNotEmpty) {
+                            textToSpeechBloc.add(CreateTextToSpeechEvent(
+                                text: text, title: title, save: true));
+                            Navigator.pop(context, true);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Text field is empty!')),
+                            );
+                          }
+                        },
                       ),
-                      onPressed: () {
-                        final title = _titleController.text.trim();
-                        final text = _textController.text.trim();
-                        if (text.isNotEmpty) {
-                          textToSpeechBloc.add(CreateTextToSpeechEvent(
-                              text: text, title: title, save: true));
-                          Navigator.pop(context, true);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Text field is empty!')),
-                          );
-                        }
-                      },
                     ),
                   ),
                 ],

@@ -25,4 +25,12 @@ class PreferencesUtils {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('theme').toString();
   }
+
+  static Future<void> resetShowcaseFlags() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove('pageOneDone'); // Remove specific flags
+      await prefs.remove('pageTwoDone');
+      await prefs.remove('pageThreeDone');
+  }
+  
 }

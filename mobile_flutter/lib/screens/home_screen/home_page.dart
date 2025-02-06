@@ -29,6 +29,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final List<String> quickSpeechItems = [];
   GlobalKey _speechToTextKey = GlobalKey();
+  GlobalKey _textToSpeechKey = GlobalKey();
   bool _isShowcaseSeen = false;
   String theme = "";
 
@@ -37,12 +38,11 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     loadTheme();
     loadFavorites();
-    if (!_isShowcaseSeen) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ShowCaseWidget.of(context).startShowCase([_speechToTextKey]);
-        _isShowcaseSeen = true;
-      });
-    }
+    theme = PreferencesUtils.getTheme().toString();
+    PreferencesUtils.resetShowcaseFlags();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ShowCaseWidget.of(context).startShowCase([_speechToTextKey]);
+    });
   }
 
   Future<void> loadTheme() async {
@@ -145,15 +145,22 @@ class _HomePageState extends State<HomePage> {
                             description:
                                 "Tap here to test speech to text functionality",
                             child: GestureDetector(
-                              onTap: () {
-                                Navigator.push(
+                              onTap: () async {
+                                final result = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => SpeechToTextPage(
-                                      themeProvider: themeProvider,
-                                    ),
-                                  ),
+                                      builder: (context) => SpeechToTextPage(
+                                            themeProvider: themeProvider,
+                                          )),
                                 );
+                                if (result == "speechToTextCompleted") {
+                                  print("Speech to Text process completed!");
+                                  WidgetsBinding.instance
+                                      .addPostFrameCallback((_) {
+                                    ShowCaseWidget.of(context)
+                                        .startShowCase([_textToSpeechKey]);
+                                  });
+                                }
                               },
                               child: HomeCatalogsCard(
                                 imagePath: 'assets/icons/word-of-mouth.png',
@@ -168,25 +175,30 @@ class _HomePageState extends State<HomePage> {
                           ),
                           SizedBox(
                               width: MediaQuery.of(context).size.width * 0.04),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => VoiceMessagePage(
-                                    themeProvider: themeProvider,
+                          Showcase(
+                            key: _textToSpeechKey,
+                            description:
+                                "Tap here to test text-to-speech functionality",
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => VoiceMessagePage(
+                                      themeProvider: themeProvider,
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                            child: HomeCatalogsCard(
-                              imagePath: 'assets/icons/text-to-speech.png',
-                              isImagePath: true,
-                              content: 'Text to Speech',
-                              contentSize:
-                                  ResponsiveUtils.getResponsiveFontSize(
-                                      context, 14),
-                              themeProvider: themeProvider,
+                                );
+                              },
+                              child: HomeCatalogsCard(
+                                imagePath: 'assets/icons/text-to-speech.png',
+                                isImagePath: true,
+                                content: 'Text to Speech',
+                                contentSize:
+                                    ResponsiveUtils.getResponsiveFontSize(
+                                        context, 14),
+                                themeProvider: themeProvider,
+                              ),
                             ),
                           ),
                         ],
