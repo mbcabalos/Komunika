@@ -56,7 +56,9 @@ class HomeQuickSpeechCard extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const VoiceMessagePage(),
+                        builder: (context) => VoiceMessagePage(
+                          themeProvider: themeProvider,
+                        ),
                       ),
                     );
                   }, // Callback when the button is pressed

@@ -5,12 +5,14 @@ import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
+import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SpeechToTextPage extends StatefulWidget {
-  const SpeechToTextPage({super.key});
+  final ThemeProvider themeProvider;
+  const SpeechToTextPage({super.key, required this.themeProvider});
 
   @override
   State<SpeechToTextPage> createState() => SpeechToTextPageState();
@@ -46,7 +48,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
     return BlocProvider<SpeechToTextBloc>(
       create: (context) => speechToTextBloc,
       child: Scaffold(
-        backgroundColor: ColorsPalette.background,
+        backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
           title: 'Speech to text',
           titleSize: getResponsiveFontSize(context, 20),
@@ -137,10 +139,10 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                     // readOnly: true,
                     controller: _textController,
                     style: const TextStyle(color: Colors.black, fontSize: 20),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Message Here',
-                      border: OutlineInputBorder(),
-                      fillColor: ColorsPalette.card,
+                      border: const OutlineInputBorder(),
+                      fillColor: widget.themeProvider.themeData.cardColor,
                       filled: true,
                     ),
                     textAlignVertical: TextAlignVertical.center,
@@ -152,7 +154,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
             const SizedBox(height: 20),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: ColorsPalette.accent,
+                backgroundColor: widget.themeProvider.themeData.primaryColor,
                 minimumSize: Size(MediaQuery.of(context).size.width * 0.3, 50),
               ),
               onPressed: () {},

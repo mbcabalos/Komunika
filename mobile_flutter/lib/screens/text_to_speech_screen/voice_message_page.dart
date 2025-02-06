@@ -7,11 +7,13 @@ import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/colors.dart';
+import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:komunika/widgets/text_to_speech_widgets/tts_card.dart';
 
 class VoiceMessagePage extends StatefulWidget {
-  const VoiceMessagePage({super.key});
+  final ThemeProvider themeProvider;
+  const VoiceMessagePage({super.key, required this.themeProvider});
 
   @override
   State<VoiceMessagePage> createState() => VoiceMessagePageState();
@@ -47,7 +49,7 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
     return BlocProvider<TextToSpeechBloc>(
       create: (context) => textToSpeechBloc,
       child: Scaffold(
-        backgroundColor: ColorsPalette.background,
+        backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
           title: 'Text to Speech',
           titleSize: getResponsiveFontSize(context, 20),
@@ -57,12 +59,14 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
         floatingActionButton: Padding(
           padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
           child: FloatingActionButton(
-            backgroundColor: ColorsPalette.accent,
+            backgroundColor: widget.themeProvider.themeData.primaryColor,
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const TextToSpeechScreen(),
+                  builder: (context) => TextToSpeechScreen(
+                    themeProvider: widget.themeProvider,
+                  ),
                 ),
               );
             },
@@ -86,11 +90,11 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
             if (state is TextToSpeechLoadingState) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is TextToSpeechLoadedSuccessState) {
-              return _buildContent(phoneHeight);
+              return _buildContent(phoneHeight, widget.themeProvider);
             } else if (state is TextToSpeechErrorState) {
               return const Text('Error processing text to speech!');
             } else {
-              return _buildContent(phoneHeight);
+              return _buildContent(phoneHeight, widget.themeProvider);
             }
           },
         ),
@@ -98,7 +102,7 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
     );
   }
 
-  Widget _buildContent(double phoneHeight) {
+  Widget _buildContent(double phoneHeight, ThemeProvider themeProvider) {
     return Center(
       child: Column(
         children: [
@@ -134,6 +138,7 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
                           onLongPress: () {
                             _showOptionsMenu(context, audioPath, favorites);
                           },
+                          themeProvider: themeProvider,
                         ),
                       );
                     },

@@ -6,11 +6,12 @@ import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/colors.dart';
-import 'package:komunika/utils/fonts.dart';
+import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/app_bar.dart';
 
 class TextToSpeechScreen extends StatefulWidget {
-  const TextToSpeechScreen({super.key});
+  final ThemeProvider themeProvider;
+  const TextToSpeechScreen({super.key, required this.themeProvider});
 
   @override
   State<TextToSpeechScreen> createState() => _TextToSpeechScreenState();
@@ -40,7 +41,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     return BlocProvider<TextToSpeechBloc>(
       create: (context) => textToSpeechBloc,
       child: Scaffold(
-        backgroundColor: ColorsPalette.background,
+        backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
           title: 'Text to Speech',
           titleSize: getResponsiveFontSize(context, 20),
@@ -59,11 +60,11 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
             if (state is TextToSpeechLoadingState) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is TextToSpeechLoadedSuccessState) {
-              return _buildContent();
+              return _buildContent(widget.themeProvider);
             } else if (state is TextToSpeechErrorState) {
               return const Text('Error processing text to speech!');
             } else {
-              return _buildContent();
+              return _buildContent(widget.themeProvider);
             }
           },
         ),
@@ -71,7 +72,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(ThemeProvider themeProvider) {
     final double phoneHeight = MediaQuery.of(context).size.height * 0.6;
     final double phoneWidth = MediaQuery.of(context).size.width * 0.9;
     return RefreshIndicator.adaptive(
@@ -87,11 +88,14 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                 children: [
                   TextField(
                     controller: _titleController,
-                    style: const TextStyle(color: Colors.black, fontSize: 20),
-                    decoration: const InputDecoration(
+                    style: TextStyle(
+                        color:
+                            themeProvider.themeData.textTheme.bodyMedium?.color,
+                        fontSize: 20),
+                    decoration: InputDecoration(
                       hintText: 'Title',
-                      border: OutlineInputBorder(),
-                      fillColor: ColorsPalette.card,
+                      border: const OutlineInputBorder(),
+                      fillColor: themeProvider.themeData.cardColor,
                       filled: true,
                     ),
                     textAlignVertical: TextAlignVertical.center,
@@ -100,15 +104,18 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   const SizedBox(height: 10),
                   TextField(
                     controller: _textController,
-                    style: const TextStyle(color: Colors.black, fontSize: 20),
-                    decoration: const InputDecoration(
+                    style: TextStyle(
+                        color:
+                            themeProvider.themeData.textTheme.bodyMedium?.color,
+                        fontSize: 20),
+                    decoration: InputDecoration(
                       hintText: 'Type Something .....',
-                      border: OutlineInputBorder(),
-                      fillColor: ColorsPalette.card,
+                      border: const OutlineInputBorder(),
+                      fillColor: themeProvider.themeData.cardColor,
                       filled: true,
                     ),
                     textAlignVertical: TextAlignVertical.center,
-                    maxLines: 20,
+                    maxLines: 12,
                   ),
                 ],
               ),
@@ -119,9 +126,9 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.blue,
+                      color: themeProvider.themeData.primaryColor,
                     ),
                     child: IconButton(
                       icon: Image.asset(
@@ -145,9 +152,9 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     ),
                   ),
                   Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.blue,
+                      color: themeProvider.themeData.primaryColor,
                     ),
                     child: IconButton(
                       icon: Image.asset(
