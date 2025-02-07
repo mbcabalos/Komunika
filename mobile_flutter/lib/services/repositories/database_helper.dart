@@ -1,8 +1,19 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseHelper {
   static Database? _database;
+
+  List<Map<String, dynamic>> audioItems = [
+    {'audioName': 'Hello', 'favorites': 1},
+    {'audioName': 'Goodbye', 'favorites': 1},
+    {'audioName': 'Greeting', 'favorites': 1},
+  ];
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -22,9 +33,45 @@ class DatabaseHelper {
         await db.execute(
           'CREATE TABLE audio_items(id INTEGER PRIMARY KEY, audioName TEXT, favorites INTEGER DEFAULT 0)',
         );
+        await moveAudioFiles();
+        await insertAudioItems(audioItems);
       },
       version: 1,
     );
+  }
+
+  Future<void> moveAudioFiles() async {
+    try {
+      // Get the directory to store files in the app's "files" folder
+      Directory? appDocDirectory = await getExternalStorageDirectory();
+      String targetDir = '${appDocDirectory?.path}/audio';
+
+      // Create the target folder if it doesn't exist
+      final targetDirectory = Directory(targetDir);
+      if (!await targetDirectory.exists()) {
+        await targetDirectory.create(recursive: true);
+      }
+
+      // Define the list of audio file paths in assets
+      List<String> assetFiles = [
+        'assets/audio/Goodbye.mp3',
+        'assets/audio/Greeting.mp3',
+        'assets/audio/Hello.mp3',
+      ];
+
+      // Loop through each audio file, read it from assets and write it to the target folder
+      for (String assetFile in assetFiles) {
+        ByteData data = await rootBundle.load(assetFile);
+        List<int> bytes = data.buffer.asUint8List();
+
+        File file = File('$targetDir/${assetFile.split('/').last}');
+        await file.writeAsBytes(bytes);
+        print('File written to: ${file.path}');
+      }
+      insertAudioItems(audioItems);
+    } catch (e) {
+      print("Error moving audio files: $e");
+    }
   }
 
   Future<List<Map<String, dynamic>>> fetchAllAudioItems() async {
@@ -44,6 +91,29 @@ class DatabaseHelper {
       printDatabaseContent();
     } catch (e) {
       print('Error inserting audio item: $e');
+    }
+  }
+
+  Future<void> insertAudioItems(List<Map<String, dynamic>> audioItems) async {
+    try {
+      print("Inserting data...");
+      final db = await database;
+
+      // Loop through each item in the list and insert into the database
+      for (var item in audioItems) {
+        print("Inserting data now");
+        await db.insert(
+          'audio_items',
+          item,
+          conflictAlgorithm:
+              ConflictAlgorithm.replace, // Handle conflicts by replacing
+        );
+      }
+
+      print('Inserted all audio items');
+      printDatabaseContent();
+    } catch (e) {
+      print('Error inserting audio items: $e');
     }
   }
 
