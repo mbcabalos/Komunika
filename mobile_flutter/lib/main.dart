@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:komunika/screens/home_screen/home_page.dart';
 import 'package:komunika/screens/splash_screen/splash_screen.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
+import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:path/path.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -24,7 +25,14 @@ Future<void> main() async {
   );
 }
 
+List<Map<String, dynamic>> audioItems = [
+  {'audioName': 'Hello', 'favorites': 1},
+  {'audioName': 'Goodbye', 'favorites': 1},
+  {'audioName': 'Greet', 'favorites': 1},
+];
+
 Future<void> checkDatabaseExistence() async {
+  DatabaseHelper databaseHelper = DatabaseHelper();
   String path = join(await getDatabasesPath(), 'audio_database.db');
   await deleteDatabase(path);
   bool exists = await databaseExists(path);
@@ -33,6 +41,7 @@ Future<void> checkDatabaseExistence() async {
       db.execute(
           'CREATE TABLE audio_items(id INTEGER PRIMARY KEY, audioName TEXT, favorites INTEGER DEFAULT 0)');
     });
+    databaseHelper.moveAudioFiles();
     print('Database created');
   }
 }
