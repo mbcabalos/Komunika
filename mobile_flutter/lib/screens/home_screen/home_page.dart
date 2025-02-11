@@ -1,9 +1,9 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
+import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/shared_prefs.dart';
@@ -46,7 +46,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-
   Future<void> loadFavorites() async {
     // Get the database path
     String path = p.join(await getDatabasesPath(), 'audio_database.db');
@@ -72,13 +71,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> requestPermissions() async {
-  var status = await Permission.microphone.request();
-  if (status.isDenied || status.isPermanentlyDenied) {
-    print("Microphone permission is required!");
-    // Optionally, guide the user to the app settings to enable it
-    openAppSettings();
+    var status = await Permission.microphone.request();
+    if (status.isDenied || status.isPermanentlyDenied) {
+      print("Microphone permission is required!");
+      // Optionally, guide the user to the app settings to enable it
+      openAppSettings();
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +86,7 @@ class _HomePageState extends State<HomePage> {
         return Scaffold(
           backgroundColor: themeProvider.themeData.primaryColor,
           appBar: AppBarWidget(
-            title: 'Komunika',
+            title: context.translate("home_title"),
             titleSize: ResponsiveUtils.getResponsiveFontSize(context, 35),
             isBackButton: false,
             isSettingButton: true,
@@ -96,19 +95,19 @@ class _HomePageState extends State<HomePage> {
             children: [
               // Header Section
               Container(
-                margin: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
                       width: MediaQuery.of(context).size.width * 0.95,
-                      height: MediaQuery.of(context).size.height * 0.18,
+                      height: MediaQuery.of(context).size.height * 0.15,
                       child: Text(
-                        "Breaking Barriers, \nConnecting \nHearts. ",
+                        context.translate("home_header"),
                         style: TextStyle(
                           fontFamily: Fonts.main,
                           fontSize: ResponsiveUtils.getResponsiveFontSize(
-                              context, 35),
+                              context, 30),
                           color: themeProvider
                               .themeData.textTheme.bodySmall?.color,
                         ),
@@ -116,8 +115,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                     HomeTipsCard(
-                      content:
-                          "“Ensure your phone’s microphone is not obstructed for optimal performance.”",
+                      content: context.translate("home_tips"),
                       contentSize:
                           ResponsiveUtils.getResponsiveFontSize(context, 15),
                       themeProvider: themeProvider,
@@ -144,8 +142,8 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Showcase(
                             key: _speechToTextKey,
-                            description:
-                                "Tap here to test speech to text functionality",
+                            description: context
+                                .translate("home_speech_to_text_description"),
                             child: GestureDetector(
                               onTap: () async {
                                 final result = await Navigator.push(
@@ -167,7 +165,8 @@ class _HomePageState extends State<HomePage> {
                               child: HomeCatalogsCard(
                                 imagePath: 'assets/icons/word-of-mouth.png',
                                 isImagePath: true,
-                                content: 'Speech To Text',
+                                content:
+                                    context.translate("home_speech_to_text"),
                                 contentSize:
                                     ResponsiveUtils.getResponsiveFontSize(
                                         context, 14),
@@ -179,8 +178,8 @@ class _HomePageState extends State<HomePage> {
                               width: MediaQuery.of(context).size.width * 0.04),
                           Showcase(
                             key: _textToSpeechKey,
-                            description:
-                                "Tap here to test text-to-speech functionality",
+                            description: context
+                                .translate("home_text_to_speech_description"),
                             child: GestureDetector(
                               onTap: () {
                                 Navigator.push(
@@ -195,7 +194,8 @@ class _HomePageState extends State<HomePage> {
                               child: HomeCatalogsCard(
                                 imagePath: 'assets/icons/text-to-speech.png',
                                 isImagePath: true,
-                                content: 'Text to Speech',
+                                content:
+                                    context.translate("home_text_to_speech"),
                                 contentSize:
                                     ResponsiveUtils.getResponsiveFontSize(
                                         context, 14),
@@ -213,7 +213,7 @@ class _HomePageState extends State<HomePage> {
                           HomeCatalogsCard(
                             imagePath: 'assets/icons/hello.png',
                             isImagePath: true,
-                            content: 'Sign Transcribe',
+                            content: context.translate("home_sign_transcribe"),
                             contentSize: ResponsiveUtils.getResponsiveFontSize(
                                 context, 14),
                             themeProvider: themeProvider,
@@ -223,7 +223,7 @@ class _HomePageState extends State<HomePage> {
                           HomeCatalogsCard(
                             imagePath: 'assets/icons/transcription.png',
                             isImagePath: true,
-                            content: 'Screen Captions',
+                            content: context.translate("home_screen_captions"),
                             contentSize: ResponsiveUtils.getResponsiveFontSize(
                                 context, 14),
                             themeProvider: themeProvider,
