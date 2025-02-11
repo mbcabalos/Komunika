@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:komunika/main.dart';
 import 'package:komunika/screens/settings_screen/settings_FAQ_page.dart';
 import 'package:komunika/screens/settings_screen/settings_about_page.dart';
+import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +23,19 @@ class SettingPageState extends State<SettingPage> {
   String selectedLanguage = 'English';
 
   @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  void _loadSettings() async {
+    String storedLanguage = await PreferencesUtils.getLanguage();
+    setState(() {
+      selectedLanguage = storedLanguage;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
@@ -28,21 +43,22 @@ class SettingPageState extends State<SettingPage> {
         return Scaffold(
           backgroundColor: themeProvider.themeData.scaffoldBackgroundColor,
           appBar: AppBarWidget(
-          title: 'Settings',
-          titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
-          isBackButton: true,
-          isSettingButton: false,
-        ),
+            title: context.translate('settings_title'),
+            titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+            isBackButton: true,
+            isSettingButton: false,
+          ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionHeader("Appearance", themeProvider),
+                _buildSectionHeader(
+                    context.translate('settings_appearance'), themeProvider),
                 _buildSettingItem(
                   themeProvider: themeProvider,
                   icon: Icons.color_lens,
-                  title: "Theme",
+                  title: context.translate('settings_theme'),
                   trailing: DropdownButton<String>(
                     value: selectedTheme,
                     onChanged: (String? newValue) async {
@@ -51,8 +67,6 @@ class SettingPageState extends State<SettingPage> {
                       });
                       themeProvider.setTheme(newValue.toString());
                       await PreferencesUtils.storeTheme(newValue.toString());
-                      String theme = await PreferencesUtils.getTheme();
-                      print(theme);
                     },
                     items: <String>['Light', 'Dark']
                         .map<DropdownMenuItem<String>>((String value) {
@@ -71,19 +85,25 @@ class SettingPageState extends State<SettingPage> {
                     underline: Container(),
                   ),
                 ),
-                _buildSectionHeader("Language & Region", themeProvider),
+                _buildSectionHeader(
+                    context.translate('settings_language_region'), themeProvider),
                 _buildSettingItem(
                   themeProvider: themeProvider,
                   icon: Icons.language,
-                  title: "Language",
+                  title: context.translate('settings_language'),
                   trailing: DropdownButton<String>(
                     value: selectedLanguage,
-                    onChanged: (String? newValue) {
+                    onChanged: (String? newValue) async {
                       setState(() {
                         selectedLanguage = newValue!;
                       });
+                      await PreferencesUtils.storeLanguage(newValue.toString());
+                      Locale newLocale = newValue == 'Filipino'
+                          ? const Locale('fil', 'PH')
+                          : const Locale('en', 'US');
+                      MyApp.setLocale(context, newLocale);
                     },
-                    items: <String>['English']
+                    items: <String>['English', 'Filipino']
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
@@ -102,11 +122,12 @@ class SettingPageState extends State<SettingPage> {
                     underline: Container(),
                   ),
                 ),
-                _buildSectionHeader("Help & Support", themeProvider),
+                _buildSectionHeader(
+                    context.translate('settings_help_support'), themeProvider),
                 _buildSettingItem(
                   themeProvider: themeProvider,
                   icon: Icons.help_outline,
-                  title: "FAQ",
+                  title: context.translate('settings_faq'),
                   onTap: () {
                     Navigator.push(
                         context,
@@ -117,7 +138,7 @@ class SettingPageState extends State<SettingPage> {
                 _buildSettingItem(
                   themeProvider: themeProvider,
                   icon: Icons.info_outline,
-                  title: "About",
+                  title: context.translate('settings_about'),
                   onTap: () {
                     Navigator.push(
                         context,
@@ -128,7 +149,7 @@ class SettingPageState extends State<SettingPage> {
                 _buildSettingItem(
                   themeProvider: themeProvider,
                   icon: Icons.update,
-                  title: "New Version Available",
+                  title: context.translate('settings_update_available'),
                   trailing: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -137,7 +158,7 @@ class SettingPageState extends State<SettingPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      "Update",
+                      context.translate('settings_update'),
                       style: TextStyle(
                         fontSize:
                             ResponsiveUtils.getResponsiveFontSize(context, 12),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
-import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/app_bar.dart';
@@ -148,6 +147,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                     key: _textFieldKey,
                     description: "Wait for your message to be translated",
                     child: TextField(
+                      readOnly: true,
                       controller: _textController,
                       style: TextStyle(
                           color: themeProvider
@@ -167,27 +167,6 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
               ),
             ),
             const SizedBox(height: 20),
-            Showcase(
-              key: _doneButtonKey,
-              description: "Click here to return to the home page",
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: themeProvider.themeData.primaryColor,
-                  minimumSize:
-                      Size(MediaQuery.of(context).size.width * 0.3, 50),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop("speechToTextCompleted");
-                },
-                child:  Text(
-                  "Done",
-                  style: TextStyle(
-                      fontFamily: Fonts.main,
-                      fontSize: 20,
-                      color: themeProvider.themeData.textTheme.bodyMedium?.color),
-                ),
-              ),
-            ),
           ],
         ),
       ),

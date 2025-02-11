@@ -8,7 +8,19 @@ class PreferencesUtils {
 
   static Future<String> getTheme() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('theme') ?? 'Light'; 
+    return prefs.getString('theme') ?? 'Light';
+  }
+
+  static const String _languageKey = "selectedLanguage";
+
+  static Future<void> storeLanguage(String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_languageKey, language);
+  }
+
+  static Future<String> getLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_languageKey) ?? 'English';
   }
 
   static Future<void> storeWalkthorugh(bool walkthough) async {
@@ -28,9 +40,8 @@ class PreferencesUtils {
 
   static Future<void> resetShowcaseFlags() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.remove('pageOneDone'); // Remove specific flags
-      await prefs.remove('pageTwoDone');
-      await prefs.remove('pageThreeDone');
+    await prefs.remove('pageOneDone'); // Remove specific flags
+    await prefs.remove('pageTwoDone');
+    await prefs.remove('pageThreeDone');
   }
-  
 }

@@ -1,16 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:komunika/utils/colors.dart';
-import 'package:komunika/utils/fonts.dart'; // Your ColorsPalette
+import 'package:komunika/utils/fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Your ColorsPalette
 
 class ThemeProvider extends ChangeNotifier {
   // Default theme (Light)
   String _selectedTheme = 'Light';
   String get selectedTheme => _selectedTheme;
 
+  ThemeProvider() {
+    loadTheme(); // Load the theme when ThemeProvider is created
+  }
+
   // Set the theme
   void setTheme(String theme) {
     _selectedTheme = theme;
     notifyListeners(); // Notify listeners to update the theme
+  }
+
+  // Load theme from SharedPreferences
+  Future<void> loadTheme() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String storedTheme = prefs.getString('theme') ?? 'Light'; // Default to Light if not found
+    _selectedTheme = storedTheme;
+    notifyListeners(); // Notify listeners if theme is changed
   }
 
   // Theme function to return ThemeData based on selected theme

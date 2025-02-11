@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:komunika/screens/home_screen/home_page.dart';
 import 'package:komunika/screens/splash_screen/splash_screen.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
+import 'package:komunika/utils/app_localization.dart';
+import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:path/path.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -16,11 +19,14 @@ Future<void> main() async {
   await socketService.initSocket();
   await checkDatabaseExistence();
   await requestPermissions();
+  String storedLanguage = await PreferencesUtils.getLanguage();
+  Locale initialLocale =
+      storedLanguage == 'Filipino' ? Locale('fil', 'PH') : Locale('en', 'US');
 
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
-      child: const MyApp(),
+      child: MyApp(initialLocale: initialLocale),
     ),
   );
 }
@@ -55,8 +61,35 @@ Future<void> requestPermissions() async {
   }
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  final Locale initialLocale;
+  const MyApp({super.key, required this.initialLocale});
+
+  static void setLocale(BuildContext context, Locale newLocale) {
+    final _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    state?.setLocale(newLocale);
+  }
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late Locale _locale;
+
+  @override
+  void initState() {
+    super.initState();
+    _locale = widget.initialLocale;
+  }
+
+  void setLocale(Locale locale) async {
+    await PreferencesUtils.storeLanguage(
+        locale.languageCode == 'fil' ? 'Filipino' : 'English');
+    setState(() {
+      _locale = locale;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +99,25 @@ class MyApp extends StatelessWidget {
         //showcase widget builder context
         debugShowCheckedModeBanner: false,
         title: 'Komunika',
+        supportedLocales: const [
+          Locale('en', 'US'), // English
+          Locale('fil', 'PH'), // Filipino
+        ],
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        locale: _locale,
+        localeResolutionCallback: (locale, supportedLocales) {
+          for (var supportedLocale in supportedLocales) {
+            if (supportedLocale.languageCode == locale?.languageCode) {
+              return supportedLocale;
+            }
+          }
+          return supportedLocales.first;
+        },
         theme: themeProvider.themeData,
         initialRoute: '/',
         routes: {
