@@ -16,9 +16,8 @@ import 'package:sqflite/sqflite.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SocketService socketService = SocketService();
-  await socketService.initSocket();
   await checkDatabaseExistence();
-  await requestPermissions();
+  socketService.initSocket();
   String storedLanguage = await PreferencesUtils.getLanguage();
   Locale initialLocale =
       storedLanguage == 'Filipino' ? Locale('fil', 'PH') : Locale('en', 'US');
@@ -49,15 +48,6 @@ Future<void> checkDatabaseExistence() async {
     });
     databaseHelper.moveAudioFiles();
     print('Database created');
-  }
-}
-
-Future<void> requestPermissions() async {
-  var status = await Permission.microphone.request();
-  if (status.isDenied || status.isPermanentlyDenied) {
-    print("Microphone permission is required!");
-    // Optionally, guide the user to the app settings to enable it
-    openAppSettings();
   }
 }
 

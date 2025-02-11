@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/utils/fonts.dart';
@@ -100,22 +101,75 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: phoneWidth,
+                  height: phoneHeight,
+                  child: BlocBuilder<SpeechToTextBloc, SpeechToTextState>(
+                    builder: (context, state) {
+                      if (state is TranscriptionUpdated) {
+                        _textController.text += state.text;
+
+                        _textController.selection = TextSelection.fromPosition(
+                            TextPosition(offset: _textController.text.length));
+                      }
+
+                      return Showcase(
+                        key: _textFieldKey,
+                        description: "Wait for your message to be translated",
+                        child: Card(
+                          elevation: 1, // Adds shadow effect
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(12), // Rounded corners
+                          ),
+                          color: themeProvider.themeData.cardColor,
+                          child: TextField(
+                            readOnly: true,
+                            controller: _textController,
+                            style: TextStyle(
+                              color: themeProvider
+                                  .themeData.textTheme.bodyMedium?.color,
+                              fontSize: 20,
+                            ),
+                            decoration: const InputDecoration(
+                              hintText: 'Message...',
+                              border: InputBorder.none,
+                              fillColor: Colors.transparent,
+                              filled: true,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                            ),
+                            textAlignVertical: TextAlignVertical.center,
+                            maxLines: phoneHeight.toInt(),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 100),
                 Showcase(
                   key: _microphoneKey,
                   description: "Tap to start recording",
                   child: GestureDetector(
-                    onTap: () async {
+                    onLongPress: () async {
                       speechToTextBloc
                           .add(StartRecording()); // Trigger start recording
                     },
+                    onLongPressUp: () async {
+                      speechToTextBloc.add(StopRecording());
+                    },
+                    onLongPressCancel: () async {
+                      print("User cancelled");
+                    },
                     child: Container(
-                      width: 200,
-                      height: 200,
+                      width: 100,
+                      height: 100,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         image: DecorationImage(
-                          image:
-                              AssetImage('assets/icons/circle-microphone.png'),
+                          image: AssetImage('assets/icons/microphone_idle.png'),
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -123,50 +177,13 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text("Tap to Record",
+                const Text("Hold to start",
                     style: TextStyle(
                         fontSize: 25,
                         fontFamily: Fonts.main,
                         fontWeight: FontWeight.bold)),
               ],
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: phoneWidth,
-              height: phoneHeight,
-              child: BlocBuilder<SpeechToTextBloc, SpeechToTextState>(
-                builder: (context, state) {
-                  if (state is TranscriptionUpdated) {
-                    _textController.text += state.text;
-
-                    _textController.selection = TextSelection.fromPosition(
-                        TextPosition(offset: _textController.text.length));
-                  }
-
-                  return Showcase(
-                    key: _textFieldKey,
-                    description: "Wait for your message to be translated",
-                    child: TextField(
-                      readOnly: true,
-                      controller: _textController,
-                      style: TextStyle(
-                          color: themeProvider
-                              .themeData.textTheme.bodyMedium?.color,
-                          fontSize: 20),
-                      decoration: InputDecoration(
-                        hintText: 'Message Here',
-                        border: const OutlineInputBorder(),
-                        fillColor: themeProvider.themeData.cardColor,
-                        filled: true,
-                      ),
-                      textAlignVertical: TextAlignVertical.center,
-                      maxLines: phoneHeight.toInt(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
           ],
         ),
       ),

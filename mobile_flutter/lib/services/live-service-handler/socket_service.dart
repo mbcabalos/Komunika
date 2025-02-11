@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:komunika/services/endpoint.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SocketService {
   static final SocketService _instance = SocketService._internal();
   factory SocketService() => _instance;
+  String socketUrl = Endpoint.socketUrl;
 
   IO.Socket? socket;
   bool isSocketInitialized = false;
@@ -16,9 +18,7 @@ class SocketService {
   final _transcriptionController = StreamController<String>.broadcast();
 
   Future<void> initSocket() async {
-    // String serverUrl = 'http://192.168.254.116:5000'; // David server
-    // String serverUrl = 'http://192.168.1.133:5000'; // Benedict server
-    String serverUrl = 'http://192.168.206.177:5000'; // Benedict server
+    String serverUrl = socketUrl;
 
     if (socket != null && isSocketInitialized) {
       print("✅ Socket already initialized!");
@@ -60,6 +60,15 @@ class SocketService {
   Future<void> sendAudio(Uint8List audioChunk) async {
     if (isSocketInitialized) {
       socket?.emit('audio_stream', audioChunk);
+    } else {
+      print("❌ Socket is not connected yet!");
+    }
+  }
+
+  Future<void> sendAudioFile(Uint8List audioChunk) async {
+    if (isSocketInitialized) {
+      print("Emitting socket");
+      socket?.emit('audio_upload', audioChunk);
     } else {
       print("❌ Socket is not connected yet!");
     }

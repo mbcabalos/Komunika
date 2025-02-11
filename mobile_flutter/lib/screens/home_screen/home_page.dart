@@ -15,6 +15,7 @@ import 'package:komunika/widgets/home_widgets/home_tips_card.dart';
 import 'package:path/path.dart'
     as p; //renamed as p to avoid conflict with showcase context eme
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:sqflite/sqflite.dart';
@@ -37,6 +38,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     // loadTheme();
+    requestPermissions();
     loadFavorites();
     PreferencesUtils.resetShowcaseFlags();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -68,6 +70,15 @@ class _HomePageState extends State<HomePage> {
     await player.setFilePath(filePath); // Set file path (local file or URL)
     await player.play(); // Play the audio
   }
+
+  Future<void> requestPermissions() async {
+  var status = await Permission.microphone.request();
+  if (status.isDenied || status.isPermanentlyDenied) {
+    print("Microphone permission is required!");
+    // Optionally, guide the user to the app settings to enable it
+    openAppSettings();
+  }
+}
 
   @override
   Widget build(BuildContext context) {
