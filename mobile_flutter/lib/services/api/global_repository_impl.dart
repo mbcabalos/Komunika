@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:http/io_client.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:komunika/services/endpoint.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/services/repositories/global_repository.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,7 +11,7 @@ import 'package:path_provider/path_provider.dart';
 class GlobalRepositoryImpl extends GlobalRepository {
   // final baseURL = "http://192.168.254.116:5000/api"; // David
   // final baseURL = "http://192.168.1.133:5000/api"; // BEnedict
-  final baseURL = "http://192.168.206.177:5000/api"; // BEnedict
+  final baseURL = Endpoint.baseUrl; // BEnedict
   @override
   Future<void> sendTextToSpeech(String text, String title, bool save) async {
     try {
