@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_event.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
+import 'package:komunika/screens/home_screen/home_page.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
+import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -62,7 +64,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
-          title: 'Text to Speech',
+          title: context.translate("tts_title"),
           titleSize: getResponsiveFontSize(context, 20),
           isBackButton: true,
           isSettingButton: false,
@@ -130,7 +132,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                               .themeData.textTheme.bodyMedium?.color,
                           fontSize: 20),
                       decoration: InputDecoration(
-                        hintText: 'Type Something .....',
+                        hintText: context.translate("tts_hint"),
                         border: const OutlineInputBorder(),
                         fillColor: themeProvider.themeData.cardColor,
                         filled: true,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:komunika/screens/home_screen/home_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
+import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/themes.dart';
@@ -44,7 +46,7 @@ class HomeQuickSpeechCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    "No quick speech items available",
+                    context.translate("home_no_quick_speech"),
                     style: TextStyle(
                       color: themeProvider.themeData.textTheme.titleMedium?.color,
                       fontSize: contentSize,
@@ -92,7 +94,7 @@ class HomeQuickSpeechCard extends StatelessWidget {
                       Container(
                         margin: const EdgeInsets.only(left: 8, top: 8),
                         child: Text(
-                          "Quick Speech",
+                          context.translate("home_quick_speech"),
                           style: TextStyle(
                             color: themeProvider
                                 .themeData.textTheme.bodyMedium?.color,

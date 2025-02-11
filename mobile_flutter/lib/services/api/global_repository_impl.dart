@@ -10,7 +10,6 @@ import 'package:path_provider/path_provider.dart';
 
 class GlobalRepositoryImpl extends GlobalRepository {
   // final baseURL = "http://192.168.254.116:5000/api"; // David
-  // final baseURL = "http://192.168.1.133:5000/api"; // BEnedict
   final baseURL = Endpoint.baseUrl; // BEnedict
   @override
   Future<void> sendTextToSpeech(String text, String title, bool save) async {

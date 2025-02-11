@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
+import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/fonts.dart';
+import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -59,8 +60,8 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
-          title: 'Speech to text',
-          titleSize: getResponsiveFontSize(context, 20),
+          title: context.translate("stt_title"),
+          titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
           isBackButton: true,
           isSettingButton: false,
         ),
@@ -132,12 +133,12 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                                   .themeData.textTheme.bodyMedium?.color,
                               fontSize: 20,
                             ),
-                            decoration: const InputDecoration(
-                              hintText: 'Message...',
+                            decoration: InputDecoration(
+                              hintText: context.translate("stt_hint"),
                               border: InputBorder.none,
                               fillColor: Colors.transparent,
                               filled: true,
-                              contentPadding: EdgeInsets.symmetric(
+                              contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 8),
                             ),
                             textAlignVertical: TextAlignVertical.center,
@@ -177,9 +178,9 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text("Hold to start",
+                Text(context.translate("stt_hold_microphone"),
                     style: TextStyle(
-                        fontSize: 25,
+                        fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
                         fontFamily: Fonts.main,
                         fontWeight: FontWeight.bold)),
               ],
@@ -188,11 +189,5 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
         ),
       ),
     );
-  }
-
-  double getResponsiveFontSize(BuildContext context, double size) {
-    double baseWidth = 375.0; // Reference width (e.g., iPhone 11 Pro)
-    double screenWidth = MediaQuery.of(context).size.width;
-    return size * (screenWidth / baseWidth);
   }
 }

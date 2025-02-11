@@ -1,4 +1,23 @@
 {
+  "home_title": "Komunika",
+  "home_header": "Breaking Barriers, \nConnecting \nHearts.",
+  "home_tips": "“Ensure your phone’s microphone is not obstructed for optimal performance.”",
+  "home_speech_to_text": "Speech To Text",
+  "home_text_to_speech": "Text to Speech",
+  "home_sign_transcribe": "Sign Transcribe",
+  "home_screen_captions": "Screen Captions",
+  "home_quick_speech": "Quick Speech",
+  "home_no_quick_speech": "No quick speech items available",
+  "home_speech_to_text_description": "Tap here to test speech-to-text functionality",
+  "home_text_to_speech_description": "Tap here to test text-to-speech functionality",
+
+  "stt_title": "Speech to Text",
+  "stt_hint": "Message...",
+  "stt_hold_microphone": "Hold to Start",
+
+  "tts_title": "Text to Speech",
+  "tts_hint": "Type Something...",
+
   "settings_title": "Settings",
   "settings_appearance": "Appearance",
   "settings_theme": "Theme",
@@ -13,25 +32,19 @@
   "about_title": "About",
   "about_version": "Version",
   "about_project_team": "Project Team",
+  "lead_developer": "Lead Developer",
+  "ui_ux_designer": "UI/UX Designer",
+  "frontend_developer": "Frontend Developer",
+  "backend_developer": "Backend Developer",
+  "full_stack_developer": "Full Stack Developer",
   "about_follow_us": "Follow Us",
 
   "faq_title": "FAQ",
   "faq_description": "Frequently Asked Questions",
-  "faq_questions": {
-    "what_is_this_app": "What is this app?",
-    "how_to_use_app": "How to use the app?"
-  },
-  "faq_answers": {
-    "what_is_this_app": "This app is for communication and more.",
-    "how_to_use_app": "Simply sign in and explore the features for communication, announcements, and more."
-  },
-
-  "roles": {
-    "lead_developer": "Lead Developer",
-    "ui_ux_designer": "UI/UX Designer",
-    "frontend_developer": "Frontend Developer",
-    "backend_developer": "Backend Developer",
-    "full_stack_developer": "Full Stack Developer"
-  }
+  "faq_question1": "What is Komunika?",
+  "faq_answer1": "Komunika is a communication app designed to help users with hearing disabilities to connect and share information seamlessly.",
+  "faq_question2": "How to use the app?",
+  "faq_answer2": "Explore the features for communication, announcements, and more.",
+  "faq_question3": "How do I contact support?",
+  "faq_answer3": "You can contact support by sending an email to support@komunika.com"
 }
-
