@@ -36,22 +36,14 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    loadTheme();
+    // loadTheme();
     loadFavorites();
-    theme = PreferencesUtils.getTheme().toString();
     PreferencesUtils.resetShowcaseFlags();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ShowCaseWidget.of(context).startShowCase([_speechToTextKey]);
     });
   }
 
-  Future<void> loadTheme() async {
-    String storedTheme = await PreferencesUtils.getTheme();
-    print("Stored Theme: $storedTheme"); // Debugging line
-    setState(() {
-      theme = storedTheme;
-    });
-  }
 
   Future<void> loadFavorites() async {
     // Get the database path
@@ -81,7 +73,6 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
-        theme = themeProvider.selectedTheme;
         return Scaffold(
           backgroundColor: themeProvider.themeData.primaryColor,
           appBar: AppBarWidget(

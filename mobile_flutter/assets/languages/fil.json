@@ -1,0 +1,22 @@
+{
+  "settings_title": "Mga Setting",
+  "settings_appearance": "Hitsura",
+  "settings_theme": "Tema",
+  "settings_language_region": "Wika at Rehiyon",
+  "settings_language": "Wika",
+  "settings_help_support": "Tulong at Suporta",
+  "settings_faq": "Mga Madalas Itanong",
+  "settings_about": "Tungkol",
+  "settings_update_available": "May Bagong Bersyon",
+  "settings_update": "I-update",
+
+  "about_title": "Tungkol",
+  "about_version": "Bersion",
+  "about_project_team": "Pangkat ng Proyekto.",
+  "about_follow_us": "Sundan Kami",
+
+  "faq_title": "Mga Tanong",
+  "faq_description": "Mga Madalas Itanong",
+  "faq_questions": "Ano ang app na ito?",
+  "faq_answers": "Ang app na ito ay para sa komunikasyon at iba pa."
+}

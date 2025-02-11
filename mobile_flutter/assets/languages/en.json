@@ -1,0 +1,37 @@
+{
+  "settings_title": "Settings",
+  "settings_appearance": "Appearance",
+  "settings_theme": "Theme",
+  "settings_language_region": "Language & Region",
+  "settings_language": "Language",
+  "settings_help_support": "Help & Support",
+  "settings_faq": "FAQ",
+  "settings_about": "About",
+  "settings_update_available": "New Version Available",
+  "settings_update": "Update",
+
+  "about_title": "About",
+  "about_version": "Version",
+  "about_project_team": "Project Team",
+  "about_follow_us": "Follow Us",
+
+  "faq_title": "FAQ",
+  "faq_description": "Frequently Asked Questions",
+  "faq_questions": {
+    "what_is_this_app": "What is this app?",
+    "how_to_use_app": "How to use the app?"
+  },
+  "faq_answers": {
+    "what_is_this_app": "This app is for communication and more.",
+    "how_to_use_app": "Simply sign in and explore the features for communication, announcements, and more."
+  },
+
+  "roles": {
+    "lead_developer": "Lead Developer",
+    "ui_ux_designer": "UI/UX Designer",
+    "frontend_developer": "Frontend Developer",
+    "backend_developer": "Backend Developer",
+    "full_stack_developer": "Full Stack Developer"
+  }
+}
+

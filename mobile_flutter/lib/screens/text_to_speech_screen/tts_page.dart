@@ -5,7 +5,6 @@ import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_event.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
-import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';

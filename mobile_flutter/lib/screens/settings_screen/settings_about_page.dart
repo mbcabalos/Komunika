@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
@@ -17,7 +18,7 @@ class AboutPage extends StatelessWidget {
         return Scaffold(
           backgroundColor: themeProvider.themeData.scaffoldBackgroundColor,
           appBar: AppBarWidget(
-            title: "About",
+            title: context.translate("about_title"),
             titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
             isBackButton: true,
             isSettingButton: false,
@@ -63,7 +64,7 @@ class AboutPage extends StatelessWidget {
 
                 // App Version
                 Text(
-                  "Version 1.0.0",
+                  "${context.translate("about_version")} 1.0.0",
                   style: TextStyle(
                     fontSize:
                         ResponsiveUtils.getResponsiveFontSize(context, 16),
@@ -75,7 +76,7 @@ class AboutPage extends StatelessWidget {
 
                 // Authors Section
                 _buildSectionHeader(
-                    "Project Team",
+                    context.translate("about_project_team"),
                     ResponsiveUtils.getResponsiveFontSize(context, 18),
                     themeProvider),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.015),
@@ -117,7 +118,7 @@ class AboutPage extends StatelessWidget {
 
                 // Social Media Links
                 _buildSectionHeader(
-                    "Follow Us",
+                    context.translate("about_follow_us"),
                     ResponsiveUtils.getResponsiveFontSize(context, 18),
                     themeProvider),
                 const SizedBox(height: 10),
