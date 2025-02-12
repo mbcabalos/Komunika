@@ -6,6 +6,7 @@ import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
+import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -64,7 +65,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
           title: context.translate("tts_title"),
-          titleSize: getResponsiveFontSize(context, 20),
+          titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
           isBackButton: true,
           isSettingButton: false,
         ),
@@ -93,8 +94,8 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   }
 
   Widget _buildContent(ThemeProvider themeProvider) {
-    final double phoneHeight = MediaQuery.of(context).size.height * 0.6;
-    final double phoneWidth = MediaQuery.of(context).size.width * 0.9;
+    final double phoneHeight = MediaQuery.of(context).size.height * 0.7;
+    final double phoneWidth = MediaQuery.of(context).size.width * 1.0;
     return RefreshIndicator.adaptive(
       onRefresh: _initialize,
       child: Padding(
@@ -109,13 +110,24 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   Showcase(
                     key: _titleKey,
                     description: "Enter a title for your speech.",
-                    child: TextField(
-                      controller: _titleController,
-                      decoration: InputDecoration(
-                        hintText: 'Title',
-                        border: const OutlineInputBorder(),
-                        fillColor: themeProvider.themeData.cardColor,
-                        filled: true,
+                    child: Card(
+                      elevation: 1,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextField(
+                        controller: _titleController,
+                        style: TextStyle(
+                          color: themeProvider
+                              .themeData.textTheme.bodyMedium?.color,
+                          fontSize: 20,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Title',
+                          border: InputBorder.none,
+                          fillColor: themeProvider.themeData.cardColor,
+                          filled: true,
+                        ),
                       ),
                     ),
                   ),
@@ -124,103 +136,121 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     key: _typeSomethingKey,
                     description:
                         "Type the message you want to convert to speech.",
-                    child: TextField(
-                      controller: _textController,
-                      style: TextStyle(
+                    child: Card(
+                      elevation: 1,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      color: themeProvider.themeData.cardColor,
+                      child: TextField(
+                        readOnly: false,
+                        controller: _textController,
+                        style: TextStyle(
                           color: themeProvider
                               .themeData.textTheme.bodyMedium?.color,
-                          fontSize: 20),
-                      decoration: InputDecoration(
-                        hintText: context.translate("tts_hint"),
-                        border: const OutlineInputBorder(),
-                        fillColor: themeProvider.themeData.cardColor,
-                        filled: true,
+                          fontSize: 20,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: context.translate("tts_hint"),
+                          border: InputBorder.none,
+                          fillColor: Colors.transparent,
+                          filled: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 16),
+                        ),
+                        textAlignVertical: TextAlignVertical.center,
+                        maxLines: 15,
+                        keyboardType: TextInputType.multiline,
                       ),
-                      textAlignVertical: TextAlignVertical.center,
-                      maxLines: 12,
                     ),
                   ),
                 ],
               ),
             ),
-            Container(
-              margin: const EdgeInsets.only(left: 32, right: 32, top: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: themeProvider.themeData.primaryColor,
-                    ),
-                    child: Showcase(
-                      key: _soundKey,
-                      description: "Tap here to hear the speech output.",
-                      child: IconButton(
-                        icon: Image.asset(
-                          'assets/icons/speaker-filled-audio-tool.png',
-                          height: MediaQuery.of(context).size.width * 0.10,
-                          width: MediaQuery.of(context).size.width * 0.10,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Showcase(
+                  key: GlobalKey(),
+                  description: "Pause recording",
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      width: ResponsiveUtils.getResponsiveSize(context, 40),
+                      height: ResponsiveUtils.getResponsiveSize(context, 40),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: AssetImage('assets/icons/pause.png'),
+                          fit: BoxFit.contain,
                         ),
-                        onPressed: () {
-                          final title = _titleController.text.trim();
-                          final text = _textController.text.trim();
-                          if (text.isNotEmpty) {
-                            textToSpeechBloc.add(CreateTextToSpeechEvent(
-                                text: text, title: title, save: false));
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Text field is empty!')),
-                            );
-                          }
-                        },
                       ),
                     ),
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: themeProvider.themeData.primaryColor,
-                    ),
-                    child: Showcase(
-                      key: _saveKey,
-                      description: "Tap here to save the generated speech.",
-                      child: IconButton(
-                        icon: Image.asset(
-                          'assets/icons/diskette.png',
-                          height: MediaQuery.of(context).size.width * 0.10,
-                          width: MediaQuery.of(context).size.width * 0.10,
+                ),
+                const SizedBox(width: 20),
+                Showcase(
+                  key: _soundKey,
+                  description: "Tap here to hear the speech output.",
+                  child: GestureDetector(
+                    onTap: () {
+                      final title = _titleController.text.trim();
+                      final text = _textController.text.trim();
+                      if (text.isNotEmpty) {
+                        textToSpeechBloc.add(CreateTextToSpeechEvent(
+                            text: text, title: title, save: false));
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Text field is empty!')),
+                        );
+                      }
+                    },
+                    child: Container(
+                        width: ResponsiveUtils.getResponsiveSize(context, 80),
+                        height: ResponsiveUtils.getResponsiveSize(context, 80),
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: themeProvider.themeData.primaryColor),
+                        child: const Icon(Icons.volume_up_rounded,
+                            color: Colors.white, size: 60)),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Showcase(
+                  key: _saveKey,
+                  description: "Tap here to save the generated speech.",
+                  child: GestureDetector(
+                    onTap: () {
+                      final title = _titleController.text.trim();
+                      final text = _textController.text.trim();
+                      if (text.isNotEmpty) {
+                        textToSpeechBloc.add(CreateTextToSpeechEvent(
+                            text: text, title: title, save: true));
+                        Navigator.pop(context, true);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Text field is empty!')),
+                        );
+                      }
+                    },
+                    child: Container(
+                      width: ResponsiveUtils.getResponsiveSize(context, 40),
+                      height: ResponsiveUtils.getResponsiveSize(context, 40),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        image: DecorationImage(
+                          image: AssetImage('assets/icons/saved.png'),
+                          fit: BoxFit.contain,
                         ),
-                        onPressed: () {
-                          final title = _titleController.text.trim();
-                          final text = _textController.text.trim();
-                          if (text.isNotEmpty) {
-                            textToSpeechBloc.add(CreateTextToSpeechEvent(
-                                text: text, title: title, save: true));
-                            Navigator.pop(context, true);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Text field is empty!')),
-                            );
-                          }
-                        },
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
-  }
-
-  double getResponsiveFontSize(BuildContext context, double size) {
-    double baseWidth = 375.0; // Reference width (e.g., iPhone 11 Pro)
-    double screenWidth = MediaQuery.of(context).size.width;
-    return size * (screenWidth / baseWidth);
   }
 }
