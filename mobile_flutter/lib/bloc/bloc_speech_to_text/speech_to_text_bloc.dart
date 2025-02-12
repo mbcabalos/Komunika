@@ -12,8 +12,7 @@ part 'speech_to_text_state.dart';
 
 class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
-  StreamController<Uint8List> _audioStreamController =
-      StreamController<Uint8List>();
+  StreamController<Uint8List>? _audioStreamController;
   final StreamController<String> _transcriptionController =
       StreamController<String>();
   final SocketService socketService;
@@ -50,43 +49,7 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   FutureOr<void> createSpeechToTextLoadingEvent(
       CreateSpeechToTextEvent event, Emitter<SpeechToTextState> emit) async {}
 
-  // Future<void> _startRecording(
-  //     StartRecording event, Emitter<SpeechToTextState> emit) async {
-  //   _startNewStream();
-  //   await _recorder.openRecorder();
-  //   await _recorder.startRecorder(
-  //     toStream: _audioStreamController.sink,
-  //     codec: Codec.pcm16,
-  //     sampleRate: 16000,
-  //     numChannels: 1,
-  //   );
-  //   _audioStreamController.stream.listen(
-  //     (Uint8List buffer) {
-  //       socketService.sendAudio(buffer);
-  //     },
-  //   );
-  //   isRecording = true;
-  // }
-
-  // Future<void> _stopRecording(
-  //     StopRecording event, Emitter<SpeechToTextState> emit) async {
-  //   await _recorder.stopRecorder();
-  //   await Future.delayed(const Duration(seconds: 7));
-  //   _audioStreamController.close();
-  //   isRecording = false;
-  // }
-
-  // @override
-  // Future<void> close() {
-  //   _recorder.closeRecorder();
-  //   return super.close();
-  // }
-
-  // void _startNewStream() {
-  //   _audioStreamController?.close(); // Close if already open
-  //   _audioStreamController = StreamController<Uint8List>(); // Create a new one
-  // }
-
+  // Start recording with stream controller setup
   Future<void> _startRecording(
       StartRecording event, Emitter<SpeechToTextState> emit) async {
     if (isRecording) return;
@@ -96,9 +59,12 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     String filePath = '${tempDir.path}/recorded_audio.wav';
     _recordedFile = File(filePath);
 
+    // Initialize a new stream controller for audio streaming
+    _startNewStream();
+
     await _recorder.openRecorder();
     await _recorder.startRecorder(
-      toFile: filePath, // Save the recording to a file
+      toStream: _audioStreamController!.sink, // Streaming to the controller
       codec: Codec.pcm16WAV,
       sampleRate: 16000,
     );
@@ -106,6 +72,7 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     print("🎙️ Recording started...");
   }
 
+  // Stop recording and send audio to the backend
   Future<void> _stopRecording(
       StopRecording event, Emitter<SpeechToTextState> emit) async {
     if (!isRecording) return;
@@ -119,8 +86,12 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     if (_recordedFile != null) {
       sendAudioToBackend(_recordedFile!);
     }
+
+    // Close the stream after recording is stopped
+    _audioStreamController?.close();
   }
 
+  // Send recorded audio to the backend
   void sendAudioToBackend(File audioFile) async {
     print("📤 Sending audio to backend...");
     List<int> audioBytes = await audioFile.readAsBytes();
@@ -128,9 +99,16 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     print("Socket called");
   }
 
+  // Manage stream controller lifecycle
+  void _startNewStream() {
+    _audioStreamController?.close(); // Close any existing stream
+    _audioStreamController = StreamController<Uint8List>(); // Create a new one
+  }
+
   @override
   Future<void> close() {
     _recorder.closeRecorder();
+    _audioStreamController?.close(); // Close the stream controller
     return super.close();
   }
 }

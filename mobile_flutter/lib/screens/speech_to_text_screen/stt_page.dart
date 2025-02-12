@@ -25,6 +25,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
   GlobalKey _textFieldKey = GlobalKey();
   GlobalKey _doneButtonKey = GlobalKey();
   bool _isShowcaseSeen = false;
+  bool _isRecording = false;
 
   @override
   void initState() {
@@ -90,8 +91,10 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
   }
 
   Widget _buildContent(ThemeProvider themeProvider) {
-    final double phoneHeight = MediaQuery.of(context).size.height * 0.5;
+    final double phoneHeight =
+        MediaQuery.of(context).size.height * 0.6; // Increased height
     final double phoneWidth = MediaQuery.of(context).size.width * 0.9;
+
     return RefreshIndicator.adaptive(
       onRefresh: _initialize,
       child: Padding(
@@ -110,7 +113,6 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                     builder: (context, state) {
                       if (state is TranscriptionUpdated) {
                         _textController.text += state.text;
-
                         _textController.selection = TextSelection.fromPosition(
                             TextPosition(offset: _textController.text.length));
                       }
@@ -125,64 +127,134 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                                 BorderRadius.circular(12), // Rounded corners
                           ),
                           color: themeProvider.themeData.cardColor,
-                          child: TextField(
-                            readOnly: true,
-                            controller: _textController,
-                            style: TextStyle(
-                              color: themeProvider
-                                  .themeData.textTheme.bodyMedium?.color,
-                              fontSize: 20,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: TextField(
+                              readOnly: true,
+                              controller: _textController,
+                              style: TextStyle(
+                                color: themeProvider
+                                    .themeData.textTheme.bodyMedium?.color,
+                                fontSize: 20,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: context.translate("stt_hint"),
+                                border: InputBorder.none,
+                                fillColor: Colors.transparent,
+                                filled: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 16),
+                              ),
+                              textAlignVertical: TextAlignVertical.center,
+                              maxLines: null, // Allows for infinite lines
+                              keyboardType: TextInputType.multiline,
                             ),
-                            decoration: InputDecoration(
-                              hintText: context.translate("stt_hint"),
-                              border: InputBorder.none,
-                              fillColor: Colors.transparent,
-                              filled: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                            ),
-                            textAlignVertical: TextAlignVertical.center,
-                            maxLines: phoneHeight.toInt(),
                           ),
                         ),
                       );
                     },
                   ),
                 ),
-                const SizedBox(height: 100),
-                Showcase(
-                  key: _microphoneKey,
-                  description: "Tap to start recording",
-                  child: GestureDetector(
-                    onLongPress: () async {
-                      speechToTextBloc
-                          .add(StartRecording()); // Trigger start recording
-                    },
-                    onLongPressUp: () async {
-                      speechToTextBloc.add(StopRecording());
-                    },
-                    onLongPressCancel: () async {
-                      print("User cancelled");
-                    },
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: AssetImage('assets/icons/microphone_idle.png'),
-                          fit: BoxFit.contain,
+                const SizedBox(height: 50),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Showcase(
+                      key: GlobalKey(),
+                      description: "Pause recording",
+                      child: GestureDetector(
+                        onTap: () {},
+                        child: Container(
+                          width: ResponsiveUtils.getResponsiveSize(context, 40),
+                          height:
+                              ResponsiveUtils.getResponsiveSize(context, 40),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              image: AssetImage('assets/icons/pause.png'),
+                              fit: BoxFit.contain,
+                            ),
+                          ),
                         ),
                       ),
                     ),
+                    const SizedBox(width: 20),
+                    Showcase(
+                      key: _microphoneKey,
+                      description: "Tap to start recording",
+                      child: GestureDetector(
+                        onLongPress: () async {
+                          setState(() {
+                            _isRecording = true;
+                          });
+                          speechToTextBloc.add(StartRecording());
+                        },
+                        onLongPressUp: () async {
+                          setState(() {
+                            _isRecording = false;
+                          });
+                          speechToTextBloc.add(StopRecording());
+                        },
+                        onLongPressCancel: () async {
+                          setState(() {
+                            _isRecording = false;
+                          });
+                          print("User cancelled");
+                        },
+                        child: Container(
+                          width: ResponsiveUtils.getResponsiveSize(context, 80),
+                          height:
+                              ResponsiveUtils.getResponsiveSize(context, 80),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: themeProvider.themeData.primaryColor,
+                          ),
+                          child: _isRecording
+                              ? const Icon(
+                                  Icons.graphic_eq_rounded,
+                                  color: Colors.white,
+                                  size: 60,
+                                )
+                              : const Icon(
+                                  Icons.mic,
+                                  color: Colors.white,
+                                  size: 60,
+                                ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Showcase(
+                      key: GlobalKey(),
+                      description: "Save transcription",
+                      child: GestureDetector(
+                        onTap: () {},
+                        child: Container(
+                          width: ResponsiveUtils.getResponsiveSize(context, 40),
+                          height:
+                              ResponsiveUtils.getResponsiveSize(context, 40),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.rectangle,
+                            image: DecorationImage(
+                              image: AssetImage('assets/icons/saved.png'),
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  context.translate("stt_hold_microphone"),
+                  style: TextStyle(
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 15),
+                    fontFamily: Fonts.main,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 20),
-                Text(context.translate("stt_hold_microphone"),
-                    style: TextStyle(
-                        fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
-                        fontFamily: Fonts.main,
-                        fontWeight: FontWeight.bold)),
               ],
             ),
           ],
