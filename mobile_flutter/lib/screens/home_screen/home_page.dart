@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:komunika/screens/auto_caption_screen/auto_caption_page.dart';
 import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
@@ -220,13 +221,24 @@ class _HomePageState extends State<HomePage> {
                           ),
                           SizedBox(
                               width: MediaQuery.of(context).size.width * 0.04),
-                          HomeCatalogsCard(
-                            imagePath: 'assets/icons/transcription.png',
-                            isImagePath: true,
-                            content: context.translate("home_screen_captions"),
-                            contentSize: ResponsiveUtils.getResponsiveFontSize(
-                                context, 14),
-                            themeProvider: themeProvider,
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => AutoCaptionScreen(
+                                          themeProvider: themeProvider)));
+                            },
+                            child: HomeCatalogsCard(
+                              imagePath: 'assets/icons/transcription.png',
+                              isImagePath: true,
+                              content:
+                                  context.translate("home_screen_captions"),
+                              contentSize:
+                                  ResponsiveUtils.getResponsiveFontSize(
+                                      context, 14),
+                              themeProvider: themeProvider,
+                            ),
                           ),
                         ],
                       ),
