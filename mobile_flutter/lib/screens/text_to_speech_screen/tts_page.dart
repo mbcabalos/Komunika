@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_event.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
-import 'package:komunika/screens/home_screen/home_page.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
