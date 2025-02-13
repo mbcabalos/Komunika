@@ -35,6 +35,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   GlobalKey _typeSomethingKey = GlobalKey();
   GlobalKey _soundKey = GlobalKey();
   GlobalKey _saveKey = GlobalKey();
+  GlobalKey _addKey = GlobalKey();
 
   @override
   void initState() {
@@ -43,7 +44,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     final databaseHelper = DatabaseHelper();
     textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
     _initialize();
-    _checkThenShowcase();
+    //_checkThenShowcase();
   }
 
   Future<void> _checkThenShowcase() async {
@@ -53,7 +54,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     if (!pageTwoDone) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ShowCaseWidget.of(context)
-            .startShowCase([_titleKey, _typeSomethingKey, _soundKey, _saveKey]);
+            .startShowCase([_titleKey, _typeSomethingKey, _soundKey, _saveKey, _addKey]);
         prefs.setBool('pageThreeDone', true);
       });
     }
@@ -115,7 +116,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                 children: [
                   Showcase(
                     key: _titleKey,
-                    description: "Enter a title for your speech.",
+                    description: "Tap to enter title",
                     child: Card(
                       elevation: 1,
                       shape: RoundedRectangleBorder(
@@ -141,7 +142,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   Showcase(
                     key: _typeSomethingKey,
                     description:
-                        "Type the message you want to convert to speech.",
+                        "Type the message",
                     child: Card(
                       elevation: 1,
                       shape: RoundedRectangleBorder(
@@ -176,28 +177,28 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Showcase(
-                //   key: GlobalKey(),
-                //   description: "Pause recording",
-                //   child: GestureDetector(
-                //     onTap: () {},
-                //     child: Container(
-                //       width: ResponsiveUtils.getResponsiveSize(context, 40),
-                //       height: ResponsiveUtils.getResponsiveSize(context, 40),
-                //       decoration: const BoxDecoration(
-                //         shape: BoxShape.circle,
-                //         image: DecorationImage(
-                //           image: AssetImage('assets/icons/pause.png'),
-                //           fit: BoxFit.contain,
-                //         ),
-                //       ),
-                //     ),
-                //   ),
-                // ),
+                Showcase(
+                  key: _addKey,
+                  description: "Add another entry",
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      width: ResponsiveUtils.getResponsiveSize(context, 35),
+                      height: ResponsiveUtils.getResponsiveSize(context, 35),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: AssetImage('assets/icons/plus.png'),
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 20),
                 Showcase(
                   key: _soundKey,
-                  description: "Tap here to hear the speech output.",
+                  description: "Hear the speech output.",
                   child: GestureDetector(
                     onTap: () {
                       final title = _titleController.text.trim();
@@ -224,7 +225,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                 const SizedBox(width: 20),
                 Showcase(
                   key: _saveKey,
-                  description: "Tap here to save the generated speech.",
+                  description: "Save generated speech.",
                   child: GestureDetector(
                     onTap: () async {
                       final title = _titleController.text.trim();

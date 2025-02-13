@@ -5,6 +5,7 @@ import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
+import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,7 +24,8 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
   final TextEditingController _textController = TextEditingController();
   GlobalKey _microphoneKey = GlobalKey();
   GlobalKey _textFieldKey = GlobalKey();
-  GlobalKey _doneButtonKey = GlobalKey();
+  GlobalKey _saveKey = GlobalKey();
+  GlobalKey _plusKey = GlobalKey();
   bool _isShowcaseSeen = false;
   bool _isRecording = false;
 
@@ -34,7 +36,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
 
     speechToTextBloc = SpeechToTextBloc(socketService);
     _initialize();
-    _checkThenShowcase();
+    //_checkThenShowcase();
   }
 
   Future<void> _checkThenShowcase() async {
@@ -42,9 +44,9 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
     bool pageOneDone = prefs.getBool('pageOneDone') ?? false;
 
     if (!pageOneDone) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         ShowCaseWidget.of(context)
-            .startShowCase([_microphoneKey, _textFieldKey, _doneButtonKey]);
+            .startShowCase([_microphoneKey, _textFieldKey, _saveKey, _plusKey]);
         prefs.setBool('pageOneDone', true);
       });
     }
@@ -117,7 +119,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                       }
                       return Showcase(
                         key: _textFieldKey,
-                        description: "Wait for your message to be translated",
+                        description: "See translated message here",
                         child: Card(
                           elevation: 1, // Adds shadow effect
                           shape: RoundedRectangleBorder(
@@ -157,10 +159,30 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(width: 50),
+                    Showcase(
+                      key: _plusKey,
+                      description: "Add new entry",
+                      child: GestureDetector(
+                        onTap: () {
+                          // Handle plus icon action
+                        },
+                        child: Container(
+                          width: ResponsiveUtils.getResponsiveSize(context, 35),
+                          height: ResponsiveUtils.getResponsiveSize(context, 35),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.rectangle,
+                            image: DecorationImage(
+                              image: AssetImage('assets/icons/plus.png'),
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
                     Showcase(
                       key: _microphoneKey,
-                      description: "Tap to start recording",
+                      description: "Tap and hold to start recording",
                       child: GestureDetector(
                         onTap: () async {
                           if (!_isRecording) {
@@ -211,10 +233,13 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                     ),
                     const SizedBox(width: 20),
                     Showcase(
-                      key: GlobalKey(),
+                      key: _saveKey,
                       description: "Save transcription",
                       child: GestureDetector(
-                        onTap: () {},
+                        onTap: () async {
+                          final SharedPreferences prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool('pageOneDone', true);
+                        },
                         child: Container(
                           width: ResponsiveUtils.getResponsiveSize(context, 40),
                           height:

@@ -18,6 +18,7 @@ import 'package:path/path.dart'
     as p; //renamed as p to avoid conflict with showcase context eme
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -45,10 +46,10 @@ class _HomePageState extends State<HomePage> {
     // loadTheme();
     requestPermissions();
     loadFavorites();
-    PreferencesUtils.resetShowcaseFlags();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ShowCaseWidget.of(context).startShowCase([_speechToTextKey]);
-    });
+    //PreferencesUtils.resetShowcaseFlags();
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   ShowCaseWidget.of(context).startShowCase([_speechToTextKey]);
+    // });
   }
 
   Future<void> _refreshScreen() async {
@@ -187,13 +188,14 @@ class _HomePageState extends State<HomePage> {
                                         themeProvider: themeProvider,
                                       )),
                             );
-                            if (result == "speechToTextCompleted") {
-                              print("Speech to Text process completed!");
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                ShowCaseWidget.of(context)
-                                    .startShowCase([_textToSpeechKey]);
-                              });
-                            }
+                            // final SharedPreferences prefs = await SharedPreferences.getInstance();
+                            // bool pageOneDone = prefs.getBool('pageOneDone') ?? false;
+
+                            // if (pageOneDone) {
+                            //   WidgetsBinding.instance.addPostFrameCallback((_) {
+                            //     ShowCaseWidget.of(context).startShowCase([_textToSpeechKey]);
+                            //   });
+                            // }
                           },
                           child: HomeCatalogsCard(
                             imagePath: 'assets/icons/word-of-mouth.png',

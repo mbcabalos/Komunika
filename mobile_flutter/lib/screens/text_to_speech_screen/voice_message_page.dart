@@ -35,7 +35,7 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
     super.initState();
     textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
     _refreshScreen();
-    _checkThenShowcase();
+    //_checkThenShowcase();
   }
 
   Future<void> _refreshScreen() async {
@@ -75,7 +75,7 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
           padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
           child: Showcase(
             key: _fabKey,
-            description: "Tap here to add voice message",
+            description: "Tap to add voice message",
             child: FloatingActionButton(
               backgroundColor: widget.themeProvider.themeData.primaryColor,
               onPressed: () async {
