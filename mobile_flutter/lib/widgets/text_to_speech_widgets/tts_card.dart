@@ -25,7 +25,7 @@ class TTSCard extends StatelessWidget {
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(
-        margin: const EdgeInsets.only(top: 12),
+        margin: const EdgeInsets.only(top: 12, left: 12),
         width: cardWidth,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -33,22 +33,19 @@ class TTSCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-              color: themeProvider.themeData.primaryColor.withOpacity(0.2),
+              color: ColorsPalette.black.withOpacity(0.2),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Container(
-          margin: const EdgeInsets.only(left: 12,),
-          child: Text(
-            audioName, // Display the audio name
-            style: TextStyle(
-              fontFamily: Fonts.main,
-              color: themeProvider.themeData.textTheme.bodyMedium?.color,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+        child: Text(
+          audioName, // Display the audio name
+          style: TextStyle(
+            fontFamily: Fonts.main,
+            color: themeProvider.themeData.textTheme.bodyMedium?.color,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
