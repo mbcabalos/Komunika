@@ -14,7 +14,13 @@ import 'package:showcaseview/showcaseview.dart';
 
 class TextToSpeechScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
-  const TextToSpeechScreen({super.key, required this.themeProvider});
+  final VoidCallback isSaved; // Callback to refresh the parent screen
+
+  const TextToSpeechScreen({
+    super.key,
+    required this.themeProvider,
+    required this.isSaved,
+  });
 
   @override
   State<TextToSpeechScreen> createState() => _TextToSpeechScreenState();
@@ -170,24 +176,24 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Showcase(
-                  key: GlobalKey(),
-                  description: "Pause recording",
-                  child: GestureDetector(
-                    onTap: () {},
-                    child: Container(
-                      width: ResponsiveUtils.getResponsiveSize(context, 40),
-                      height: ResponsiveUtils.getResponsiveSize(context, 40),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: AssetImage('assets/icons/pause.png'),
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                // Showcase(
+                //   key: GlobalKey(),
+                //   description: "Pause recording",
+                //   child: GestureDetector(
+                //     onTap: () {},
+                //     child: Container(
+                //       width: ResponsiveUtils.getResponsiveSize(context, 40),
+                //       height: ResponsiveUtils.getResponsiveSize(context, 40),
+                //       decoration: const BoxDecoration(
+                //         shape: BoxShape.circle,
+                //         image: DecorationImage(
+                //           image: AssetImage('assets/icons/pause.png'),
+                //           fit: BoxFit.contain,
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 const SizedBox(width: 20),
                 Showcase(
                   key: _soundKey,
@@ -220,13 +226,15 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   key: _saveKey,
                   description: "Tap here to save the generated speech.",
                   child: GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       final title = _titleController.text.trim();
                       final text = _textController.text.trim();
                       if (text.isNotEmpty) {
                         textToSpeechBloc.add(CreateTextToSpeechEvent(
                             text: text, title: title, save: true));
-                        Navigator.pop(context, true);
+                        widget
+                            .isSaved(); // Call the callback to refresh the parent screen
+                        Navigator.pop(context, true); // Close the screen
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Text field is empty!')),
