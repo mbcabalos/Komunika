@@ -16,7 +16,7 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   final StreamController<String> _transcriptionController =
       StreamController<String>();
   final SocketService socketService;
-  bool isRecording = false;
+  bool recording = false;
   File? _recordedFile;
 
   SpeechToTextBloc(this.socketService) : super(SpeechToTextLoadingState()) {
@@ -24,6 +24,8 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     on<CreateSpeechToTextEvent>(createSpeechToTextLoadingEvent);
     on<StartRecording>(_startRecording);
     on<StopRecording>(_stopRecording);
+    on<StartTapRecording>(_startTapRecording);
+    on<StopTapRecording>(_stopTapRecording);
 
     socketService.socket?.on("transcription_result", (data) {
       if (data != null && data["text"] != null) {
@@ -52,8 +54,8 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   // Start recording with stream controller setup
   Future<void> _startRecording(
       StartRecording event, Emitter<SpeechToTextState> emit) async {
-    if (isRecording) return;
-    isRecording = true;
+    if (recording) return;
+    recording = true;
     Directory tempDir = await getTemporaryDirectory();
     String filePath = '${tempDir.path}/recorded_audio.wav';
     _recordedFile = File(filePath);
@@ -67,17 +69,43 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     print("🎙️ Recording started...");
   }
 
+  Future<void> _startTapRecording(
+      StartTapRecording event, Emitter<SpeechToTextState> emit) async {
+    _startNewStream();
+    await _recorder.openRecorder();
+    await _recorder.startRecorder(
+      toStream: _audioStreamController?.sink,
+      codec: Codec.pcm16,
+      sampleRate: 16000,
+      numChannels: 1,
+    );
+    _audioStreamController?.stream.listen(
+      (Uint8List buffer) {
+        socketService.sendAudio(buffer);
+      },
+    );
+    recording = true;
+  }
+
   // Stop recording and send audio to the backend
   Future<void> _stopRecording(
       StopRecording event, Emitter<SpeechToTextState> emit) async {
-    if (!isRecording) return;
-    isRecording = false;
+    if (!recording) return;
+    recording = false;
     await _recorder.stopRecorder();
     await _recorder.closeRecorder();
     print("🛑 Recording stopped.");
     if (_recordedFile != null) {
       sendAudioToBackend(_recordedFile!);
     }
+  }
+
+  Future<void> _stopTapRecording(
+      StopTapRecording event, Emitter<SpeechToTextState> emit) async {
+    await _recorder.stopRecorder();
+    await Future.delayed(const Duration(seconds: 7));
+    _audioStreamController?.close();
+    recording = false;
   }
 
   // Send recorded audio to the backend
