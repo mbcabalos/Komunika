@@ -24,7 +24,9 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
   FutureOr<void> textToSpeechLoadingEvent(
       TextToSpeechLoadingEvent event, Emitter<TextToSpeechState> emit) async {
     try {
-      emit(TextToSpeechLoadedSuccessState());
+      List<Map<String, dynamic>> data =
+          await DatabaseHelper().fetchAllAudioItems();
+      emit(TextToSpeechLoadedSuccessState(audioItems: data));
     } catch (e) {
       emit(TextToSpeechErrorState(message: '$e'));
     }
@@ -35,7 +37,9 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
     try {
       await _globalService.sendTextToSpeech(
           event.text, event.title, event.save);
-      emit(TextToSpeechLoadedSuccessState());
+      List<Map<String, dynamic>> data =
+          await DatabaseHelper().fetchAllAudioItems();
+      emit(TextToSpeechLoadedSuccessState(audioItems: data));
     } catch (e) {
       emit(TextToSpeechErrorState(message: '$e'));
     }
@@ -45,7 +49,9 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
       AddToFavorite event, Emitter<TextToSpeechState> emit) async {
     try {
       _databaseHelper.favorite(event.audioName);
-      emit(TextToSpeechLoadedSuccessState());
+      List<Map<String, dynamic>> data =
+          await DatabaseHelper().fetchAllAudioItems();
+      emit(TextToSpeechLoadedSuccessState(audioItems: data));
     } catch (e) {}
   }
 
@@ -53,7 +59,9 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
       RemoveFromFavorite event, Emitter<TextToSpeechState> emit) async {
     try {
       _databaseHelper.removeFavorite(event.audioName);
-      emit(TextToSpeechLoadedSuccessState());
+      List<Map<String, dynamic>> data =
+          await DatabaseHelper().fetchAllAudioItems();
+      emit(TextToSpeechLoadedSuccessState(audioItems: data));
     } catch (e) {}
   }
 
@@ -67,7 +75,9 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
       final player = AudioPlayer();
       await player.setFilePath(filePath); // Set file path (local file or URL)
       await player.play(); // Play the audio
-      emit(TextToSpeechLoadedSuccessState());
+      List<Map<String, dynamic>> data =
+          await DatabaseHelper().fetchAllAudioItems();
+      emit(TextToSpeechLoadedSuccessState(audioItems: data));
     } catch (e) {}
   }
 }

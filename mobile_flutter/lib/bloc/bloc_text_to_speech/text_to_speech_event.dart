@@ -11,6 +11,7 @@ class CreateTextToSpeechEvent extends TextToSpeechEvent {
       {required this.text, required this.title, required this.save});
 }
 
+class FetchAudioEvent extends TextToSpeechEvent {}
 class PlayAudioEvent extends TextToSpeechEvent {
   final String audioName;
 

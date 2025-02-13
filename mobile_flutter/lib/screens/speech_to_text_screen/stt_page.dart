@@ -159,26 +159,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Showcase(
-                      key: GlobalKey(),
-                      description: "Pause recording",
-                      child: GestureDetector(
-                        onTap: () {},
-                        child: Container(
-                          width: ResponsiveUtils.getResponsiveSize(context, 40),
-                          height:
-                              ResponsiveUtils.getResponsiveSize(context, 40),
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                              image: AssetImage('assets/icons/pause.png'),
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: 50),
                     Showcase(
                       key: _microphoneKey,
                       description: "Tap to start recording",

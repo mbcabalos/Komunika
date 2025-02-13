@@ -8,6 +8,7 @@ import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
+import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:komunika/widgets/text_to_speech_widgets/tts_card.dart';
@@ -24,28 +25,25 @@ class VoiceMessagePage extends StatefulWidget {
 
 class VoiceMessagePageState extends State<VoiceMessagePage> {
   late TextToSpeechBloc textToSpeechBloc;
-  // List to store the fetched audioPaths
   List<Map<String, dynamic>> audioItems = [];
   GlobalKey _fabKey = GlobalKey();
-
-  // Fetch audio paths from the database
-  Future<void> fetchAudioPaths() async {
-    List<Map<String, dynamic>> data =
-        await DatabaseHelper().fetchAllAudioItems();
-    setState(() {
-      audioItems = data;
-    });
-  }
+  final globalService = GlobalRepositoryImpl();
+  final databaseHelper = DatabaseHelper();
 
   @override
   void initState() {
     super.initState();
-    final globalService = GlobalRepositoryImpl();
-    final databaseHelper = DatabaseHelper();
     textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
-    textToSpeechBloc.add(TextToSpeechLoadingEvent());
-    fetchAudioPaths();
+    _refreshScreen();
     _checkThenShowcase();
+  }
+
+  Future<void> _refreshScreen() async {
+    setState(() {
+      print("Refreshing the screen..");
+      textToSpeechBloc.add(TextToSpeechLoadingEvent());
+      textToSpeechBloc.add(FetchAudioEvent());
+    }); // This triggers a rebuild
   }
 
   Future<void> _checkThenShowcase() async {
@@ -69,7 +67,7 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
           title: context.translate("tts_title"),
-          titleSize: getResponsiveFontSize(context, 20),
+          titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
           isBackButton: true,
           isSettingButton: false,
         ),
@@ -80,15 +78,18 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
             description: "Tap here to add voice message",
             child: FloatingActionButton(
               backgroundColor: widget.themeProvider.themeData.primaryColor,
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => TextToSpeechScreen(
                       themeProvider: widget.themeProvider,
+                      isSaved: _refreshScreen, // Pass the callback
                     ),
                   ),
                 );
+                print("Called");
+                _refreshScreen(); // Refresh after returning
               },
               child: Image.asset(
                 'assets/icons/text-to-speech.png',
@@ -111,11 +112,12 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
             if (state is TextToSpeechLoadingState) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is TextToSpeechLoadedSuccessState) {
-              return _buildContent(phoneHeight, widget.themeProvider);
+              return _buildContent(phoneHeight, widget.themeProvider, state);
             } else if (state is TextToSpeechErrorState) {
               return const Text('Error processing text to speech!');
             } else {
-              return _buildContent(phoneHeight, widget.themeProvider);
+              return _buildContent(phoneHeight, widget.themeProvider,
+                  TextToSpeechLoadedSuccessState(audioItems: []));
             }
           },
         ),
@@ -123,35 +125,31 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
     );
   }
 
-  Widget _buildContent(double phoneHeight, ThemeProvider themeProvider) {
-    return Center(
-      child: Column(
-        children: [
-          Container(
-            height: phoneHeight,
-            margin: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                // Display the fetched audio items in a ListView
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: audioItems.length,
-                    itemBuilder: (context, index) {
-                      final id = audioItems[index]['id'];
-                      final audioPath = audioItems[index]['audioName'];
-                      final favorites = audioItems[index]['favorites'];
-                      return GestureDetector(
-                        onTap: () {
-                          textToSpeechBloc
-                              .add(PlayAudioEvent(audioName: audioPath));
-                        },
-                        onLongPress: () {
-                          _showOptionsMenu(context, audioPath, favorites);
-                        },
-                        child: TTSCard(
-                          audioName: audioPath,
+  Widget _buildContent(double phoneHeight, ThemeProvider themeProvider,
+      TextToSpeechLoadedSuccessState state) {
+    audioItems = state.audioItems;
+    return RefreshIndicator(
+      onRefresh: () => _refreshScreen(),
+      child: Center(
+        child: Column(
+          children: [
+            Container(
+              height: phoneHeight,
+              margin: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  // Display the fetched audio items in a ListView
+                  Expanded(
+                    child: ListView.builder(
+                      key: ValueKey(audioItems.length),
+                      itemCount: audioItems.length,
+                      itemBuilder: (context, index) {
+                        final id = audioItems[index]['id'];
+                        final audioPath = audioItems[index]['audioName'];
+                        final favorites = audioItems[index]['favorites'];
+                        return GestureDetector(
                           onTap: () {
                             textToSpeechBloc
                                 .add(PlayAudioEvent(audioName: audioPath));
@@ -159,24 +157,28 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
                           onLongPress: () {
                             _showOptionsMenu(context, audioPath, favorites);
                           },
-                          themeProvider: themeProvider,
-                        ),
-                      );
-                    },
+                          child: TTSCard(
+                            audioName: audioPath,
+                            onTap: () {
+                              textToSpeechBloc
+                                  .add(PlayAudioEvent(audioName: audioPath));
+                            },
+                            onLongPress: () {
+                              _showOptionsMenu(context, audioPath, favorites);
+                            },
+                            themeProvider: themeProvider,
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
-  }
-
-  double getResponsiveFontSize(BuildContext context, double size) {
-    double baseWidth = 375.0; // Reference width (e.g., iPhone 11 Pro)
-    double screenWidth = MediaQuery.of(context).size.width;
-    return size * (screenWidth / baseWidth);
   }
 
   void _showOptionsMenu(BuildContext context, audioPath, favorites) {
@@ -201,13 +203,6 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
                     textToSpeechBloc.add(AddToFavorite(audioName: audioPath));
                   }
                   Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.edit),
-                title: Text("Edit"),
-                onTap: () {
-                  Navigator.pop(context); // Close the menu
                 },
               ),
               ListTile(

@@ -23,14 +23,16 @@ class PreferencesUtils {
     return prefs.getString(_languageKey) ?? 'English';
   }
 
-  static Future<void> storeWalkthorugh(bool walkthough) async {
+  static Future<void> storeWalkthorugh(bool walkthrough) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isWalkthrough', walkthough);
+    await prefs.setBool(
+        'isWalkthrough', walkthrough); // Use bool for correct flag type
   }
 
   static Future<String> getWalkthrough() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('isWalkthough').toString();
+    return prefs.getBool('isWalkthrough')?.toString() ??
+        'false'; // Default to 'false'
   }
 
   static Future<String> getThemeAndWalkthrough() async {
