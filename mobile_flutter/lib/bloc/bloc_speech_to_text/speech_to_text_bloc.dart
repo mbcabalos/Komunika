@@ -53,18 +53,13 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   Future<void> _startRecording(
       StartRecording event, Emitter<SpeechToTextState> emit) async {
     if (isRecording) return;
-
     isRecording = true;
     Directory tempDir = await getTemporaryDirectory();
     String filePath = '${tempDir.path}/recorded_audio.wav';
     _recordedFile = File(filePath);
-
-    // Initialize a new stream controller for audio streaming
-    _startNewStream();
-
     await _recorder.openRecorder();
     await _recorder.startRecorder(
-      toStream: _audioStreamController!.sink, // Streaming to the controller
+      toFile: filePath,
       codec: Codec.pcm16WAV,
       sampleRate: 16000,
     );
@@ -76,19 +71,13 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   Future<void> _stopRecording(
       StopRecording event, Emitter<SpeechToTextState> emit) async {
     if (!isRecording) return;
-
     isRecording = false;
     await _recorder.stopRecorder();
     await _recorder.closeRecorder();
-
     print("🛑 Recording stopped.");
-
     if (_recordedFile != null) {
       sendAudioToBackend(_recordedFile!);
     }
-
-    // Close the stream after recording is stopped
-    _audioStreamController?.close();
   }
 
   // Send recorded audio to the backend
@@ -96,6 +85,7 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     print("📤 Sending audio to backend...");
     List<int> audioBytes = await audioFile.readAsBytes();
     socketService.sendAudioFile(Uint8List.fromList(audioBytes));
+    await audioFile.delete();
     print("Socket called");
   }
 

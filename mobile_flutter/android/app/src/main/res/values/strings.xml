@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Komunika</string>
+    <string name="accessibility_service_description">Enables live captions for better accessibility.</string>
+</resources>

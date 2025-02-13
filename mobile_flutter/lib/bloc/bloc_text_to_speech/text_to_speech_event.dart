@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 abstract class TextToSpeechEvent {}
 
 class TextToSpeechLoadingEvent extends TextToSpeechEvent {}
@@ -12,6 +14,7 @@ class CreateTextToSpeechEvent extends TextToSpeechEvent {
 }
 
 class FetchAudioEvent extends TextToSpeechEvent {}
+
 class PlayAudioEvent extends TextToSpeechEvent {
   final String audioName;
 
@@ -28,4 +31,10 @@ class RemoveFromFavorite extends TextToSpeechEvent {
   final String audioName;
 
   RemoveFromFavorite({required this.audioName});
+}
+
+class DeleteQuickSpeech extends TextToSpeechEvent {
+  final int audioId;
+
+  DeleteQuickSpeech({required this.audioId});
 }
