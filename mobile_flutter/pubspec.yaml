@@ -73,9 +73,9 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/icons/logo.png" # Replace with your actual path
-  adaptive_icon_background: "#0000ff" # Background color (optional)
-  adaptive_icon_foreground: "assets/icons/logo.png" # (Android only)
+  image_path: "assets/icons/app_logo.png" # Replace with your actual path
+  adaptive_icon_background: "#ffffff" # Background color (optional)
+  adaptive_icon_foreground: "assets/icons/app_logo.png" # (Android only)
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

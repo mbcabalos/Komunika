@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
+import 'package:komunika/utils/responsive.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -46,7 +48,7 @@ class SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue, 
+      backgroundColor: ColorsPalette.accent, 
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -55,23 +57,27 @@ class SplashScreenState extends State<SplashScreen>
             children: [
               // Logo or Icon
               Image.asset(
-                'assets/icons/logo.png',
-                width: 100,
-                height: 100,
-                color: Colors.white,
-                colorBlendMode: BlendMode.srcIn,
+                'assets/icons/app_logo2.png',
+                width: ResponsiveUtils.getResponsiveSize(context, 150),
+                height: ResponsiveUtils.getResponsiveSize(context, 150),
               ),
-
-              const SizedBox(height: 20),
-              // App Name or Tagline
+              SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 20)),
               Text(
-                'Komunika',
+                'KOMUNIKA',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: getResponsiveFontSize(context, 25),
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 30),
                   fontWeight: FontWeight.bold,
                   fontFamily: Fonts.main,
-                  letterSpacing: 5,
+                ),
+              ),
+              Text(
+                'AMPLIFY YOUR WORLD',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 10),
+                  fontWeight: FontWeight.bold,
+                  fontFamily: Fonts.main,
                 ),
               ),
             ],
@@ -79,11 +85,5 @@ class SplashScreenState extends State<SplashScreen>
         ),
       ),
     );
-  }
-
-  double getResponsiveFontSize(BuildContext context, double size) {
-    double baseWidth = 375.0; // Reference width (e.g., iPhone 11 Pro)
-    double screenWidth = MediaQuery.of(context).size.width;
-    return size * (screenWidth / baseWidth);
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_home/home_bloc.dart';
 import 'package:komunika/screens/auto_caption_screen/auto_caption_page.dart';
+import 'package:komunika/screens/sign_transcribe_screen/sign_transcribe_page.dart';
 import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
@@ -236,13 +237,23 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      HomeCatalogsCard(
-                        imagePath: 'assets/icons/hello.png',
-                        isImagePath: true,
-                        content: context.translate("home_sign_transcribe"),
-                        contentSize:
-                            ResponsiveUtils.getResponsiveFontSize(context, 14),
-                        themeProvider: themeProvider,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SignTranscribePage(themeProvider: themeProvider),
+                            ),
+                          );
+                        },
+                        child: HomeCatalogsCard(
+                          imagePath: 'assets/icons/hello.png',
+                          isImagePath: true,
+                          content: context.translate("home_sign_transcribe"),
+                          contentSize: ResponsiveUtils.getResponsiveFontSize(
+                              context, 14),
+                          themeProvider: themeProvider,
+                        ),
                       ),
                       SizedBox(width: MediaQuery.of(context).size.width * 0.04),
                       GestureDetector(
