@@ -29,7 +29,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       FetchAudioEvent event, Emitter<HomeState> emit) async {
     try {
       List<Map<String, dynamic>> data =
-          await DatabaseHelper().fetchAllAudioItems();
+          await DatabaseHelper().fetchAllFavorites();
       emit(HomeSuccessLoadedState(audioItems: data));
     } catch (e) {
       emit(HomeErrorState(message: "$e"));

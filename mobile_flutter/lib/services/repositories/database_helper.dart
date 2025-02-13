@@ -79,6 +79,15 @@ class DatabaseHelper {
     return await db.query('audio_items');
   }
 
+  Future<List<Map<String, dynamic>>> fetchAllFavorites() async {
+    final db = await database;
+    return await db.query(
+      'audio_items',
+      where: 'favorites = ?',
+      whereArgs: [1],
+    );
+  }
+
   // Insert an audio item (just the audioName for now)
   Future<void> insertAudioItem(String audioName) async {
     try {

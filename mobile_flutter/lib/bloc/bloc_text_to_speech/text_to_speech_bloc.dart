@@ -19,6 +19,7 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
     on<PlayAudioEvent>(playAudioEvent);
     on<AddToFavorite>(addToFavorite);
     on<RemoveFromFavorite>(removeFromFavorite);
+    on<DeleteQuickSpeech>(deleteQuickspeech);
   }
 
   FutureOr<void> textToSpeechLoadingEvent(
@@ -59,6 +60,16 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
       RemoveFromFavorite event, Emitter<TextToSpeechState> emit) async {
     try {
       _databaseHelper.removeFavorite(event.audioName);
+      List<Map<String, dynamic>> data =
+          await DatabaseHelper().fetchAllAudioItems();
+      emit(TextToSpeechLoadedSuccessState(audioItems: data));
+    } catch (e) {}
+  }
+
+  FutureOr<void> deleteQuickspeech(
+      DeleteQuickSpeech event, Emitter<TextToSpeechState> emit) async {
+    try {
+      await DatabaseHelper().deleteAudioItem(event.audioId);
       List<Map<String, dynamic>> data =
           await DatabaseHelper().fetchAllAudioItems();
       emit(TextToSpeechLoadedSuccessState(audioItems: data));

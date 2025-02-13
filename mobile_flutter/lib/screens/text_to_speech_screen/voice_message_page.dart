@@ -155,7 +155,7 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
                                 .add(PlayAudioEvent(audioName: audioPath));
                           },
                           onLongPress: () {
-                            _showOptionsMenu(context, audioPath, favorites);
+                            _showOptionsMenu(context, id, audioPath, favorites);
                           },
                           child: TTSCard(
                             audioName: audioPath,
@@ -164,7 +164,8 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
                                   .add(PlayAudioEvent(audioName: audioPath));
                             },
                             onLongPress: () {
-                              _showOptionsMenu(context, audioPath, favorites);
+                              _showOptionsMenu(
+                                  context, id, audioPath, favorites);
                             },
                             themeProvider: themeProvider,
                           ),
@@ -181,7 +182,7 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
     );
   }
 
-  void _showOptionsMenu(BuildContext context, audioPath, favorites) {
+  void _showOptionsMenu(BuildContext context, id, audioPath, favorites) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -209,7 +210,8 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
                 leading: Icon(Icons.delete),
                 title: Text("Delete"),
                 onTap: () {
-                  Navigator.pop(context); // Close the menu
+                  textToSpeechBloc.add(DeleteQuickSpeech(audioId: id));
+                  Navigator.pop(context);
                 },
               ),
             ],
