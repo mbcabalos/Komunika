@@ -94,7 +94,6 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
     final double phoneHeight =
         MediaQuery.of(context).size.height * 0.6; // Increased height
     final double phoneWidth = MediaQuery.of(context).size.width * 0.9;
-
     return RefreshIndicator.adaptive(
       onRefresh: _initialize,
       child: Padding(
@@ -116,7 +115,6 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                         _textController.selection = TextSelection.fromPosition(
                             TextPosition(offset: _textController.text.length));
                       }
-
                       return Showcase(
                         key: _textFieldKey,
                         description: "Wait for your message to be translated",
@@ -164,6 +162,19 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                       key: _microphoneKey,
                       description: "Tap to start recording",
                       child: GestureDetector(
+                        onTap: () async {
+                          if (!_isRecording) {
+                            setState(() {
+                              _isRecording = true;
+                            });
+                            speechToTextBloc.add(StartTapRecording());
+                          } else {
+                            setState(() {
+                              _isRecording = false;
+                            });
+                            speechToTextBloc.add(StopTapRecording());
+                          }
+                        },
                         onLongPress: () async {
                           setState(() {
                             _isRecording = true;
@@ -175,12 +186,6 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                             _isRecording = false;
                           });
                           speechToTextBloc.add(StopRecording());
-                        },
-                        onLongPressCancel: () async {
-                          setState(() {
-                            _isRecording = false;
-                          });
-                          print("User cancelled");
                         },
                         child: Container(
                           width: ResponsiveUtils.getResponsiveSize(context, 80),

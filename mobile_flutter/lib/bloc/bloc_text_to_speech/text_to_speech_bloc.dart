@@ -84,8 +84,8 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
       final downloadDir = Directory('${directory?.parent.path}/files/audio');
       final filePath = '${downloadDir.path}/$path.mp3';
       final player = AudioPlayer();
-      await player.setFilePath(filePath); // Set file path (local file or URL)
-      await player.play(); // Play the audio
+      await player.setFilePath(filePath);
+      await player.play(); 
       List<Map<String, dynamic>> data =
           await DatabaseHelper().fetchAllAudioItems();
       emit(TextToSpeechLoadedSuccessState(audioItems: data));

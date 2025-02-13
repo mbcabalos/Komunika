@@ -13,6 +13,10 @@ class StartRecording extends SpeechToTextEvent {}
 
 class StopRecording extends SpeechToTextEvent {}
 
+class StartTapRecording extends SpeechToTextEvent {}
+
+class StopTapRecording extends SpeechToTextEvent {}
+
 class StartListeningEvent extends SpeechToTextEvent {}
 
 class NewTranscriptionEvent extends SpeechToTextEvent {
