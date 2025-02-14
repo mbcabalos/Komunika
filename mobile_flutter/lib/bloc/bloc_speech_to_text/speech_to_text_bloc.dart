@@ -93,7 +93,6 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     if (!recording) return;
     recording = false;
     await _recorder.stopRecorder();
-    await _recorder.closeRecorder();
     print("🛑 Recording stopped.");
     if (_recordedFile != null) {
       sendAudioToBackend(_recordedFile!);

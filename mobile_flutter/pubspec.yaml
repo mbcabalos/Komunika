@@ -51,11 +51,12 @@ dependencies:
   url_launcher: ^6.3.1
   shared_preferences: ^2.5.1
   socket_io_client: ^3.0.2
-  flutter_sound:
+  flutter_sound: ^9.23.1
   equatable:
   permission_handler:
   flutter_svg:
   bloc: ^9.0.0
+  camera: ^0.11.1
 
 dev_dependencies:
   flutter_test:

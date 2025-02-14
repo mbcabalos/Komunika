@@ -1,91 +1,120 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:komunika/utils/app_localization_translate.dart';
-import 'package:komunika/utils/responsive.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:komunika/bloc/bloc_sign_transcriber/sign_transcriber_bloc.dart';
+import 'dart:math' as math;
+
 import 'package:komunika/utils/themes.dart';
-import 'package:komunika/widgets/app_bar.dart';
 
-class SignTranscribePage extends StatefulWidget {
+class SignTranscriberPage extends StatelessWidget {
   final ThemeProvider themeProvider;
-  const SignTranscribePage({super.key, required this.themeProvider});
-
-  @override
-  State<SignTranscribePage> createState() => SignTranscribePageState();
-}
-
-class SignTranscribePageState extends State<SignTranscribePage> {
-  bool isSignTranscriptionEnabled = false;
-  final TextEditingController _textController = TextEditingController();
-  String translatedMessage = "This is a note, this is a...";
+  const SignTranscriberPage({super.key, required this.themeProvider});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarWidget(
-          title: "Sign Transcibe",
-          titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
-          isBackButton: true,
-          isSettingButton: false),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+    return BlocProvider(
+      create: (context) => SignTranscriberBloc()..add(InitializeCamera()),
+      child: Scaffold(
+        appBar: AppBar(title: const Text("Sign Transcriber")),
+        body: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              BlocBuilder<SignTranscriberBloc, SignTranscriberState>(
+                builder: (context, state) {
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        height: 400,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: themeProvider.themeData.cardColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: state is CameraInitialized
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Transform(
+                                  alignment: Alignment.center,
+                                  transform: Matrix4.identity()
+                                    ..rotateZ(math.pi / 2)
+                                    ..rotateY(state.cameraController.description
+                                                .lensDirection ==
+                                            CameraLensDirection.front
+                                        ? math.pi
+                                        : 0),
+                                  child: AspectRatio(
+                                    aspectRatio: 9 / 16,
+                                    child:
+                                        CameraPreview(state.cameraController),
+                                  ),
+                                ),
+                              )
+                            : const Center(
+                                child: Text("Live video feed",
+                                    style: TextStyle(
+                                        fontSize: 14, color: Colors.black54))),
+                      ),
+                      Positioned(
+                        bottom: 10,
+                        right: 10,
+                        child: IconButton(
+                          icon: const Icon(Icons.switch_camera,
+                              color: Colors.white),
+                          onPressed: () => context
+                              .read<SignTranscriberBloc>()
+                              .add(SwitchCamera()),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-              color: widget.themeProvider.themeData.cardColor,
-              child: TextField(
-                readOnly: false,
-                controller: _textController,
-                style: TextStyle(
-                  color: widget
-                      .themeProvider.themeData.textTheme.bodyMedium?.color,
-                  fontSize: 20,
-                ),
-                decoration: const InputDecoration(
-                  hintText: "Waiting Progress ni Kobe",
-                  border: InputBorder.none,
-                  fillColor: Colors.transparent,
-                  filled: true,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                ),
-                textAlignVertical: TextAlignVertical.center,
-                maxLines: 5,
-                keyboardType: TextInputType.multiline,
+              const SizedBox(height: 10),
+              BlocBuilder<SignTranscriberBloc, SignTranscriberState>(
+                builder: (context, state) {
+                  String message = "Translated message will appear here...";
+                  if (state is TranscriptionInProgress) {
+                    message = state.message;
+                  }
+
+                  return Container(
+                    height: 130,
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                        color: themeProvider.themeData.cardColor,
+                        borderRadius: BorderRadius.circular(8)),
+                    child: Center(
+                        child: Text(message,
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: themeProvider
+                                    .themeData.textTheme.bodyMedium?.color))),
+                  );
+                },
               ),
-            ),
-            const SizedBox(height: 20),
-            Card(
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => context
+                        .read<SignTranscriberBloc>()
+                        .add(StartTranslation()),
+                    child: const Text("Start"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => context
+                        .read<SignTranscriberBloc>()
+                        .add(StopTranslation()),
+                    child: const Text("Stop"),
+                  ),
+                ],
               ),
-              color: widget.themeProvider.themeData.cardColor,
-              child: TextField(
-                readOnly: false,
-                controller: _textController,
-                style: TextStyle(
-                  color: widget
-                      .themeProvider.themeData.textTheme.bodyMedium?.color,
-                  fontSize: 20,
-                ),
-                decoration: InputDecoration(
-                  hintText: "Translated Message",
-                  border: InputBorder.none,
-                  fillColor: Colors.transparent,
-                  filled: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                ),
-                textAlignVertical: TextAlignVertical.center,
-                maxLines: 12,
-                keyboardType: TextInputType.multiline,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

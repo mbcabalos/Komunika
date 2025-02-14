@@ -40,9 +40,9 @@ class AboutPage extends StatelessWidget {
                   alignment: Alignment.center,
                   child: ClipRRect(
                     child: Image.asset(
-                      'assets/icons/logo.png',
-                      width: ResponsiveUtils.getResponsiveSize(context, 100),
-                      height: ResponsiveUtils.getResponsiveSize(context, 100),
+                      'assets/icons/app_logo.png',
+                      width: ResponsiveUtils.getResponsiveSize(context, 500),
+                      height: ResponsiveUtils.getResponsiveSize(context, 500),
                       fit: BoxFit.fill,
                     ),
                   ),

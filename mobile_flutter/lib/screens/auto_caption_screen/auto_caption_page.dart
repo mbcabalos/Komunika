@@ -73,7 +73,7 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
             ),
             color: widget.themeProvider.themeData.cardColor,
             child: TextField(
-              readOnly: false,
+              readOnly: true,
               controller: _textController,
               style: TextStyle(
                 color:
