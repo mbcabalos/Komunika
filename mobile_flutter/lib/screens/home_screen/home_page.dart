@@ -244,7 +244,8 @@ class _HomePageState extends State<HomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SignTranscribePage(themeProvider: themeProvider),
+                              builder: (context) => SignTranscribePage(
+                                  themeProvider: themeProvider),
                             ),
                           );
                         },
@@ -287,7 +288,6 @@ class _HomePageState extends State<HomePage> {
                     },
                     themeProvider: themeProvider,
                   ),
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.04),
                 ],
               ),
             ),
