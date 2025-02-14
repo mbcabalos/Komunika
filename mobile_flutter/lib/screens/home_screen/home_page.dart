@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_home/home_bloc.dart';
+import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/screens/auto_caption_screen/auto_caption_page.dart';
 import 'package:komunika/screens/sign_transcribe_screen/sign_transcribe_page.dart';
 import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
+import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
@@ -31,6 +33,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late HomeBloc homeBloc;
+  late SpeechToTextBloc sttBloc;
   List<String> quickSpeechItems = [];
   GlobalKey _speechToTextKey = GlobalKey();
   GlobalKey _textToSpeechKey = GlobalKey();
@@ -40,7 +43,9 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    final socketService = SocketService();
     homeBloc = HomeBloc();
+    sttBloc = SpeechToTextBloc(socketService);
     homeBloc.add(HomeLoadingEvent());
     homeBloc.add(FetchAudioEvent());
     // loadTheme();
@@ -86,8 +91,15 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<HomeBloc>(
-      create: (context) => homeBloc,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<HomeBloc>(
+          create: (context) => homeBloc,
+        ),
+        BlocProvider<SpeechToTextBloc>(
+          create: (context) => sttBloc,
+        ),
+      ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return Scaffold(
@@ -186,6 +198,7 @@ class _HomePageState extends State<HomePage> {
                               MaterialPageRoute(
                                   builder: (context) => SpeechToTextPage(
                                         themeProvider: themeProvider,
+                                        speechToTextBloc: sttBloc,
                                       )),
                             );
                             // final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -244,7 +257,7 @@ class _HomePageState extends State<HomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SignTranscribePage(
+                              builder: (context) => SignTranscriberPage(
                                   themeProvider: themeProvider),
                             ),
                           );

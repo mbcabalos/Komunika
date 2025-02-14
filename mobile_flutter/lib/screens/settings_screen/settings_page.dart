@@ -146,31 +146,31 @@ class SettingPageState extends State<SettingPage> {
                             builder: (context) => const AboutPage()));
                   },
                 ),
-                _buildSettingItem(
-                  themeProvider: themeProvider,
-                  icon: Icons.update,
-                  title: context.translate('settings_update_available'),
-                  trailing: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: ColorsPalette.grey,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      context.translate('settings_update'),
-                      style: TextStyle(
-                        fontSize:
-                            ResponsiveUtils.getResponsiveFontSize(context, 12),
-                        fontFamily: Fonts.main,
-                        color: ColorsPalette.white,
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    // Navigate to update page
-                  },
-                ),
+                // _buildSettingItem(
+                //   themeProvider: themeProvider,
+                //   icon: Icons.update,
+                //   title: context.translate('settings_update_available'),
+                //   trailing: Container(
+                //     padding:
+                //         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                //     decoration: BoxDecoration(
+                //       color: ColorsPalette.grey,
+                //       borderRadius: BorderRadius.circular(12),
+                //     ),
+                //     child: Text(
+                //       context.translate('settings_update'),
+                //       style: TextStyle(
+                //         fontSize:
+                //             ResponsiveUtils.getResponsiveFontSize(context, 12),
+                //         fontFamily: Fonts.main,
+                //         color: ColorsPalette.white,
+                //       ),
+                //     ),
+                //   ),
+                //   onTap: () {
+                //     // Navigate to update page
+                //   },
+                // ),
               ],
             ),
           ),

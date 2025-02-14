@@ -13,14 +13,15 @@ import 'package:showcaseview/showcaseview.dart';
 
 class SpeechToTextPage extends StatefulWidget {
   final ThemeProvider themeProvider;
-  const SpeechToTextPage({super.key, required this.themeProvider});
+  final SpeechToTextBloc speechToTextBloc;
+  const SpeechToTextPage(
+      {super.key, required this.themeProvider, required this.speechToTextBloc});
 
   @override
   State<SpeechToTextPage> createState() => SpeechToTextPageState();
 }
 
 class SpeechToTextPageState extends State<SpeechToTextPage> {
-  late SpeechToTextBloc speechToTextBloc;
   final TextEditingController _textController = TextEditingController();
   GlobalKey _microphoneKey = GlobalKey();
   GlobalKey _textFieldKey = GlobalKey();
@@ -32,11 +33,9 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
   @override
   void initState() {
     super.initState();
-    final socketService = SocketService();
 
-    speechToTextBloc = SpeechToTextBloc(socketService);
     _initialize();
-    //_checkThenShowcase();
+    _checkThenShowcase();
   }
 
   Future<void> _checkThenShowcase() async {
@@ -53,13 +52,13 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
   }
 
   Future<void> _initialize() async {
-    speechToTextBloc.add(SpeechToTextLoadingEvent());
+    widget.speechToTextBloc.add(SpeechToTextLoadingEvent());
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<SpeechToTextBloc>(
-      create: (context) => speechToTextBloc,
+    return BlocProvider.value(
+      value: widget.speechToTextBloc,
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
@@ -164,11 +163,13 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                       description: "Add new entry",
                       child: GestureDetector(
                         onTap: () {
-                          // Handle plus icon action
+                          print("clicked");
+                          _textController.clear();
                         },
                         child: Container(
                           width: ResponsiveUtils.getResponsiveSize(context, 35),
-                          height: ResponsiveUtils.getResponsiveSize(context, 35),
+                          height:
+                              ResponsiveUtils.getResponsiveSize(context, 35),
                           decoration: const BoxDecoration(
                             shape: BoxShape.rectangle,
                             image: DecorationImage(
@@ -189,25 +190,25 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                             setState(() {
                               _isRecording = true;
                             });
-                            speechToTextBloc.add(StartTapRecording());
+                            widget.speechToTextBloc.add(StartTapRecording());
                           } else {
                             setState(() {
                               _isRecording = false;
                             });
-                            speechToTextBloc.add(StopTapRecording());
+                            widget.speechToTextBloc.add(StopTapRecording());
                           }
                         },
                         onLongPress: () async {
                           setState(() {
                             _isRecording = true;
                           });
-                          speechToTextBloc.add(StartRecording());
+                          widget.speechToTextBloc.add(StartRecording());
                         },
                         onLongPressUp: () async {
                           setState(() {
                             _isRecording = false;
                           });
-                          speechToTextBloc.add(StopRecording());
+                          widget.speechToTextBloc.add(StopRecording());
                         },
                         child: Container(
                           width: ResponsiveUtils.getResponsiveSize(context, 80),
@@ -237,7 +238,8 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                       description: "Save transcription",
                       child: GestureDetector(
                         onTap: () async {
-                          final SharedPreferences prefs = await SharedPreferences.getInstance();
+                          final SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
                           await prefs.setBool('pageOneDone', true);
                         },
                         child: Container(

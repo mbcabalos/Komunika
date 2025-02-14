@@ -177,25 +177,25 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Showcase(
-                  key: _addKey,
-                  description: "Add another entry",
-                  child: GestureDetector(
-                    onTap: () {},
-                    child: Container(
-                      width: ResponsiveUtils.getResponsiveSize(context, 35),
-                      height: ResponsiveUtils.getResponsiveSize(context, 35),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: AssetImage('assets/icons/plus.png'),
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 20),
+                // Showcase(
+                //   key: _addKey,
+                //   description: "Add another entry",
+                //   child: GestureDetector(
+                //     onTap: () {},
+                //     child: Container(
+                //       width: ResponsiveUtils.getResponsiveSize(context, 35),
+                //       height: ResponsiveUtils.getResponsiveSize(context, 35),
+                //       decoration: const BoxDecoration(
+                //         shape: BoxShape.circle,
+                //         image: DecorationImage(
+                //           image: AssetImage('assets/icons/plus.png'),
+                //           fit: BoxFit.contain,
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                // ),
+                const SizedBox(width: 50),
                 Showcase(
                   key: _soundKey,
                   description: "Hear the speech output.",
