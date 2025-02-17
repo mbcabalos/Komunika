@@ -35,7 +35,6 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
     super.initState();
     textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
     _refreshScreen();
-    //_checkThenShowcase();
   }
 
   Future<void> _refreshScreen() async {
@@ -44,18 +43,6 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
       textToSpeechBloc.add(TextToSpeechLoadingEvent());
       textToSpeechBloc.add(FetchAudioEvent());
     }); // This triggers a rebuild
-  }
-
-  Future<void> _checkThenShowcase() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool pageTwoDone = prefs.getBool('pageTwoDone') ?? false;
-
-    if (!pageTwoDone) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ShowCaseWidget.of(context).startShowCase([_fabKey]);
-        prefs.setBool('pageTwoDone', true);
-      });
-    }
   }
 
   @override

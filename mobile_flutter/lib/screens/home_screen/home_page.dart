@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_home/home_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
+import 'package:komunika/bloc/bloc_walkthrough/walkthrough_bloc.dart';
 import 'package:komunika/screens/auto_caption_screen/auto_caption_page.dart';
 import 'package:komunika/screens/sign_transcribe_screen/sign_transcribe_page.dart';
 import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
@@ -16,6 +17,7 @@ import 'package:komunika/widgets/app_bar.dart';
 import 'package:komunika/widgets/home_widgets/home_catalogs_card.dart';
 import 'package:komunika/widgets/home_widgets/home_quick_speech_card.dart';
 import 'package:komunika/widgets/home_widgets/home_tips_card.dart';
+import 'package:komunika/widgets/home_widgets/home_walkthrough.dart';
 import 'package:path/path.dart'
     as p; //renamed as p to avoid conflict with showcase context eme
 import 'package:permission_handler/permission_handler.dart';
@@ -51,11 +53,24 @@ class _HomePageState extends State<HomePage> {
     // loadTheme();
     requestPermissions();
     loadFavorites();
-    //PreferencesUtils.resetShowcaseFlags();
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   ShowCaseWidget.of(context).startShowCase([_speechToTextKey]);
-    // });
+    PreferencesUtils.storeWalkthrough(false); //use to test walthrough
+    _showWalkthrough();
   }
+
+  void _showWalkthrough() async {
+  bool isWalkthroughDone = await PreferencesUtils.getWalkthrough();
+  if (!isWalkthroughDone) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return BlocProvider(
+          create: (context) => WalkthroughBloc(),
+          child: HomeWalkthrough(),
+        );
+      },
+    );
+  }
+}
 
   Future<void> _refreshScreen() async {
     setState(() {
@@ -201,14 +216,6 @@ class _HomePageState extends State<HomePage> {
                                         speechToTextBloc: sttBloc,
                                       )),
                             );
-                            // final SharedPreferences prefs = await SharedPreferences.getInstance();
-                            // bool pageOneDone = prefs.getBool('pageOneDone') ?? false;
-
-                            // if (pageOneDone) {
-                            //   WidgetsBinding.instance.addPostFrameCallback((_) {
-                            //     ShowCaseWidget.of(context).startShowCase([_textToSpeechKey]);
-                            //   });
-                            // }
                           },
                           child: HomeCatalogsCard(
                             imagePath: 'assets/icons/word-of-mouth.png',

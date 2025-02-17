@@ -35,20 +35,6 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
     super.initState();
 
     _initialize();
-    _checkThenShowcase();
-  }
-
-  Future<void> _checkThenShowcase() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool pageOneDone = prefs.getBool('pageOneDone') ?? false;
-
-    if (!pageOneDone) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        ShowCaseWidget.of(context)
-            .startShowCase([_microphoneKey, _textFieldKey, _saveKey, _plusKey]);
-        prefs.setBool('pageOneDone', true);
-      });
-    }
   }
 
   Future<void> _initialize() async {

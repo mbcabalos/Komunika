@@ -44,20 +44,6 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     final databaseHelper = DatabaseHelper();
     textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
     _initialize();
-    //_checkThenShowcase();
-  }
-
-  Future<void> _checkThenShowcase() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool pageTwoDone = prefs.getBool('pageThreeDone') ?? false;
-
-    if (!pageTwoDone) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ShowCaseWidget.of(context)
-            .startShowCase([_titleKey, _typeSomethingKey, _soundKey, _saveKey, _addKey]);
-        prefs.setBool('pageThreeDone', true);
-      });
-    }
   }
 
   Future<void> _initialize() async {
