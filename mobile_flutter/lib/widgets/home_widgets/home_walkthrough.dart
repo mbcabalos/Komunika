@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:komunika/bloc/bloc_walkthrough/walkthrough_bloc.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 
 class HomeWalkthrough extends StatefulWidget {
@@ -15,9 +13,9 @@ class _HomeWalkthroughState extends State<HomeWalkthrough> {
   int _currentPage = 0;
 
   final List<String> _imagePaths = [
-    'assets/walkthrough/intro_1.png', // Replace with your image paths
-    'assets/walkthrough/intro_2.png',
-    'assets/walkthrough/intro_3.png',
+    'assets/images/welcome.jpg', 
+    'assets/images/stt4.jpg',
+    'assets/images/vm4.jpg',
   ];
 
   @override
@@ -35,46 +33,54 @@ class _HomeWalkthroughState extends State<HomeWalkthrough> {
   void _nextPage() {
     if (_currentPage < _imagePaths.length - 1) {
       _pageController.nextPage(
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeIn,
       );
     } else {
-      _markWalkthroughCompleted(); // Automatically mark as done on last page
+      _markWalkthroughCompleted();
     }
   }
 
   void _skipWalkthrough() async {
-    await PreferencesUtils.storeWalkthrough(true); // Skip and mark as done
-    Navigator.of(context).pop(); // Close the walkthrough dialog
+    await PreferencesUtils.storeWalkthrough(true);
+    Navigator.of(context).pop();
   }
 
   void _markWalkthroughCompleted() async {
-    await PreferencesUtils.storeWalkthrough(true); // Mark as completed
-    Navigator.of(context).pop(); // Close the walkthrough dialog
+    await PreferencesUtils.storeWalkthrough(true);
+    Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12), 
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
+            // Image with fixed size to fit dialog
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.8, // 80% of screen width
+              height: MediaQuery.of(context).size.height * 0.5, // 50% of screen height
               child: PageView.builder(
                 controller: _pageController,
                 itemCount: _imagePaths.length,
                 onPageChanged: _onPageChanged,
                 itemBuilder: (context, index) {
-                  return Center(
-                    child: Image.asset(_imagePaths[index]), // Displaying image
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      _imagePaths[index],
+                      fit: BoxFit.cover, // Ensures image fits well
+                    ),
                   );
                 },
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
+            // Progress indicator
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
@@ -82,21 +88,18 @@ class _HomeWalkthroughState extends State<HomeWalkthrough> {
                 (index) => _buildIndicator(index),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
+            // Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Skip Button
                 TextButton(
                   onPressed: _skipWalkthrough,
-                  child: Text('Skip'),
+                  child: const Text('Skip'),
                 ),
-                // Next Button or Done Button
                 ElevatedButton(
                   onPressed: _nextPage,
-                  child: Text(
-                    _currentPage == _imagePaths.length - 1 ? 'Done' : 'Next',
-                  ),
+                  child: Text(_currentPage == _imagePaths.length - 1 ? 'Done' : 'Next'),
                 ),
               ],
             ),
@@ -108,8 +111,8 @@ class _HomeWalkthroughState extends State<HomeWalkthrough> {
 
   Widget _buildIndicator(int index) {
     return AnimatedContainer(
-      duration: Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(horizontal: 5),
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
       width: _currentPage == index ? 12 : 8,
       height: 8,
       decoration: BoxDecoration(
