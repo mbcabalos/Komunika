@@ -40,10 +40,20 @@ class PreferencesUtils {
     return prefs.getString('theme').toString();
   }
 
-  static Future<void> resetShowcaseFlags() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('pageOneDone'); // Remove specific flags
-    await prefs.remove('pageTwoDone');
-    await prefs.remove('pageThreeDone');
+  static Future<void> storeIntroStatus(bool status) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isIntroSeen', status);
   }
+
+  static Future<bool> getIntroStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('isIntroSeen') ?? false;
+  }
+
+  // static Future<void> resetShowcaseFlags() async {
+  //   final SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   await prefs.remove('pageOneDone'); // Remove specific flags
+  //   await prefs.remove('pageTwoDone');
+  //   await prefs.remove('pageThreeDone');
+  // }
 }

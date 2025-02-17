@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_home/home_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/screens/auto_caption_screen/auto_caption_page.dart';
+import 'package:komunika/screens/intro_screen_screen/intro_screen.dart';
 import 'package:komunika/screens/sign_transcribe_screen/sign_transcribe_page.dart';
 import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
@@ -51,11 +52,30 @@ class _HomePageState extends State<HomePage> {
     // loadTheme();
     requestPermissions();
     loadFavorites();
+    PreferencesUtils.storeIntroStatus(false); // Reset intro status
+    print("Intro status reset to false");
+
+    _checkIntroStatus();
     //PreferencesUtils.resetShowcaseFlags();
     // WidgetsBinding.instance.addPostFrameCallback((_) {
     //   ShowCaseWidget.of(context).startShowCase([_speechToTextKey]);
     // });
   }
+
+  Future<void> _checkIntroStatus() async {
+  final prefs = await SharedPreferences.getInstance();
+  final isIntroSeen = prefs.getBool('isIntroSeen') ?? false;
+  
+  // If not seen, navigate to IntroScreen after the home page loads
+  if (!isIntroSeen) {
+    Future.delayed(Duration(seconds:5), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => IntroScreen()), // Navigate to the IntroScreen
+      );
+    });
+  }
+}
 
   Future<void> _refreshScreen() async {
     setState(() {
