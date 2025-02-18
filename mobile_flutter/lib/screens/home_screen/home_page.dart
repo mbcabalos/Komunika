@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
     // loadTheme();
     requestPermissions();
     loadFavorites();
-    PreferencesUtils.storeWalkthrough(false); //use to test walthrough
+    //PreferencesUtils.storeWalkthrough(false); //use to test walthrough
     _showWalkthrough();
   }
 
