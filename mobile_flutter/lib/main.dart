@@ -30,12 +30,6 @@ Future<void> main() async {
   );
 }
 
-List<Map<String, dynamic>> audioItems = [
-  {'audioName': 'Hello', 'favorites': 1},
-  {'audioName': 'Goodbye', 'favorites': 1},
-  {'audioName': 'Greet', 'favorites': 1},
-];
-
 Future<void> checkDatabaseExistence() async {
   DatabaseHelper databaseHelper = DatabaseHelper();
   String path = join(await getDatabasesPath(), 'audio_database.db');

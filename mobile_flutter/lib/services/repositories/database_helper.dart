@@ -12,7 +12,16 @@ class DatabaseHelper {
   List<Map<String, dynamic>> audioItems = [
     {'audioName': 'Hello', 'favorites': 1},
     {'audioName': 'Goodbye', 'favorites': 1},
-    {'audioName': 'Greeting', 'favorites': 1},
+    {'audioName': 'Greet', 'favorites': 1},
+    {'audioName': 'Good morning', 'favorites': 1},
+    {'audioName': 'Good afternoon', 'favorites': 1},
+    {'audioName': 'Good evening', 'favorites': 1},
+    {'audioName': 'Agree', 'favorites': 1},
+    {'audioName': 'Disagree', 'favorites': 1},
+    {'audioName': 'Sorry', 'favorites': 1},
+    {'audioName': 'Thank you', 'favorites': 1},
+    {'audioName': 'Ask the time', 'favorites': 1},
+    {'audioName': 'Assistance', 'favorites': 1},
   ];
 
   Future<Database> get database async {
@@ -57,9 +66,17 @@ class DatabaseHelper {
         'assets/audio/Goodbye.mp3',
         'assets/audio/Greeting.mp3',
         'assets/audio/Hello.mp3',
+        'assets/audio/Good morning.mp3',
+        'assets/audio/Good afternoon.mp3',
+        'assets/audio/Good evening.mp3',
+        'assets/audio/Agree.mp3',
+        'assets/audio/Disagree.mp3',
+        'assets/audio/Sorry.mp3',
+        'assets/audio/Thank you.mp3',
+        'assets/audio/Ask the time.mp3',
+        'assets/audio/Assistance.mp3',
       ];
 
-      // Loop through each audio file, read it from assets and write it to the target folder
       for (String assetFile in assetFiles) {
         ByteData data = await rootBundle.load(assetFile);
         List<int> bytes = data.buffer.asUint8List();
