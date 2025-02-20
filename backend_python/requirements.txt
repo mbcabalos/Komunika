@@ -20,7 +20,6 @@ itsdangerous==2.2.0
 Jinja2==3.1.5
 MarkupSafe==3.0.2
 pycparser==2.22
-pypiwin32==223
 python-engineio==4.11.2
 python-socketio==5.12.1
 pyttsx3==2.98
