@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/themes.dart';
 

@@ -22,7 +22,6 @@ import 'package:path/path.dart'
     as p; //renamed as p to avoid conflict with showcase context eme
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:sqflite/sqflite.dart';
 
