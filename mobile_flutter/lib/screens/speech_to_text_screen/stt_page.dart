@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
-import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
-import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,17 +21,17 @@ class SpeechToTextPage extends StatefulWidget {
 
 class SpeechToTextPageState extends State<SpeechToTextPage> {
   final TextEditingController _textController = TextEditingController();
-  GlobalKey _microphoneKey = GlobalKey();
-  GlobalKey _textFieldKey = GlobalKey();
-  GlobalKey _saveKey = GlobalKey();
-  GlobalKey _plusKey = GlobalKey();
-  bool _isShowcaseSeen = false;
+  final GlobalKey _microphoneKey = GlobalKey();
+  final GlobalKey _textFieldKey = GlobalKey();
+  final GlobalKey _saveKey = GlobalKey();
+  final GlobalKey _plusKey = GlobalKey();
+  final bool _isShowcaseSeen = false;
   bool _isRecording = false;
 
   @override
   void initState() {
     super.initState();
-
+    _textController.clear();
     _initialize();
   }
 
@@ -47,12 +45,30 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
       value: widget.speechToTextBloc,
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
-        appBar: AppBarWidget(
-          title: context.translate("stt_title"),
-          titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
-          isBackButton: true,
-          isSettingButton: false,
-        ),
+        appBar: AppBar(
+            title: Padding(
+              padding: const EdgeInsets.only(top: 7.0),
+              child: Text(
+                context.translate("stt_title"),
+                style: TextStyle(
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+                ),
+              ),
+            ),
+            leading: Padding(
+              padding: const EdgeInsets.only(top: 7.0),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 10,
+                ),
+                onPressed: () {
+                  _textController.clear();
+                  widget.speechToTextBloc.add(StopTapRecording());
+                  Navigator.pop(context);
+                },
+              ),
+            )),
         body: BlocConsumer<SpeechToTextBloc, SpeechToTextState>(
           listener: (context, state) {
             if (state is SpeechToTextErrorState) {
