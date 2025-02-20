@@ -44,5 +44,5 @@ if __name__ == '__main__':
     print(f"Server running on:")
     print(f"Local: http://127.0.0.1:5000")
     print(f"Network: http://{local_ip}:5000 (for mobile access)")
-    socketio.run(app, host="0.0.0.0", port=5000, use_preloader=False)
+    socketio.run(app, host="0.0.0.0", port=6000, use_preloader=False)
     eventlet.monkey_patch() 
