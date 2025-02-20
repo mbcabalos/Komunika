@@ -24,7 +24,6 @@ pypiwin32==223
 python-engineio==4.11.2
 python-socketio==5.12.1
 pyttsx3==2.98
-pywin32==308
 requests==2.32.3
 simple-websocket==1.1.0
 sounddevice==0.5.1
