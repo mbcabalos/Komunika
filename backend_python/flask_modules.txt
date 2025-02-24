@@ -1,4 +1,4 @@
-audioop-lts==0.2.1
+
 bidict==0.23.1
 blinker==1.9.0
 certifi==2024.12.14
@@ -12,8 +12,10 @@ eventlet==0.39.0
 Flask==3.1.0
 Flask-Cors==5.0.0
 Flask-SocketIO==5.5.1
+gdown==5.2.0
 greenlet==3.1.1
 h11==0.14.0
+gunicorn==23.0.0
 idna==3.10
 itsdangerous==2.2.0
 Jinja2==3.1.5
@@ -23,7 +25,6 @@ pypiwin32==223
 python-engineio==4.11.2
 python-socketio==5.12.1
 pyttsx3==2.98
-pywin32==308
 requests==2.32.3
 simple-websocket==1.1.0
 sounddevice==0.5.1

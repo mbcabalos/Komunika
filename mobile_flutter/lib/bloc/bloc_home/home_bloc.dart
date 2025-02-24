@@ -4,22 +4,45 @@ import 'package:bloc/bloc.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 part 'home_event.dart';
 part 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  HomeBloc() : super(HomeLoadingState()) {
+  final DatabaseHelper _databaseHelper;
+  HomeBloc(this._databaseHelper) : super(HomeLoadingState()) {
     on<HomeLoadingEvent>(homeLoadingEvent);
+    on<RequestPermissionEvent>(requestPermissionEvent);
     on<FetchAudioEvent>(fetchAudioEvent);
     on<PlayAudioEvent>(playAudioEvent);
   }
 
+  /// Helper function to fetch audio items and emit state
+  Future<void> _fetchAndEmitAudioItems(Emitter<HomeState> emit) async {
+    try {
+      List<Map<String, dynamic>> audioItems =
+          await _databaseHelper.fetchAllFavorites();
+      emit(HomeSuccessLoadedState(audioItems: audioItems));
+    } catch (e) {
+      emit(HomeErrorState(message: '$e'));
+    }
+  }
+
   FutureOr<void> homeLoadingEvent(
       HomeLoadingEvent event, Emitter<HomeState> emit) async {
+    await _fetchAndEmitAudioItems(emit);
+  }
+
+  FutureOr<void> requestPermissionEvent(
+      RequestPermissionEvent event, Emitter<HomeState> emit) async {
     try {
-      List<Map<String, dynamic>> data =
-          await DatabaseHelper().fetchAllAudioItems();
-      emit(HomeSuccessLoadedState(audioItems: data));
+      var status = await Permission.microphone.request();
+      if (status.isDenied || status.isPermanentlyDenied) {
+        print("Microphone permission is required!");
+        // Optionally, guide the user to the app settings to enable it
+        openAppSettings();
+      }
+      await _fetchAndEmitAudioItems(emit);
     } catch (e) {
       emit(HomeErrorState(message: "$e"));
     }
@@ -46,9 +69,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final player = AudioPlayer();
       await player.setFilePath(filePath); // Set file path (local file or URL)
       await player.play(); // Play the audio
-      List<Map<String, dynamic>> data =
-          await DatabaseHelper().fetchAllAudioItems();
-      emit(HomeSuccessLoadedState(audioItems: data));
+      await _fetchAndEmitAudioItems(emit);
     } catch (e) {
       emit(HomeErrorState(message: "$e"));
     }

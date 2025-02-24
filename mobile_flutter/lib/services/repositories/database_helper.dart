@@ -102,6 +102,7 @@ class DatabaseHelper {
       'audio_items',
       where: 'favorites = ?',
       whereArgs: [1],
+      limit: 5,
     );
   }
 

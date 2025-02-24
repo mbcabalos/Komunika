@@ -5,7 +5,6 @@ import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
-import 'package:komunika/widgets/app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 
@@ -46,29 +45,30 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBar(
-            title: Padding(
-              padding: const EdgeInsets.only(top: 7.0),
-              child: Text(
-                context.translate("stt_title"),
-                style: TextStyle(
-                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
-                ),
+          title: Padding(
+            padding: const EdgeInsets.only(top: 7.0),
+            child: Text(
+              context.translate("stt_title"),
+              style: TextStyle(
+                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
               ),
             ),
-            leading: Padding(
-              padding: const EdgeInsets.only(top: 7.0),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  size: 10,
-                ),
-                onPressed: () {
-                  _textController.clear();
-                  widget.speechToTextBloc.add(StopTapRecording());
-                  Navigator.pop(context);
-                },
+          ),
+          leading: Padding(
+            padding: const EdgeInsets.only(top: 7.0),
+            child: IconButton(
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 10,
               ),
-            )),
+              onPressed: () {
+                _textController.clear();
+                widget.speechToTextBloc.add(StopTapRecording());
+                Navigator.pop(context);
+              },
+            ),
+          ),
+        ),
         body: BlocConsumer<SpeechToTextBloc, SpeechToTextState>(
           listener: (context, state) {
             if (state is SpeechToTextErrorState) {

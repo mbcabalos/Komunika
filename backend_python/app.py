@@ -3,11 +3,8 @@ import socket
 from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
-import pyttsx3
-import os
-from datetime import datetime
-
 from sockets.stt_socket import register_transcription_events
+# from sockets.sign_transcriber import register_sign_transcriber
 
 def create_app():
     app = Flask(__name__)  # App instance should only be created here
@@ -22,7 +19,7 @@ def create_app():
 
     # Sockets
     register_transcription_events(socketio)
-
+    # register_sign_transcriber(socketio)
     @app.route("/")
     def home():
         return "Flask SocketIO Server is Running!"
@@ -44,5 +41,5 @@ if __name__ == '__main__':
     print(f"Server running on:")
     print(f"Local: http://127.0.0.1:5000")
     print(f"Network: http://{local_ip}:5000 (for mobile access)")
-    socketio.run(app, host="0.0.0.0", port=5000, use_preloader=False)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True )  #use_preloader=False
     eventlet.monkey_patch() 
