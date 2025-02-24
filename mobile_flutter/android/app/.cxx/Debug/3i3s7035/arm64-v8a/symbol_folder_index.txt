@@ -1,0 +1,1 @@
+D:\VS Code for Flutter\Large Project\Komunika\mobile_flutter\build\app\intermediates\cxx\Debug\3i3s7035\obj\arm64-v8a

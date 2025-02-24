@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/responsive.dart';
-import 'package:komunika/widgets/app_bar.dart';
+import 'package:komunika/widgets/global_widgets/app_bar.dart';
 
 class NavigationPage extends StatefulWidget {
   const NavigationPage({super.key});

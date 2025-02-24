@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/themes.dart';
-import 'package:komunika/widgets/app_bar.dart';
+import 'package:komunika/widgets/global_widgets/app_bar.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});

@@ -33,7 +33,6 @@ Future<void> main() async {
 Future<void> checkDatabaseExistence() async {
   DatabaseHelper databaseHelper = DatabaseHelper();
   String path = join(await getDatabasesPath(), 'audio_database.db');
-  await deleteDatabase(path);
   bool exists = await databaseExists(path);
   if (!exists) {
     await openDatabase(path, version: 1, onCreate: (db, version) {
