@@ -8,6 +8,8 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import android.content.pm.ServiceInfo
+import androidx.core.app.NotificationCompat
+import android.util.Log
 
 class ForegroundService : Service() {
 
@@ -28,7 +30,7 @@ class ForegroundService : Service() {
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
                 "Screen Recorder Service",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_LOW // Use LOW or DEFAULT to avoid intrusive notifications
             )
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(serviceChannel)
@@ -36,18 +38,33 @@ class ForegroundService : Service() {
     }
 
     private fun startForegroundService() {
-        val notification = Notification.Builder(this, CHANNEL_ID)
-            .setContentTitle("Screen Recorder")
-            .setContentText("Recording in progress")
-            .setSmallIcon(R.drawable.ic_notification) // Replace with your notification icon
-            .build()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // For Android 10 and above, specify the foreground service type
-            startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
+        val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Screen Recorder")
+                .setContentText("Recording in progress")
+                .setSmallIcon(R.drawable.ic_notification)
+                .setPriority(NotificationCompat.PRIORITY_LOW) // Match the channel importance
+                .build()
         } else {
-            // For older versions, start the service without specifying the type
-            startForeground(1, notification)
+            NotificationCompat.Builder(this)
+                .setContentTitle("Screen Recorder")
+                .setContentText("Recording in progress")
+                .setSmallIcon(R.drawable.ic_notification)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build()
+        }
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // For Android 10 and above, specify the foreground service type
+                startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
+            } else {
+                // For older versions, start the service without specifying the type
+                startForeground(1, notification)
+            }
+        } catch (e: SecurityException) {
+            Log.e("ForegroundService", "SecurityException: ${e.message}")
+            // Handle the exception (e.g., show a message to the user)
         }
     }
 }

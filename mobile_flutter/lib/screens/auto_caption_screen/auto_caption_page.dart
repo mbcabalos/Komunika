@@ -4,7 +4,7 @@ import 'package:komunika/bloc/bloc_auto_caption/auto_caption_bloc.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
-import 'package:komunika/widgets/app_bar.dart';
+import 'package:komunika/widgets/global_widgets/app_bar.dart';
 
 class AutoCaptionScreen extends StatefulWidget {
   final ThemeProvider themeProvider;

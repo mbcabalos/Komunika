@@ -11,12 +11,24 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
   static const platform = MethodChannel('com.example.komunika/recorder');
   final socketService = SocketService();
 
+  final StreamController<Uint8List> _audioStreamController =
+      StreamController<Uint8List>.broadcast();
+
   AutoCaptionBloc() : super(AutoCaptionLoadingState()) {
     on<AutoCaptionLoadingEvent>(autoCaptionLoadingEvent);
     on<ToggleAutoCaptionEvent>(_onToggleAutoCaption);
     on<StartAutoCaption>(_startAudioCaption);
     on<StopAutoCaption>(_stopAutoCaption);
+
+    platform.setMethodCallHandler((call) async {
+      if (call.method == 'onAudioData') {
+        final List<int> audioData = List<int>.from(call.arguments);
+        _audioStreamController.add(Uint8List.fromList(audioData));
+      }
+    });
   }
+
+  Stream<Uint8List> get audioStream => _audioStreamController.stream;
 
   FutureOr<void> autoCaptionLoadingEvent(
       AutoCaptionLoadingEvent event, Emitter<AutoCaptionState> emit) async {
@@ -47,6 +59,10 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
       await platform.invokeMethod('startForegroundService');
       await platform.invokeMethod('startRecording');
       emit(AutoCaptionLoadedSuccessState(isEnabled: true));
+
+      audioStream.listen((audioData) {
+        socketService.sendCaptionAudio(audioData);
+      });
     } on PlatformException catch (e) {
       emit(AutoCaptionErrorState(
           message: 'Failed to start recording: ${e.message}'));

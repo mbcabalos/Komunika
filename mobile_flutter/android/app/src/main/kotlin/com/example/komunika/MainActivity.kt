@@ -2,18 +2,18 @@ package com.example.komunika
 
 import android.content.Intent
 import android.media.AudioFormat
+import android.media.AudioPlaybackCaptureConfiguration
 import android.media.AudioRecord
 import android.media.AudioAttributes
-import android.media.AudioPlaybackCaptureConfiguration
 import android.media.MediaRecorder
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Build
-import android.os.Bundle
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import android.util.Log
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.example.komunika/recorder"
@@ -29,6 +29,10 @@ class MainActivity : FlutterActivity() {
                 "startForegroundService" -> {
                     startForegroundService()
                     result.success("Foreground service started")
+                }
+                "stopForegroundService" -> {
+                    stopForegroundService()
+                    result.success("Foreground service stopped")
                 }
                 "startRecording" -> {
                     startRecording()
@@ -58,77 +62,101 @@ class MainActivity : FlutterActivity() {
         mediaProjection = null
 
         // Stop the foreground service
-        val serviceIntent = Intent(this, ForegroundService::class.java)
-        stopService(serviceIntent)
+        stopForegroundService()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            // Start the foreground service before using MediaProjection
-            startForegroundService()
-
-            // Now get the MediaProjection instance
             mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data)
-
-            // Start capturing media audio instead of microphone
+            Log.d("AudioCapture", "MediaProjection initialized successfully")
+            startForegroundService()
             startAudioStreaming()
+        } else {
+            Log.e("AudioCapture", "Failed to initialize MediaProjection")
         }
     }
 
     private fun startAudioStreaming() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // Create an AudioPlaybackCaptureConfiguration to capture media audio
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mediaProjection != null) {
+            // Configure audio playback capture
             val captureConfig = AudioPlaybackCaptureConfiguration.Builder(mediaProjection!!)
-                .addMatchingUsage(AudioAttributes.USAGE_MEDIA)
+                .addMatchingUsage(AudioAttributes.USAGE_MEDIA) // Capture media audio
+                .addMatchingUsage(AudioAttributes.USAGE_GAME)   // Capture game audio
+                .addMatchingUsage(AudioAttributes.USAGE_UNKNOWN) // Capture other audio
                 .build()
 
-            // Initialize audio record with the new configuration
-            val sampleRate = 44100 // 44.1 kHz
-            val channelConfig = AudioFormat.CHANNEL_IN_STEREO
+            val sampleRate = 16000
+            val channelConfig = AudioFormat.CHANNEL_IN_MONO
             val audioFormat = AudioFormat.ENCODING_PCM_16BIT
             val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
 
-            audioRecord = AudioRecord(
-                MediaRecorder.AudioSource.DEFAULT, // Use DEFAULT for capturing media audio
-                sampleRate,
-                channelConfig,
-                audioFormat,
-                bufferSize
-            )
+            Log.d("AudioCapture", "Audio configuration:")
+            Log.d("AudioCapture", "Sample rate: $sampleRate Hz")
+            Log.d("AudioCapture", "Channels: ${if (channelConfig == AudioFormat.CHANNEL_IN_STEREO) "Stereo" else "Mono"}")
+            Log.d("AudioCapture", "Audio format: ${if (audioFormat == AudioFormat.ENCODING_PCM_16BIT) "16-bit PCM" else "Unknown"}")
+            Log.d("AudioCapture", "Buffer size: $bufferSize bytes")
 
-            // Start recording audio from media output
-            audioRecord?.startRecording()
-            isRecording = true
+            audioRecord = AudioRecord.Builder()
+                .setAudioPlaybackCaptureConfig(captureConfig) // Use playback capture config
+                .setAudioFormat(
+                    AudioFormat.Builder()
+                        .setEncoding(audioFormat)
+                        .setSampleRate(sampleRate)
+                        .setChannelMask(channelConfig)
+                        .build()
+                )
+                .setBufferSizeInBytes(bufferSize)
+                .build()
 
-            // Start a thread to read and process audio data
-            Thread {
-                val buffer = ByteArray(bufferSize)
-                while (isRecording) {
-                    val bytesRead = audioRecord?.read(buffer, 0, bufferSize) ?: 0
-                    if (bytesRead > 0) {
-                        // Process the audio data (e.g., send it to a transcriber)
-                        processAudioData(buffer, bytesRead)
+            if (audioRecord?.state == AudioRecord.STATE_INITIALIZED) {
+                Log.d("AudioCapture", "AudioRecord initialized successfully")
+                audioRecord?.startRecording()
+                isRecording = true
+
+                // Start a thread to read and process audio data
+                Thread {
+                    val buffer = ByteArray(bufferSize)
+                    while (isRecording) {
+                        val bytesRead = audioRecord?.read(buffer, 0, bufferSize) ?: 0
+                        if (bytesRead > 0) {
+                            // Log the audio data for debugging
+                            Log.d("AudioCapture", "Captured audio data: $bytesRead bytes")
+                            Log.d("AudioCapture", "First 10 bytes: ${buffer.sliceArray(0..10).joinToString()}")
+
+                            // Send the audio data to Flutter for processing
+                            sendAudioToFlutter(buffer, bytesRead)
+                        } else {
+                            Log.e("AudioCapture", "Failed to read audio data")
+                        }
                     }
-                }
-            }.start()
+                }.start()
+            } else {
+                Log.e("AudioCapture", "Failed to initialize AudioRecord")
+            }
+        } else {
+            Log.e("AudioCapture", "MediaProjection or Android version not supported")
         }
     }
 
-    private fun processAudioData(buffer: ByteArray, bytesRead: Int) {
-        // Here, you can send the audio data to a transcriber or another service
-        // For example, you can use a WebSocket or HTTP request to stream the data
-        println("Audio data received: $bytesRead bytes")
+    private fun sendAudioToFlutter(buffer: ByteArray, bytesRead: Int) {
+        // Use runOnUiThread to ensure the method is called on the main thread
+        runOnUiThread {
+            MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, CHANNEL).invokeMethod("onAudioData", buffer)
+            Log.d("AudioCapture", "Sent $bytesRead bytes of audio data to Flutter")
+        }
     }
 
     private fun startForegroundService() {
         val serviceIntent = Intent(this, ForegroundService::class.java)
         ContextCompat.startForegroundService(this, serviceIntent)
+        Log.d("AudioCapture", "Foreground service started")
     }
 
     private fun stopForegroundService() {
         val serviceIntent = Intent(this, ForegroundService::class.java)
         stopService(serviceIntent)
+        Log.d("AudioCapture", "Foreground service stopped")
     }
 
     companion object {

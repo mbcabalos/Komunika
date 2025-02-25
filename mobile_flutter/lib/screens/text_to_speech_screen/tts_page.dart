@@ -6,19 +6,20 @@ import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
+import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/responsive.dart';
+import 'package:komunika/utils/snack_bar.dart';
 import 'package:komunika/utils/themes.dart';
-import 'package:komunika/widgets/app_bar.dart';
+import 'package:komunika/widgets/global_widgets/app_bar.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 class TextToSpeechScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
-  final VoidCallback isSaved; // Callback to refresh the parent screen
-
+  final TextToSpeechBloc ttsBloc;
   const TextToSpeechScreen({
     super.key,
     required this.themeProvider,
-    required this.isSaved,
+    required this.ttsBloc,
   });
 
   @override
@@ -26,7 +27,6 @@ class TextToSpeechScreen extends StatefulWidget {
 }
 
 class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
-  late TextToSpeechBloc textToSpeechBloc;
   final TextEditingController _textController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   bool save = false;
@@ -39,28 +39,24 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   @override
   void initState() {
     super.initState();
-    final globalService = GlobalRepositoryImpl();
-    final databaseHelper = DatabaseHelper();
-    textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
     _initialize();
   }
 
   Future<void> _initialize() async {
-    textToSpeechBloc.add(TextToSpeechLoadingEvent());
+    widget.ttsBloc.add(TextToSpeechLoadingEvent());
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<TextToSpeechBloc>(
-      create: (context) => textToSpeechBloc,
+    return BlocProvider.value(
+      value: widget.ttsBloc,
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
-          title: context.translate("tts_title"),
-          titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
-          isBackButton: true,
-          isSettingButton: false,
-        ),
+            title: context.translate("tts_title"),
+            titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+            isBackButton: false,
+            isSettingButton: false),
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
           listener: (context, state) {
             if (state is TextToSpeechErrorState) {
@@ -126,8 +122,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   const SizedBox(height: 10),
                   Showcase(
                     key: _typeSomethingKey,
-                    description:
-                        "Type the message",
+                    description: "Type the message",
                     child: Card(
                       elevation: 1,
                       shape: RoundedRectangleBorder(
@@ -189,12 +184,11 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                       final title = _titleController.text.trim();
                       final text = _textController.text.trim();
                       if (text.isNotEmpty) {
-                        textToSpeechBloc.add(CreateTextToSpeechEvent(
+                        widget.ttsBloc.add(CreateTextToSpeechEvent(
                             text: text, title: title, save: false));
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Text field is empty!')),
-                        );
+                        showCustomSnackBar(
+                            context, "Text field is empty!", ColorsPalette.red);
                       }
                     },
                     child: Container(
@@ -216,15 +210,15 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                       final title = _titleController.text.trim();
                       final text = _textController.text.trim();
                       if (text.isNotEmpty) {
-                        textToSpeechBloc.add(CreateTextToSpeechEvent(
+                        widget.ttsBloc.add(CreateTextToSpeechEvent(
                             text: text, title: title, save: true));
-                        widget
-                            .isSaved(); // Call the callback to refresh the parent screen
-                        Navigator.pop(context, true); // Close the screen
+                        _titleController.clear();
+                        _textController.clear();
+                        showCustomSnackBar(
+                            context, "Saved!", ColorsPalette.green);
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Text field is empty!')),
-                        );
+                        showCustomSnackBar(
+                            context, "Text field is empty!", ColorsPalette.red);
                       }
                     },
                     child: Container(

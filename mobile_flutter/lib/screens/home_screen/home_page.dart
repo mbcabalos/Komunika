@@ -2,18 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_home/home_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
+import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_walkthrough/walkthrough_bloc.dart';
 import 'package:komunika/screens/auto_caption_screen/auto_caption_page.dart';
 import 'package:komunika/screens/sign_transcribe_screen/sign_transcribe_page.dart';
 import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
+import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
+import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/utils/themes.dart';
-import 'package:komunika/widgets/app_bar.dart';
+import 'package:komunika/widgets/global_widgets/app_bar.dart';
 import 'package:komunika/widgets/home_widgets/home_catalogs_card.dart';
 import 'package:komunika/widgets/home_widgets/home_quick_speech_card.dart';
 import 'package:komunika/widgets/home_widgets/home_tips_card.dart';
@@ -35,6 +38,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late HomeBloc homeBloc;
   late SpeechToTextBloc sttBloc;
+  late TextToSpeechBloc ttsBloc;
+  final socketService = SocketService();
+  final globalService = GlobalRepositoryImpl();
+  final databaseHelper = DatabaseHelper();
   List<String> quickSpeechItems = [];
   GlobalKey _speechToTextKey = GlobalKey();
   GlobalKey _textToSpeechKey = GlobalKey();
@@ -44,39 +51,36 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    final socketService = SocketService();
-    homeBloc = HomeBloc();
+    homeBloc = HomeBloc(databaseHelper);
     sttBloc = SpeechToTextBloc(socketService);
+    ttsBloc = TextToSpeechBloc(globalService, databaseHelper);
     homeBloc.add(HomeLoadingEvent());
+    homeBloc.add(RequestPermissionEvent());
     homeBloc.add(FetchAudioEvent());
-    // loadTheme();
-    requestPermissions();
     loadFavorites();
     //PreferencesUtils.storeWalkthrough(false); //use to test walthrough
     _showWalkthrough();
   }
 
   void _showWalkthrough() async {
-  bool isWalkthroughDone = await PreferencesUtils.getWalkthrough();
-  if (!isWalkthroughDone) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return BlocProvider(
-          create: (context) => WalkthroughBloc(),
-          child: HomeWalkthrough(),
-        );
-      },
-    );
+    bool isWalkthroughDone = await PreferencesUtils.getWalkthrough();
+    if (!isWalkthroughDone) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return BlocProvider(
+            create: (context) => WalkthroughBloc(),
+            child: HomeWalkthrough(),
+          );
+        },
+      );
+    }
   }
-}
 
   Future<void> _refreshScreen() async {
-    setState(() {
       print("Refreshing the screen..");
       homeBloc.add(HomeLoadingEvent());
       homeBloc.add(FetchAudioEvent());
-    }); // This triggers a rebuild
   }
 
   Future<void> loadFavorites() async {
@@ -94,15 +98,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> requestPermissions() async {
-    var status = await Permission.microphone.request();
-    if (status.isDenied || status.isPermanentlyDenied) {
-      print("Microphone permission is required!");
-      // Optionally, guide the user to the app settings to enable it
-      openAppSettings();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -112,6 +107,9 @@ class _HomePageState extends State<HomePage> {
         ),
         BlocProvider<SpeechToTextBloc>(
           create: (context) => sttBloc,
+        ),
+        BlocProvider<TextToSpeechBloc>(
+          create: (context) => ttsBloc,
         ),
       ],
       child: Consumer<ThemeProvider>(
@@ -207,14 +205,16 @@ class _HomePageState extends State<HomePage> {
                             .translate("home_speech_to_text_description"),
                         child: GestureDetector(
                           onTap: () async {
-                            final result = await Navigator.push(
+                            await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => SpeechToTextPage(
-                                        themeProvider: themeProvider,
-                                        speechToTextBloc: sttBloc,
-                                      )),
+                                builder: (context) => SpeechToTextPage(
+                                  themeProvider: themeProvider,
+                                  speechToTextBloc: sttBloc,
+                                ),
+                              ),
                             );
+                            _refreshScreen();
                           },
                           child: HomeCatalogsCard(
                             imagePath: 'assets/icons/word-of-mouth.png',
@@ -232,15 +232,16 @@ class _HomePageState extends State<HomePage> {
                         description: context
                             .translate("home_text_to_speech_description"),
                         child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
+                          onTap: () async {
+                            await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => VoiceMessagePage(
-                                  themeProvider: themeProvider,
+                                  themeProvider: themeProvider, textToSpeechBloc: ttsBloc,
                                 ),
                               ),
                             );
+                            _refreshScreen();
                           },
                           child: HomeCatalogsCard(
                             imagePath: 'assets/icons/text-to-speech.png',
@@ -305,7 +306,7 @@ class _HomePageState extends State<HomePage> {
                     onTap: (audioName) {
                       homeBloc.add(PlayAudioEvent(audioName: audioName));
                     },
-                    themeProvider: themeProvider,
+                    themeProvider: themeProvider, textToSpeechBloc: ttsBloc,
                   ),
                 ],
               ),

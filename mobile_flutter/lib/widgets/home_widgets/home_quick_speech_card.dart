@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/colors.dart';
@@ -9,6 +10,7 @@ class HomeQuickSpeechCard extends StatelessWidget {
   final List<String> content;
   final double contentSize;
   final ThemeProvider themeProvider;
+  final TextToSpeechBloc textToSpeechBloc;
   final Function(String) onTap;
 
   const HomeQuickSpeechCard({
@@ -16,7 +18,7 @@ class HomeQuickSpeechCard extends StatelessWidget {
     required this.content,
     required this.contentSize,
     required this.themeProvider,
-    required this.onTap,
+    required this.onTap, required this.textToSpeechBloc,
   });
 
   @override
@@ -47,7 +49,8 @@ class HomeQuickSpeechCard extends StatelessWidget {
                   Text(
                     context.translate("home_no_quick_speech"),
                     style: TextStyle(
-                      color: themeProvider.themeData.textTheme.titleMedium?.color,
+                      color:
+                          themeProvider.themeData.textTheme.titleMedium?.color,
                       fontSize: contentSize,
                       fontWeight: FontWeight.normal,
                       fontFamily: Fonts.main,
@@ -61,7 +64,7 @@ class HomeQuickSpeechCard extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => VoiceMessagePage(
-                            themeProvider: themeProvider,
+                            themeProvider: themeProvider, textToSpeechBloc: textToSpeechBloc,
                           ),
                         ),
                       );

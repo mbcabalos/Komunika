@@ -22,15 +22,20 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
     on<DeleteQuickSpeech>(deleteQuickspeech);
   }
 
-  FutureOr<void> textToSpeechLoadingEvent(
-      TextToSpeechLoadingEvent event, Emitter<TextToSpeechState> emit) async {
+  /// Helper function to fetch audio items and emit state
+  Future<void> _fetchAndEmitAudioItems(Emitter<TextToSpeechState> emit) async {
     try {
-      List<Map<String, dynamic>> data =
-          await DatabaseHelper().fetchAllAudioItems();
-      emit(TextToSpeechLoadedSuccessState(audioItems: data));
+      List<Map<String, dynamic>> audioItems =
+          await _databaseHelper.fetchAllAudioItems();
+      emit(TextToSpeechLoadedSuccessState(audioItems: audioItems));
     } catch (e) {
       emit(TextToSpeechErrorState(message: '$e'));
     }
+  }
+
+  FutureOr<void> textToSpeechLoadingEvent(
+      TextToSpeechLoadingEvent event, Emitter<TextToSpeechState> emit) async {
+    await _fetchAndEmitAudioItems(emit);
   }
 
   FutureOr<void> createTextToSpeechLoadingEvent(
@@ -38,9 +43,7 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
     try {
       await _globalService.sendTextToSpeech(
           event.text, event.title, event.save);
-      List<Map<String, dynamic>> data =
-          await DatabaseHelper().fetchAllAudioItems();
-      emit(TextToSpeechLoadedSuccessState(audioItems: data));
+      await _fetchAndEmitAudioItems(emit);
     } catch (e) {
       emit(TextToSpeechErrorState(message: '$e'));
     }
@@ -49,31 +52,31 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
   FutureOr<void> addToFavorite(
       AddToFavorite event, Emitter<TextToSpeechState> emit) async {
     try {
-      _databaseHelper.favorite(event.audioName);
-      List<Map<String, dynamic>> data =
-          await DatabaseHelper().fetchAllAudioItems();
-      emit(TextToSpeechLoadedSuccessState(audioItems: data));
-    } catch (e) {}
+      await _databaseHelper.favorite(event.audioName);
+      await _fetchAndEmitAudioItems(emit);
+    } catch (e) {
+      emit(TextToSpeechErrorState(message: '$e'));
+    }
   }
 
   FutureOr<void> removeFromFavorite(
       RemoveFromFavorite event, Emitter<TextToSpeechState> emit) async {
     try {
-      _databaseHelper.removeFavorite(event.audioName);
-      List<Map<String, dynamic>> data =
-          await DatabaseHelper().fetchAllAudioItems();
-      emit(TextToSpeechLoadedSuccessState(audioItems: data));
-    } catch (e) {}
+      await _databaseHelper.removeFavorite(event.audioName);
+      await _fetchAndEmitAudioItems(emit);
+    } catch (e) {
+      emit(TextToSpeechErrorState(message: '$e'));
+    }
   }
 
   FutureOr<void> deleteQuickspeech(
       DeleteQuickSpeech event, Emitter<TextToSpeechState> emit) async {
     try {
-      await DatabaseHelper().deleteAudioItem(event.audioId);
-      List<Map<String, dynamic>> data =
-          await DatabaseHelper().fetchAllAudioItems();
-      emit(TextToSpeechLoadedSuccessState(audioItems: data));
-    } catch (e) {}
+      await _databaseHelper.deleteAudioItem(event.audioId);
+      await _fetchAndEmitAudioItems(emit);
+    } catch (e) {
+      emit(TextToSpeechErrorState(message: '$e'));
+    }
   }
 
   FutureOr<void> playAudioEvent(
@@ -84,11 +87,20 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
       final downloadDir = Directory('${directory?.parent.path}/files/audio');
       final filePath = '${downloadDir.path}/$path.mp3';
       final player = AudioPlayer();
+
       await player.setFilePath(filePath);
-      await player.play(); 
-      List<Map<String, dynamic>> data =
-          await DatabaseHelper().fetchAllAudioItems();
-      emit(TextToSpeechLoadedSuccessState(audioItems: data));
-    } catch (e) {}
+      await player.play();
+
+      // ✅ Correctly await the stream using `await for`
+      await for (final playerState in player.playerStateStream) {
+        if (playerState.processingState == ProcessingState.completed) {
+          emit(AudioPlaybackCompletedState());
+          break; // Stop listening after emitting the state
+        }
+      }
+      await _fetchAndEmitAudioItems(emit);
+    } catch (e) {
+      emit(TextToSpeechErrorState(message: '$e'));
+    }
   }
 }
