@@ -13,3 +13,6 @@ class TextToSpeechErrorState extends TextToSpeechState {
 
   TextToSpeechErrorState({required this.message});
 }
+
+class AudioPlaybackCompletedState extends TextToSpeechState {}
+

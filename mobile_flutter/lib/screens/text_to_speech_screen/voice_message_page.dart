@@ -5,7 +5,9 @@ import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_event.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
 import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
+import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/responsive.dart';
+import 'package:komunika/utils/snack_bar.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/global_widgets/app_bar.dart';
 import 'package:komunika/widgets/text_to_speech_widgets/tts_card.dart';
@@ -14,16 +16,21 @@ import 'package:showcaseview/showcaseview.dart';
 class VoiceMessagePage extends StatefulWidget {
   final ThemeProvider themeProvider;
   final TextToSpeechBloc textToSpeechBloc;
-  const VoiceMessagePage(
-      {super.key, required this.themeProvider, required this.textToSpeechBloc});
+
+  const VoiceMessagePage({
+    super.key,
+    required this.themeProvider,
+    required this.textToSpeechBloc,
+  });
 
   @override
-  State<VoiceMessagePage> createState() => VoiceMessagePageState();
+  State<VoiceMessagePage> createState() => _VoiceMessagePageState();
 }
 
-class VoiceMessagePageState extends State<VoiceMessagePage> {
+class _VoiceMessagePageState extends State<VoiceMessagePage> {
   List<Map<String, dynamic>> audioItems = [];
-  GlobalKey _fabKey = GlobalKey();
+  String? currentlyPlaying; // Store the name of the currently playing audio
+  final GlobalKey _fabKey = GlobalKey();
 
   @override
   void initState() {
@@ -62,11 +69,10 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
                   MaterialPageRoute(
                     builder: (context) => TextToSpeechScreen(
                       themeProvider: widget.themeProvider,
-                      ttsBloc: widget.textToSpeechBloc, // Pass the callback
+                      ttsBloc: widget.textToSpeechBloc,
                     ),
                   ),
                 );
-                print("Called");
                 _refreshScreen(); // Refresh after returning
               },
               child: Image.asset(
@@ -81,9 +87,14 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
           listener: (context, state) {
             if (state is TextToSpeechErrorState) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              showCustomSnackBar(
+                  context, "Errr, Please try again", ColorsPalette.red);
+            }
+
+            if (state is AudioPlaybackCompletedState) {
+              setState(() {
+                currentlyPlaying = null; // Reset when audio finishes
+              });
             }
           },
           builder: (context, state) {
@@ -125,25 +136,45 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
                         final id = audioItems[index]['id'];
                         final audioPath = audioItems[index]['audioName'];
                         final favorites = audioItems[index]['favorites'];
+                        final isPlaying = currentlyPlaying == audioPath;
+
                         return GestureDetector(
-                          onTap: () {
-                            widget.textToSpeechBloc
-                                .add(PlayAudioEvent(audioName: audioPath));
-                          },
-                          onLongPress: () {
-                            _showOptionsMenu(context, id, audioPath, favorites);
-                          },
+                          onTap: currentlyPlaying != null
+                              ? null // Disable onTap if audio is playing
+                              : () {
+                                  setState(() {
+                                    currentlyPlaying =
+                                        isPlaying ? null : audioPath;
+                                  });
+                                  widget.textToSpeechBloc.add(
+                                      PlayAudioEvent(audioName: audioPath));
+                                },
+                          onLongPress: currentlyPlaying != null
+                              ? null // Disable onLongPress if audio is playing
+                              : () {
+                                  _showOptionsMenu(
+                                      context, id, audioPath, favorites);
+                                },
                           child: TTSCard(
                             audioName: audioPath,
-                            onTap: () {
-                              widget.textToSpeechBloc
-                                  .add(PlayAudioEvent(audioName: audioPath));
-                            },
-                            onLongPress: () {
-                              _showOptionsMenu(
-                                  context, id, audioPath, favorites);
-                            },
+                            onTap: currentlyPlaying != null
+                                ? null // Disable onTap if audio is playing
+                                : () {
+                                    setState(() {
+                                      currentlyPlaying =
+                                          isPlaying ? null : audioPath;
+                                    });
+                                    widget.textToSpeechBloc.add(
+                                        PlayAudioEvent(audioName: audioPath));
+                                  },
+                            onLongPress: currentlyPlaying != null
+                                ? null // Disable onLongPress if audio is playing
+                                : () {
+                                    _showOptionsMenu(
+                                        context, id, audioPath, favorites);
+                                  },
                             themeProvider: themeProvider,
+                            isPlaying: isPlaying,
                           ),
                         );
                       },
@@ -177,7 +208,8 @@ class VoiceMessagePageState extends State<VoiceMessagePage> {
                     widget.textToSpeechBloc
                         .add(RemoveFromFavorite(audioName: audioPath));
                   } else {
-                    widget.textToSpeechBloc.add(AddToFavorite(audioName: audioPath));
+                    widget.textToSpeechBloc
+                        .add(AddToFavorite(audioName: audioPath));
                   }
                   Navigator.pop(context);
                 },

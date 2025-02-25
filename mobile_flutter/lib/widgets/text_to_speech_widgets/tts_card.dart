@@ -3,12 +3,12 @@ import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/themes.dart';
 
-class TTSCard extends StatelessWidget {
+class TTSCard extends StatefulWidget {
   final String audioName;
-  final VoidCallback onTap; // Callback for onTap
-  final VoidCallback onLongPress; // Callback for onLongPress
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final ThemeProvider themeProvider;
-  final bool isDisabled;
+  final bool isPlaying; // Track if the audio is playing
 
   const TTSCard({
     super.key,
@@ -16,26 +16,30 @@ class TTSCard extends StatelessWidget {
     required this.onTap,
     required this.onLongPress,
     required this.themeProvider,
-    this.isDisabled = false,
+    required this.isPlaying,
   });
 
+  @override
+  State<TTSCard> createState() => _TTSCardState();
+}
+
+class _TTSCardState extends State<TTSCard> {
   @override
   Widget build(BuildContext context) {
     final double cardWidth = MediaQuery.of(context).size.width * 0.9;
 
     return GestureDetector(
-      onTap: isDisabled ? null : onTap, 
-      onLongPress: isDisabled
-          ? null
-          : onLongPress, 
+      onTap: widget.isPlaying ? null : widget.onTap, // Disable if playing
+      onLongPress:
+          widget.isPlaying ? null : widget.onLongPress, // Disable if playing
       child: Opacity(
-        opacity: isDisabled ? 0.5 : 1.0, 
+        opacity: widget.isPlaying ? 0.5 : 1.0, // Reduce opacity if playing
         child: Container(
           margin: const EdgeInsets.only(top: 12, left: 12),
           width: cardWidth,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: themeProvider.themeData.cardColor,
+            color: widget.themeProvider.themeData.cardColor,
             borderRadius: BorderRadius.circular(25),
             boxShadow: [
               BoxShadow(
@@ -45,14 +49,31 @@ class TTSCard extends StatelessWidget {
               ),
             ],
           ),
-          child: Text(
-            audioName, // Display the audio name
-            style: TextStyle(
-              fontFamily: Fonts.main,
-              color: themeProvider.themeData.textTheme.bodyMedium?.color,
-              fontSize: 20,
-              fontWeight: FontWeight.w500,
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Audio Name
+              Text(
+                widget.audioName,
+                style: TextStyle(
+                  fontFamily: Fonts.main,
+                  color: widget
+                      .themeProvider.themeData.textTheme.bodyMedium?.color,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              // Play/Pause Icon
+              Icon(
+                widget.isPlaying
+                    ? Icons.pause_circle_filled
+                    : Icons.play_circle_fill,
+                size: 30,
+                color: widget.isPlaying
+                    ? Colors.grey // Gray out if playing
+                    : widget.themeProvider.themeData.primaryColor,
+              ),
+            ],
           ),
         ),
       ),

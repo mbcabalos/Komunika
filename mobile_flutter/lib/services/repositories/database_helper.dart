@@ -64,7 +64,7 @@ class DatabaseHelper {
       // Define the list of audio file paths in assets
       List<String> assetFiles = [
         'assets/audio/Goodbye.mp3',
-        'assets/audio/Greeting.mp3',
+        'assets/audio/Greet.mp3',
         'assets/audio/Hello.mp3',
         'assets/audio/Good morning.mp3',
         'assets/audio/Good afternoon.mp3',
@@ -126,18 +126,18 @@ class DatabaseHelper {
       print("Inserting data...");
       final db = await database;
 
-      // Loop through each item in the list and insert into the database
-      for (var item in audioItems) {
-        print("Inserting data now");
+      // Ensure only the first five items are marked as favorites
+      for (int i = 0; i < audioItems.length; i++) {
+        audioItems[i]['favorites'] = i < 5 ? 1 : 0;
+
         await db.insert(
           'audio_items',
-          item,
-          conflictAlgorithm:
-              ConflictAlgorithm.replace, // Handle conflicts by replacing
+          audioItems[i],
+          conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
 
-      print('Inserted all audio items');
+      print('Inserted all audio items with favorites set.');
       printDatabaseContent();
     } catch (e) {
       print('Error inserting audio items: $e');
