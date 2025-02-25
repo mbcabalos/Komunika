@@ -12,15 +12,18 @@ import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
+import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/shared_prefs.dart';
+import 'package:komunika/utils/snack_bar.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/global_widgets/app_bar.dart';
 import 'package:komunika/widgets/home_widgets/home_catalogs_card.dart';
 import 'package:komunika/widgets/home_widgets/home_quick_speech_card.dart';
 import 'package:komunika/widgets/home_widgets/home_tips_card.dart';
 import 'package:komunika/widgets/home_widgets/home_walkthrough.dart';
+import 'package:komunika/widgets/text_to_speech_widgets/tts_card.dart';
 import 'package:path/path.dart'
     as p; //renamed as p to avoid conflict with showcase context eme
 import 'package:permission_handler/permission_handler.dart';
@@ -42,7 +45,8 @@ class _HomePageState extends State<HomePage> {
   final socketService = SocketService();
   final globalService = GlobalRepositoryImpl();
   final databaseHelper = DatabaseHelper();
-  List<String> quickSpeechItems = [];
+  List<Map<String, dynamic>> quickSpeechItems = [];
+  String? currentlyPlaying;
   GlobalKey _speechToTextKey = GlobalKey();
   GlobalKey _textToSpeechKey = GlobalKey();
   bool _isShowcaseSeen = false;
@@ -57,7 +61,6 @@ class _HomePageState extends State<HomePage> {
     homeBloc.add(HomeLoadingEvent());
     homeBloc.add(RequestPermissionEvent());
     homeBloc.add(FetchAudioEvent());
-    loadFavorites();
     //PreferencesUtils.storeWalkthrough(false); //use to test walthrough
     _showWalkthrough();
   }
@@ -78,24 +81,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _refreshScreen() async {
-      print("Refreshing the screen..");
-      homeBloc.add(HomeLoadingEvent());
-      homeBloc.add(FetchAudioEvent());
-  }
-
-  Future<void> loadFavorites() async {
-    // Get the database path
-    String path = p.join(await getDatabasesPath(), 'audio_database.db');
-    final database = await openDatabase(path);
-    final List<Map<String, dynamic>> favorites = await database.query(
-      'audio_items',
-      where: 'favorites = 1',
-    );
-    setState(() {
-      quickSpeechItems.clear();
-      quickSpeechItems
-          .addAll(favorites.map((item) => item['audioName'] as String));
-    });
+    print("Refreshing the screen..");
+    homeBloc.add(HomeLoadingEvent());
+    homeBloc.add(FetchAudioEvent());
   }
 
   @override
@@ -115,31 +103,38 @@ class _HomePageState extends State<HomePage> {
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return Scaffold(
-              backgroundColor: themeProvider.themeData.primaryColor,
-              appBar: AppBarWidget(
-                title: context.translate("home_title"),
-                titleSize: ResponsiveUtils.getResponsiveFontSize(context, 35),
-                isBackButton: false,
-                isSettingButton: true,
-              ),
-              body: BlocConsumer<HomeBloc, HomeState>(
-                listener: (context, state) {
-                  if (state is HomeErrorState) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(state.message)),
-                    );
-                  }
-                },
-                builder: (context, state) {
-                  if (state is HomeLoadingState) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (state is HomeSuccessLoadedState) {
-                    return _buildContent(themeProvider, state);
-                  } else {
-                    return Center(child: Text(context.translate("home_error")));
-                  }
-                },
-              ));
+            backgroundColor: themeProvider.themeData.primaryColor,
+            appBar: AppBarWidget(
+              title: context.translate("home_title"),
+              titleSize: ResponsiveUtils.getResponsiveFontSize(context, 35),
+              isBackButton: false,
+              isSettingButton: true,
+            ),
+            body: BlocConsumer<HomeBloc, HomeState>(
+              listener: (context, state) {
+                if (state is HomeErrorState) {
+                  showCustomSnackBar(
+                      context, "Please try again", ColorsPalette.red);
+                }
+                if (state is AudioPlaybackCompletedState) {
+                  setState(
+                    () {
+                      currentlyPlaying = null;
+                    },
+                  );
+                }
+              },
+              builder: (context, state) {
+                if (state is HomeLoadingState) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is HomeSuccessLoadedState) {
+                  return _buildContent(themeProvider, state);
+                } else {
+                  return Center(child: Text(context.translate("home_error")));
+                }
+              },
+            ),
+          );
         },
       ),
     );
@@ -147,9 +142,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildContent(
       ThemeProvider themeProvider, HomeSuccessLoadedState state) {
-    quickSpeechItems = state.audioItems
-        .map<String>((item) => item["audioName"] as String) // Extract names
-        .toList();
+    quickSpeechItems = state.audioItems;
     return RefreshIndicator(
       onRefresh: () => _refreshScreen(),
       child: ListView(
@@ -237,7 +230,8 @@ class _HomePageState extends State<HomePage> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => VoiceMessagePage(
-                                  themeProvider: themeProvider, textToSpeechBloc: ttsBloc,
+                                  themeProvider: themeProvider,
+                                  textToSpeechBloc: ttsBloc,
                                 ),
                               ),
                             );
@@ -299,14 +293,75 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.04),
-                  HomeQuickSpeechCard(
-                    content: quickSpeechItems,
-                    contentSize:
-                        ResponsiveUtils.getResponsiveFontSize(context, 18),
-                    onTap: (audioName) {
-                      homeBloc.add(PlayAudioEvent(audioName: audioName));
-                    },
-                    themeProvider: themeProvider, textToSpeechBloc: ttsBloc,
+                  Material(
+                    elevation: 2,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 0.95,
+                      padding: const EdgeInsets.only(top: 12, bottom: 24),
+                      decoration: BoxDecoration(
+                        color: themeProvider.themeData.cardColor,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: themeProvider
+                                .themeData.scaffoldBackgroundColor
+                                .withOpacity(0.3),
+                            blurRadius: 1,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize:
+                            MainAxisSize.min, // Adjust height dynamically
+                        children: [
+                          Flexible(
+                            // Allows ListView to take only the needed space
+                            child: ListView.builder(
+                              key: ValueKey(state.audioItems.length),
+                              itemCount: state.audioItems.length,
+                              shrinkWrap: true, // Important for dynamic height
+                              physics:
+                                  const NeverScrollableScrollPhysics(), // Disable scrolling inside Flexible
+                              itemBuilder: (context, index) {
+                                final audioPath =
+                                    state.audioItems[index]['audioName'];
+                                final isPlaying = currentlyPlaying == audioPath;
+                                return GestureDetector(
+                                  onTap: currentlyPlaying != null
+                                      ? null
+                                      : () {
+                                          setState(() {
+                                            currentlyPlaying =
+                                                isPlaying ? null : audioPath;
+                                          });
+                                          homeBloc.add(PlayAudioEvent(
+                                              audioName: audioPath));
+                                        },
+                                  child: HomeQuickSpeechCard(
+                                    audioName: audioPath,
+                                    onTap: currentlyPlaying != null
+                                        ? null
+                                        : () {
+                                            setState(() {
+                                              currentlyPlaying =
+                                                  isPlaying ? null : audioPath;
+                                            });
+                                            homeBloc.add(PlayAudioEvent(
+                                                audioName: audioPath));
+                                          },
+                                    onLongPress: null,
+                                    themeProvider: themeProvider,
+                                    isPlaying: isPlaying,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),

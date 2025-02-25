@@ -15,3 +15,5 @@ final class HomeErrorState extends HomeState {
 
   HomeErrorState({required this.message});
 }
+
+class AudioPlaybackCompletedState extends HomeState {}

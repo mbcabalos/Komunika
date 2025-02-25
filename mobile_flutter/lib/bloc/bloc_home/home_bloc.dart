@@ -67,8 +67,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final downloadDir = Directory('${directory?.parent.path}/files/audio');
       final filePath = '${downloadDir.path}/$path.mp3';
       final player = AudioPlayer();
-      await player.setFilePath(filePath); // Set file path (local file or URL)
-      await player.play(); // Play the audio
+      await player.setFilePath(filePath);
+      await player.play(); 
+      // ✅ Correctly await the stream using `await for`
+      await for (final playerState in player.playerStateStream) {
+        if (playerState.processingState == ProcessingState.completed) {
+          emit(AudioPlaybackCompletedState());
+          break; // Stop listening after emitting the state
+        }
+      }
       await _fetchAndEmitAudioItems(emit);
     } catch (e) {
       emit(HomeErrorState(message: "$e"));
