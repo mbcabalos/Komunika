@@ -94,20 +94,34 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
             ),
           ),
           SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 20)),
-          SwitchListTile(
-            title: Text(
-              "Enable",
-              style: TextStyle(
-                fontSize: ResponsiveUtils.getResponsiveFontSize(
-                  context,
-                  20,
+          BlocBuilder<AutoCaptionBloc, AutoCaptionState>(
+            builder: (context, state) {
+              bool isEnabled = false;
+              if (state is AutoCaptionLoadedSuccessState) {
+                isEnabled = state.isEnabled;
+              }
+
+              return SwitchListTile(
+                title: Text(
+                  "Enable",
+                  style: TextStyle(
+                    fontSize: ResponsiveUtils.getResponsiveFontSize(
+                      context,
+                      20,
+                    ),
+                    fontFamily: Fonts.main,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                fontFamily: Fonts.main,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            value: true,
-            onChanged: (value) {},
+                value: isEnabled,
+                onChanged: (value) {
+                  // Dispatch the ToggleAutoCaptionEvent with the new value
+                  context
+                      .read<AutoCaptionBloc>()
+                      .add(ToggleAutoCaptionEvent(value));
+                },
+              );
+            },
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

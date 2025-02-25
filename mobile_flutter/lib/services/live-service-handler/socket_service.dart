@@ -74,6 +74,14 @@ class SocketService {
     }
   }
 
+  Future<void> sendCaptionAudio(Uint8List audioChunk) async {
+    if (isSocketInitialized) {
+      socket?.emit('caption_stream', audioChunk);
+    } else {
+      print("❌ Socket is not connected yet!");
+    }
+  }
+
   void closeSocket() {
     if (socket != null && isSocketInitialized) {
       socket?.disconnect();
