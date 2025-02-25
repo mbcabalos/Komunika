@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 abstract class TextToSpeechEvent {}
 
 class TextToSpeechLoadingEvent extends TextToSpeechEvent {}

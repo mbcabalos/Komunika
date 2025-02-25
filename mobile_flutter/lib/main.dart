@@ -8,7 +8,6 @@ import 'package:komunika/utils/app_localization.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:path/path.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:sqflite/sqflite.dart';
@@ -33,13 +32,17 @@ Future<void> main() async {
 Future<void> checkDatabaseExistence() async {
   DatabaseHelper databaseHelper = DatabaseHelper();
   String path = join(await getDatabasesPath(), 'audio_database.db');
+  // await deleteDatabase(path);
   bool exists = await databaseExists(path);
+  bool isWalkthroughDone = await PreferencesUtils.getWalkthrough();
   if (!exists) {
     await openDatabase(path, version: 1, onCreate: (db, version) {
       db.execute(
           'CREATE TABLE audio_items(id INTEGER PRIMARY KEY, audioName TEXT, favorites INTEGER DEFAULT 0)');
     });
-    databaseHelper.moveAudioFiles();
+    if (!isWalkthroughDone) {
+      databaseHelper.moveAudioFiles();
+    }
     print('Database created');
   }
 }

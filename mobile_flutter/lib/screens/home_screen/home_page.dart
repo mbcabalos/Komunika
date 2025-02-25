@@ -55,6 +55,7 @@ class _HomePageState extends State<HomePage> {
     sttBloc = SpeechToTextBloc(socketService);
     ttsBloc = TextToSpeechBloc(globalService, databaseHelper);
     homeBloc.add(HomeLoadingEvent());
+    homeBloc.add(RequestPermissionEvent());
     homeBloc.add(FetchAudioEvent());
     loadFavorites();
     //PreferencesUtils.storeWalkthrough(false); //use to test walthrough
@@ -79,7 +80,6 @@ class _HomePageState extends State<HomePage> {
   Future<void> _refreshScreen() async {
       print("Refreshing the screen..");
       homeBloc.add(HomeLoadingEvent());
-      homeBloc.add(RequestPermissionEvent());
       homeBloc.add(FetchAudioEvent());
   }
 
@@ -204,8 +204,8 @@ class _HomePageState extends State<HomePage> {
                         description: context
                             .translate("home_speech_to_text_description"),
                         child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
+                          onTap: () async {
+                            await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => SpeechToTextPage(
@@ -214,6 +214,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                             );
+                            _refreshScreen();
                           },
                           child: HomeCatalogsCard(
                             imagePath: 'assets/icons/word-of-mouth.png',
@@ -231,8 +232,8 @@ class _HomePageState extends State<HomePage> {
                         description: context
                             .translate("home_text_to_speech_description"),
                         child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
+                          onTap: () async {
+                            await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => VoiceMessagePage(
@@ -240,6 +241,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                             );
+                            _refreshScreen();
                           },
                           child: HomeCatalogsCard(
                             imagePath: 'assets/icons/text-to-speech.png',
