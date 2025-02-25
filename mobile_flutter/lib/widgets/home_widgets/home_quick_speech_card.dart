@@ -1,148 +1,79 @@
 import 'package:flutter/material.dart';
-import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
-import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
-import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/themes.dart';
 
-class HomeQuickSpeechCard extends StatelessWidget {
-  final List<String> content;
-  final double contentSize;
+class HomeQuickSpeechCard extends StatefulWidget {
+  final String audioName;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final ThemeProvider themeProvider;
-  final TextToSpeechBloc textToSpeechBloc;
-  final Function(String) onTap;
+  final bool isPlaying; // Track if the audio is playing
 
   const HomeQuickSpeechCard({
     super.key,
-    required this.content,
-    required this.contentSize,
+    required this.audioName,
+    required this.onTap,
+    required this.onLongPress,
     required this.themeProvider,
-    required this.onTap, required this.textToSpeechBloc,
+    required this.isPlaying,
   });
 
   @override
+  State<HomeQuickSpeechCard> createState() => _HomeQuickCardState();
+}
+
+class _HomeQuickCardState extends State<HomeQuickSpeechCard> {
+  @override
   Widget build(BuildContext context) {
-    return Material(
-      elevation: 2,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.95,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: themeProvider.themeData.cardColor,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: themeProvider.themeData.scaffoldBackgroundColor
-                  .withOpacity(0.3),
-              blurRadius: 1,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: content.isEmpty
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    context.translate("home_no_quick_speech"),
-                    style: TextStyle(
-                      color:
-                          themeProvider.themeData.textTheme.titleMedium?.color,
-                      fontSize: contentSize,
-                      fontWeight: FontWeight.normal,
-                      fontFamily: Fonts.main,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => VoiceMessagePage(
-                            themeProvider: themeProvider, textToSpeechBloc: textToSpeechBloc,
-                          ),
-                        ),
-                      );
-                    }, // Callback when the button is pressed
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                    ),
-                    child: Text(
-                      "Add One Now",
-                      style: TextStyle(
-                        fontSize: contentSize,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: Fonts.main,
-                        color: ColorsPalette.accent,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.only(left: 8, top: 8),
-                        child: Text(
-                          context.translate("home_quick_speech"),
-                          style: TextStyle(
-                            color: themeProvider
-                                .themeData.textTheme.bodyMedium?.color,
-                            fontSize: contentSize,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: Fonts.main,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  for (var item in content)
-                    GestureDetector(
-                      onTap: () {
-                        onTap(item);
-                      },
-                      child: Container(
-                        width: MediaQuery.of(context).size.width * 0.95,
-                        margin:
-                            const EdgeInsets.only(left: 20, right: 20, top: 20),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: themeProvider.themeData.cardColor,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              blurRadius: 1,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          item,
-                          style: TextStyle(
-                            color: themeProvider
-                                .themeData.textTheme.bodyMedium?.color,
-                            fontSize: contentSize,
-                            fontWeight: FontWeight.normal,
-                            fontFamily: Fonts.main,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+    return GestureDetector(
+      onTap: widget.isPlaying ? null : widget.onTap, // Disable if playing
+      onLongPress:
+          widget.isPlaying ? null : widget.onLongPress, // Disable if playing
+      child: Opacity(
+        opacity: widget.isPlaying ? 0.5 : 1.0, // Reduce opacity if playing
+        child: Container(
+          margin: const EdgeInsets.only(top: 12, left: 16, right: 16),
+          width: MediaQuery.of(context).size.width * 0.7,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: widget.themeProvider.themeData.cardColor,
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: ColorsPalette.black.withOpacity(0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
               ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Audio Name
+              Text(
+                widget.audioName,
+                style: TextStyle(
+                  fontFamily: Fonts.main,
+                  color: widget
+                      .themeProvider.themeData.textTheme.bodyMedium?.color,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              // Play/Pause Icon
+              Icon(
+                widget.isPlaying
+                    ? Icons.pause_circle_filled
+                    : Icons.play_circle_fill,
+                size: 30,
+                color: widget.isPlaying
+                    ? Colors.grey // Gray out if playing
+                    : widget.themeProvider.themeData.primaryColor,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
