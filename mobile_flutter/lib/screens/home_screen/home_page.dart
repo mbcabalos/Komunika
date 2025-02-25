@@ -7,6 +7,7 @@ import 'package:komunika/bloc/bloc_walkthrough/walkthrough_bloc.dart';
 import 'package:komunika/screens/auto_caption_screen/auto_caption_page.dart';
 import 'package:komunika/screens/sign_transcribe_screen/sign_transcribe_page.dart';
 import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
+import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
@@ -180,6 +181,9 @@ class _HomePageState extends State<HomePage> {
 
           // Body Section with white background
           Container(
+              height: quickSpeechItems.length <= 2
+                  ? MediaQuery.of(context).size.height * 0.6
+                  : null,
             decoration: BoxDecoration(
               color: themeProvider.themeData.scaffoldBackgroundColor,
               borderRadius: const BorderRadius.vertical(
@@ -229,9 +233,9 @@ class _HomePageState extends State<HomePage> {
                             await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => VoiceMessagePage(
+                                builder: (context) => TextToSpeechScreen(
                                   themeProvider: themeProvider,
-                                  textToSpeechBloc: ttsBloc,
+                                  ttsBloc: ttsBloc,
                                 ),
                               ),
                             );
@@ -313,52 +317,131 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                       child: Column(
-                        mainAxisSize:
-                            MainAxisSize.min, // Adjust height dynamically
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Flexible(
-                            // Allows ListView to take only the needed space
-                            child: ListView.builder(
-                              key: ValueKey(state.audioItems.length),
-                              itemCount: state.audioItems.length,
-                              shrinkWrap: true, // Important for dynamic height
-                              physics:
-                                  const NeverScrollableScrollPhysics(), // Disable scrolling inside Flexible
-                              itemBuilder: (context, index) {
-                                final audioPath =
-                                    state.audioItems[index]['audioName'];
-                                final isPlaying = currentlyPlaying == audioPath;
-                                return GestureDetector(
-                                  onTap: currentlyPlaying != null
-                                      ? null
-                                      : () {
-                                          setState(() {
-                                            currentlyPlaying =
-                                                isPlaying ? null : audioPath;
-                                          });
-                                          homeBloc.add(PlayAudioEvent(
-                                              audioName: audioPath));
-                                        },
-                                  child: HomeQuickSpeechCard(
-                                    audioName: audioPath,
-                                    onTap: currentlyPlaying != null
-                                        ? null
-                                        : () {
-                                            setState(() {
-                                              currentlyPlaying =
-                                                  isPlaying ? null : audioPath;
-                                            });
-                                            homeBloc.add(PlayAudioEvent(
-                                                audioName: audioPath));
-                                          },
-                                    onLongPress: null,
-                                    themeProvider: themeProvider,
-                                    isPlaying: isPlaying,
-                                  ),
-                                );
-                              },
+                          Container(
+                            margin: const EdgeInsets.only(
+                                left: 20, right: 20, top: 8),
+                            child: Text(
+                              "Quick Speech",
+                              style: TextStyle(
+                                fontFamily: Fonts.main,
+                                fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                    context, 20),
+                                fontWeight: FontWeight.w500,
+                                color: themeProvider
+                                    .themeData.textTheme.bodyMedium?.color,
+                              ),
                             ),
                           ),
+
+                          // Check if audioItems is empty
+                          state.audioItems.isEmpty
+                              ? Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 20),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        margin: const EdgeInsets.symmetric(
+                                            horizontal: 20),
+                                        child: Text(
+                                          "No items for Quick Speech. Add one here!",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w400,
+                                            color: themeProvider.themeData
+                                                .textTheme.bodyMedium?.color,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      ElevatedButton(
+                                        onPressed: () async {
+                                          await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  VoiceMessagePage(
+                                                themeProvider: themeProvider,
+                                                textToSpeechBloc: ttsBloc,
+                                              ),
+                                            ),
+                                          );
+                                          _refreshScreen();
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: themeProvider
+                                              .themeData.primaryColor,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 24, vertical: 12),
+                                        ),
+                                        child: Text(
+                                          "Add",
+                                          style: TextStyle(
+                                            fontSize: ResponsiveUtils
+                                                .getResponsiveFontSize(
+                                                    context, 16),
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : Flexible(
+                                  child: ListView.builder(
+                                    key: ValueKey(state.audioItems.length),
+                                    itemCount: state.audioItems.length,
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemBuilder: (context, index) {
+                                      final audioPath =
+                                          state.audioItems[index]['audioName'];
+                                      final isPlaying =
+                                          currentlyPlaying == audioPath;
+                                      return GestureDetector(
+                                        onTap: currentlyPlaying != null
+                                            ? null
+                                            : () {
+                                                setState(() {
+                                                  currentlyPlaying = isPlaying
+                                                      ? null
+                                                      : audioPath;
+                                                });
+                                                homeBloc.add(PlayAudioEvent(
+                                                    audioName: audioPath));
+                                              },
+                                        child: HomeQuickSpeechCard(
+                                          audioName: audioPath,
+                                          onTap: currentlyPlaying != null
+                                              ? null
+                                              : () {
+                                                  setState(() {
+                                                    currentlyPlaying = isPlaying
+                                                        ? null
+                                                        : audioPath;
+                                                  });
+                                                  homeBloc.add(PlayAudioEvent(
+                                                      audioName: audioPath));
+                                                },
+                                          onLongPress: null,
+                                          themeProvider: themeProvider,
+                                          isPlaying: isPlaying,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
                         ],
                       ),
                     ),

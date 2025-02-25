@@ -221,43 +221,45 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                             color: themeProvider.themeData.primaryColor,
                           ),
                           child: _isRecording
-                              ? const Icon(
+                              ? Icon(
                                   Icons.graphic_eq_rounded,
                                   color: Colors.white,
-                                  size: 60,
+                                  size: ResponsiveUtils.getResponsiveSize(
+                                      context, 60),
                                 )
-                              : const Icon(
+                              : Icon(
                                   Icons.mic,
                                   color: Colors.white,
-                                  size: 60,
+                                  size: ResponsiveUtils.getResponsiveSize(
+                                      context, 60),
                                 ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 20),
-                    Showcase(
-                      key: _saveKey,
-                      description: "Save transcription",
-                      child: GestureDetector(
-                        onTap: () async {
-                          final SharedPreferences prefs =
-                              await SharedPreferences.getInstance();
-                          await prefs.setBool('pageOneDone', true);
-                        },
-                        child: Container(
-                          width: ResponsiveUtils.getResponsiveSize(context, 40),
-                          height:
-                              ResponsiveUtils.getResponsiveSize(context, 40),
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.rectangle,
-                            image: DecorationImage(
-                              image: AssetImage('assets/icons/saved.png'),
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    const SizedBox(width: 50),
+                    // Showcase(
+                    //   key: _saveKey,
+                    //   description: "Save transcription",
+                    //   child: GestureDetector(
+                    //     onTap: () async {
+                    //       final SharedPreferences prefs =
+                    //           await SharedPreferences.getInstance();
+                    //       await prefs.setBool('pageOneDone', true);
+                    //     },
+                    //     child: Container(
+                    //       width: ResponsiveUtils.getResponsiveSize(context, 40),
+                    //       height:
+                    //           ResponsiveUtils.getResponsiveSize(context, 40),
+                    //       decoration: const BoxDecoration(
+                    //         shape: BoxShape.rectangle,
+                    //         image: DecorationImage(
+                    //           image: AssetImage('assets/icons/saved.png'),
+                    //           fit: BoxFit.contain,
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
                 const SizedBox(height: 10),

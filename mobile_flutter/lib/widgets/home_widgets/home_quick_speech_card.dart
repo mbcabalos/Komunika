@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
+import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 
 class HomeQuickSpeechCard extends StatefulWidget {
@@ -57,7 +58,7 @@ class _HomeQuickCardState extends State<HomeQuickSpeechCard> {
                   fontFamily: Fonts.main,
                   color: widget
                       .themeProvider.themeData.textTheme.bodyMedium?.color,
-                  fontSize: 20,
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 17),
                   fontWeight: FontWeight.w500,
                 ),
               ),

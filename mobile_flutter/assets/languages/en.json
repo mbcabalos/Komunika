@@ -13,7 +13,7 @@
 
   "stt_title": "Speech to Text",
   "stt_hint": "Message...",
-  "stt_hold_microphone": "Hold to Start",
+  "stt_hold_microphone": "Tap/Hold to Start",
 
   "tts_title": "Text to Speech",
   "tts_hint": "Type Something...",

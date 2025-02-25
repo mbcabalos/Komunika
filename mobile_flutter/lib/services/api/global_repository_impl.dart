@@ -50,6 +50,7 @@ class GlobalRepositoryImpl extends GlobalRepository {
           await player.setFilePath(
               filePath); // If it's a URL, or use setFilePath(filePath) for local file
           await player.play();
+          
           print('Playing audio: $filePath');
         }
       } else {

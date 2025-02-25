@@ -15,7 +15,7 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
   TextToSpeechBloc(this._globalService, this._databaseHelper)
       : super(TextToSpeechLoadingState()) {
     on<TextToSpeechLoadingEvent>(textToSpeechLoadingEvent);
-    on<CreateTextToSpeechEvent>(createTextToSpeechLoadingEvent);
+    on<CreateTextToSpeechEvent>(createTextToSpeechEvent);
     on<PlayAudioEvent>(playAudioEvent);
     on<AddToFavorite>(addToFavorite);
     on<RemoveFromFavorite>(removeFromFavorite);
@@ -38,12 +38,13 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
     await _fetchAndEmitAudioItems(emit);
   }
 
-  FutureOr<void> createTextToSpeechLoadingEvent(
+  FutureOr<void> createTextToSpeechEvent(
       CreateTextToSpeechEvent event, Emitter<TextToSpeechState> emit) async {
     try {
       await _globalService.sendTextToSpeech(
           event.text, event.title, event.save);
       await _fetchAndEmitAudioItems(emit);
+      emit(AudioPlaybackCompletedState());
     } catch (e) {
       emit(TextToSpeechErrorState(message: '$e'));
     }
