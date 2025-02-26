@@ -118,3 +118,57 @@ def register_transcription_events(socketio):
         except Exception as e:
             print(f"❌ Error processing audio: {e}")
             socketio.emit("server_error", {"message": str(e)})
+
+    @socketio.on("caption_stream")
+    def handle_audio_stream(audio_data):
+        global audio_buffer
+
+        # Append new chunk
+        audio_buffer.extend(audio_data)
+
+        # Process every 3 seconds of audio (16-bit PCM, 16 kHz, mono)
+        if len(audio_buffer) >= 16000 * 2 * 3:  # 3 seconds of audio
+            try:
+                # Convert raw PCM to WAV
+                wav_data = io.BytesIO()
+                with wave.open(wav_data, "wb") as wav_file:
+                    wav_file.setnchannels(1)  # Mono
+                    wav_file.setsampwidth(2)  # 16-bit
+                    wav_file.setframerate(16000)  # 16 kHz
+                    wav_file.writeframes(bytes(audio_buffer))
+
+                # Reset buffer
+                audio_buffer = bytearray()
+
+                # Seek to start
+                wav_data.seek(0)
+
+                # Transcribe using Vosk
+                recognizer = KaldiRecognizer(model, 16000)
+                text = ""
+
+                with wave.open(wav_data, "rb") as wf:
+                    while True:
+                        data = wf.readframes(3000)  # Read 3000 frames at a time
+                        if len(data) == 0:
+                            break
+                        if recognizer.AcceptWaveform(data):
+                            result = json.loads(recognizer.Result())
+                            text += " " + result.get("text", "")
+
+                # Get final text result
+                final_result = json.loads(recognizer.FinalResult())
+                text += " " + final_result.get("text", "")
+
+                # Clean up the transcription
+                text = text.strip() if text.strip() else ""
+
+                print(f"📝 Transcription: {text}")
+                if text != "" and text != "":
+                    socketio.emit("caption_result", {"text": text})
+                else:
+                    print("Audio is empty or no speech detected")
+
+            except Exception as e:
+                print(f"❌ Error processing audio: {e}")
+                socketio.emit("server_error", {"message": str(e)})

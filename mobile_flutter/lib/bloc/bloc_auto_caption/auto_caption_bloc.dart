@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
-
 part 'auto_caption_event.dart';
 part 'auto_caption_state.dart';
 
 class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
   static const platform = MethodChannel('com.example.komunika/recorder');
+
   final socketService = SocketService();
 
   final StreamController<Uint8List> _audioStreamController =
@@ -19,6 +19,19 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
     on<ToggleAutoCaptionEvent>(_onToggleAutoCaption);
     on<StartAutoCaption>(_startAudioCaption);
     on<StopAutoCaption>(_stopAutoCaption);
+
+    void emitTextToFloatingWindow(String text) {
+      // Pass the 'updatedText' as a named argument
+      platform.invokeMethod('updateText', {'updatedText': text});
+    }
+
+    socketService.socket?.on("caption_result", (data) {
+      if (data != null && data["text"] != null) {
+        final text = data["text"] as String;
+        // Trigger an event to BLoC
+        emitTextToFloatingWindow(text);
+      }
+    });
 
     platform.setMethodCallHandler((call) async {
       if (call.method == 'onAudioData') {
@@ -33,6 +46,20 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
   FutureOr<void> autoCaptionLoadingEvent(
       AutoCaptionLoadingEvent event, Emitter<AutoCaptionState> emit) async {
     emit(AutoCaptionLoadedSuccessState(isEnabled: false));
+  }
+
+  Future<void> listenForAutoCaptionToggle() async {
+    platform.setMethodCallHandler((MethodCall call) async {
+      if (call.method == 'toggleAutoCaption') {
+        bool isEnabled = call.arguments ?? false;
+        // Trigger the auto-caption toggle event
+        if (isEnabled) {
+          add(StartAutoCaption());
+        } else {
+          add(StopAutoCaption());
+        }
+      }
+    });
   }
 
   Future<void> _onToggleAutoCaption(
@@ -57,7 +84,7 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
   ) async {
     try {
       await platform.invokeMethod('startForegroundService');
-      await platform.invokeMethod('startRecording');
+      // await platform.invokeMethod('startRecording');
       emit(AutoCaptionLoadedSuccessState(isEnabled: true));
 
       audioStream.listen((audioData) {
@@ -73,13 +100,12 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
     StopAutoCaption event,
     Emitter<AutoCaptionState> emit,
   ) async {
-    try {
-      // Stop recording
-      await platform.invokeMethod('stopRecording');
+    print("called");
 
-      // Stop the foreground service
+    try {
       await platform.invokeMethod('stopForegroundService');
       emit(AutoCaptionLoadedSuccessState(isEnabled: false));
+      print("called");
     } on PlatformException catch (e) {
       emit(AutoCaptionErrorState(
           message: 'Failed to stop recording: ${e.message}'));

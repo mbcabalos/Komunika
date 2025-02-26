@@ -13,3 +13,8 @@ class ToggleAutoCaptionEvent extends AutoCaptionEvent {
   ToggleAutoCaptionEvent(this.isEnabled);
 }
 
+class CaptionResultEvent extends AutoCaptionEvent {
+  final String text;
+
+  CaptionResultEvent(this.text);
+}

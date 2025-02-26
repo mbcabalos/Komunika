@@ -2,6 +2,7 @@
 
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 <uses-permission android:name="android.permission.PROJECT_MEDIA" />
 <uses-permission android:name="android.permission.CAPTURE_VIDEO_OUTPUT" />
 <uses-permission android:name="android.permission.CAPTURE_AUDIO_OUTPUT" />
@@ -9,7 +10,6 @@
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL"/>
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -64,6 +64,24 @@
                 android:foregroundServiceType="mediaProjection"
                 android:permission="android.permission.FOREGROUND_SERVICE"/>
 
+            <service
+                android:name=".FloatingWindowService"
+                android:exported="false"
+                android:permission="android.permission.SYSTEM_ALERT_WINDOW">
+                <intent-filter>
+                    <action android:name="android.intent.action.VIEW" />
+                </intent-filter>
+            </service>
+
+            <receiver
+                android:name=".FloatingWindowService$updateTextReceiver"
+                android:exported="false"
+                android:permission="android.permission.SYSTEM_ALERT_WINDOW">
+
+                <intent-filter>
+                    <action android:name="com.example.komunika.UPDATE_TEXT" />
+                </intent-filter>
+            </receiver>
 
     </application>
     <!-- Required to query activities that can process text, see:
