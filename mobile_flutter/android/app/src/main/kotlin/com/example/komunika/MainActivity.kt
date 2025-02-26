@@ -13,6 +13,9 @@ import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import android.os.Handler
+import android.os.Looper
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.util.Log
 
 class MainActivity : FlutterActivity() {
@@ -21,10 +24,14 @@ class MainActivity : FlutterActivity() {
     private var mediaProjection: MediaProjection? = null
     private var audioRecord: AudioRecord? = null
     private var isRecording = false
+    private lateinit var platform: MethodChannel
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+        platform = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+
+        // MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+        platform.setMethodCallHandler { call, result ->
             when (call.method) {
                 "startForegroundService" -> {
                     startForegroundService()
@@ -42,6 +49,11 @@ class MainActivity : FlutterActivity() {
                     stopRecording()
                     result.success("Recording stopped")
                 }
+                "updateText" -> {
+                    val updatedText = call.argument<String>("updatedText")
+                    handleUpdatedText(updatedText)
+                    result.success(null)
+                } 
                 else -> result.notImplemented()
             }
         }
@@ -60,9 +72,6 @@ class MainActivity : FlutterActivity() {
         audioRecord = null
         mediaProjection?.stop()
         mediaProjection = null
-
-        // Stop the foreground service
-        stopForegroundService()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -70,10 +79,16 @@ class MainActivity : FlutterActivity() {
         if (requestCode == REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data)
             Log.d("AudioCapture", "MediaProjection initialized successfully")
-            startForegroundService()
+            // startForegroundService()
             startAudioStreaming()
+            Handler(Looper.getMainLooper()).postDelayed({
+            startFloatingWindow()}, 1000) // 2 seconds delay
+            
         } else {
             Log.e("AudioCapture", "Failed to initialize MediaProjection")
+            stopForegroundService()
+            stopFloatingWindow()
+            platform.invokeMethod("toggleAutoCaption", false)
         }
     }
 
@@ -120,11 +135,6 @@ class MainActivity : FlutterActivity() {
                     while (isRecording) {
                         val bytesRead = audioRecord?.read(buffer, 0, bufferSize) ?: 0
                         if (bytesRead > 0) {
-                            // Log the audio data for debugging
-                            Log.d("AudioCapture", "Captured audio data: $bytesRead bytes")
-                            Log.d("AudioCapture", "First 10 bytes: ${buffer.sliceArray(0..10).joinToString()}")
-
-                            // Send the audio data to Flutter for processing
                             sendAudioToFlutter(buffer, bytesRead)
                         } else {
                             Log.e("AudioCapture", "Failed to read audio data")
@@ -140,10 +150,9 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun sendAudioToFlutter(buffer: ByteArray, bytesRead: Int) {
-        // Use runOnUiThread to ensure the method is called on the main thread
         runOnUiThread {
             MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, CHANNEL).invokeMethod("onAudioData", buffer)
-            Log.d("AudioCapture", "Sent $bytesRead bytes of audio data to Flutter")
+            // Log.d("AudioCapture", "Sent $bytesRead bytes of audio data to Flutter")
         }
     }
 
@@ -151,12 +160,38 @@ class MainActivity : FlutterActivity() {
         val serviceIntent = Intent(this, ForegroundService::class.java)
         ContextCompat.startForegroundService(this, serviceIntent)
         Log.d("AudioCapture", "Foreground service started")
+        startRecording()
     }
 
     private fun stopForegroundService() {
         val serviceIntent = Intent(this, ForegroundService::class.java)
+        val intent = Intent(this, FloatingWindowService::class.java)
+        stopRecording()
+        stopService(intent)
         stopService(serviceIntent)
         Log.d("AudioCapture", "Foreground service stopped")
+
+    }
+
+    private fun startFloatingWindow() {
+        val intent = Intent(this, FloatingWindowService::class.java)
+        startService(intent)
+        Log.d("FloatingWindow", "Floating window service started")
+    }
+
+    private fun stopFloatingWindow() {
+        val intent = Intent(this, FloatingWindowService::class.java)
+        stopService(intent)
+        Log.d("FloatingWindow", "Floating window service started")
+    }
+
+    private fun handleUpdatedText(updatedText: String?) {
+        println("Received updated text: $updatedText")
+
+        // Send the updated text via local broadcast
+        val intent = Intent("com.example.komunika.UPDATE_TEXT")
+        intent.putExtra("transcribedText", updatedText)
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }
 
     companion object {

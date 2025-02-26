@@ -36,35 +36,51 @@ class ForegroundService : Service() {
             manager.createNotificationChannel(serviceChannel)
         }
     }
-
+    
     private fun startForegroundService() {
         val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Screen Recording",
+                NotificationManager.IMPORTANCE_DEFAULT // Keeps notification persistent
+            ).apply {
+                setShowBadge(false)
+                enableVibration(false)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            }
+    
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
+    
             NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Screen Recorder")
                 .setContentText("Recording in progress")
                 .setSmallIcon(R.drawable.ic_notification)
-                .setPriority(NotificationCompat.PRIORITY_LOW) // Match the channel importance
+                .setPriority(NotificationCompat.PRIORITY_HIGH) // Keep it high priority
+                .setOngoing(true) // ✅ Makes it unswipeable
+                .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE) // Stronger persistence
+                .setCategory(Notification.CATEGORY_SERVICE)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC) // Ensures it stays visible
                 .build()
         } else {
             NotificationCompat.Builder(this)
                 .setContentTitle("Screen Recorder")
                 .setContentText("Recording in progress")
                 .setSmallIcon(R.drawable.ic_notification)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setOngoing(true) // ✅ Ensures it's unswipeable
                 .build()
         }
-
+    
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // For Android 10 and above, specify the foreground service type
                 startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
             } else {
-                // For older versions, start the service without specifying the type
                 startForeground(1, notification)
             }
         } catch (e: SecurityException) {
             Log.e("ForegroundService", "SecurityException: ${e.message}")
-            // Handle the exception (e.g., show a message to the user)
         }
     }
+    
 }

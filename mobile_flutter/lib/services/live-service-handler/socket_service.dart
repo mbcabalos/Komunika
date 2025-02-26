@@ -45,6 +45,7 @@ class SocketService {
         _transcriptionController.add(data["text"]);
       }
     });
+    
 
     socket?.onDisconnect((_) {
       print("❌ Disconnected from WebSocket");
