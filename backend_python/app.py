@@ -3,8 +3,10 @@ import socket
 from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
+from controllers.text_to_speech import tts_blueprint
+from controllers.sign_transcriber import sign_language_blueprint
 from sockets.stt_socket import register_transcription_events
-# from sockets.sign_transcriber import register_sign_transcriber
+
 
 def create_app():
     app = Flask(__name__)  # App instance should only be created here
@@ -14,12 +16,11 @@ def create_app():
     socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
     # Import and register blueprints
-    from controllers.text_to_speech import tts_blueprint
+    
     app.register_blueprint(tts_blueprint)
-
+    app.register_blueprint(sign_language_blueprint)
     # Sockets
     register_transcription_events(socketio)
-    # register_sign_transcriber(socketio)
     @app.route("/")
     def home():
         return "Flask SocketIO Server is Running!"
