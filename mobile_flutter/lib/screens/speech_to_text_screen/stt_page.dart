@@ -38,6 +38,30 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
     widget.speechToTextBloc.add(SpeechToTextLoadingEvent());
   }
 
+  void _toggleTapRecording() {
+    if (!_isRecording) {
+      setState(() {
+        _isRecording = true;
+      });
+      widget.speechToTextBloc.add(StartTapRecording());
+    } else {
+      setState(() {
+        _isRecording = false;
+      });
+      widget.speechToTextBloc.add(StopTapRecording());
+    }
+  }
+
+  void _startRecording() {
+    setState(() => _isRecording = true);
+    widget.speechToTextBloc.add(StartRecording());
+  }
+
+  void _stopRecording() {
+    setState(() => _isRecording = false);
+    widget.speechToTextBloc.add(StopRecording());
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
@@ -187,31 +211,9 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                       key: _microphoneKey,
                       description: "Tap and hold to start recording",
                       child: GestureDetector(
-                        onTap: () async {
-                          if (!_isRecording) {
-                            setState(() {
-                              _isRecording = true;
-                            });
-                            widget.speechToTextBloc.add(StartTapRecording());
-                          } else {
-                            setState(() {
-                              _isRecording = false;
-                            });
-                            widget.speechToTextBloc.add(StopTapRecording());
-                          }
-                        },
-                        onLongPress: () async {
-                          setState(() {
-                            _isRecording = true;
-                          });
-                          widget.speechToTextBloc.add(StartRecording());
-                        },
-                        onLongPressUp: () async {
-                          setState(() {
-                            _isRecording = false;
-                          });
-                          widget.speechToTextBloc.add(StopRecording());
-                        },
+                        onTap: _toggleTapRecording,
+                        onLongPress: _startRecording,
+                        onLongPressUp: _stopRecording,
                         child: Container(
                           width: ResponsiveUtils.getResponsiveSize(context, 80),
                           height:
@@ -220,21 +222,64 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                             shape: BoxShape.circle,
                             color: themeProvider.themeData.primaryColor,
                           ),
-                          child: _isRecording
-                              ? Icon(
-                                  Icons.graphic_eq_rounded,
-                                  color: Colors.white,
-                                  size: ResponsiveUtils.getResponsiveSize(
-                                      context, 60),
-                                )
-                              : Icon(
-                                  Icons.mic,
-                                  color: Colors.white,
-                                  size: ResponsiveUtils.getResponsiveSize(
-                                      context, 60),
-                                ),
+                          child: Icon(
+                            _isRecording ? Icons.graphic_eq_rounded : Icons.mic,
+                            color: Colors.white,
+                            size:
+                                ResponsiveUtils.getResponsiveSize(context, 60),
+                          ),
                         ),
                       ),
+
+                      // child: GestureDetector(
+                      //   onTap: () async {
+                      //     if (!_isRecording) {
+                      //       setState(() {
+                      //         _isRecording = true;
+                      //       });
+                      //       widget.speechToTextBloc.add(StartTapRecording());
+                      //     } else {
+                      //       setState(() {
+                      //         _isRecording = false;
+                      //       });
+                      //       widget.speechToTextBloc.add(StopTapRecording());
+                      //     }
+                      //   },
+                      //   onLongPress: () async {
+                      //     setState(() {
+                      //       _isRecording = true;
+                      //     });
+                      //     widget.speechToTextBloc.add(StartRecording());
+                      //   },
+                      //   onLongPressUp: () async {
+                      //     setState(() {
+                      //       _isRecording = false;
+                      //     });
+                      //     widget.speechToTextBloc.add(StopRecording());
+                      //   },
+                      //   child: Container(
+                      //     width: ResponsiveUtils.getResponsiveSize(context, 80),
+                      //     height:
+                      //         ResponsiveUtils.getResponsiveSize(context, 80),
+                      //     decoration: BoxDecoration(
+                      //       shape: BoxShape.circle,
+                      //       color: themeProvider.themeData.primaryColor,
+                      //     ),
+                      //     child: _isRecording
+                      //         ? Icon(
+                      //             Icons.graphic_eq_rounded,
+                      //             color: Colors.white,
+                      //             size: ResponsiveUtils.getResponsiveSize(
+                      //                 context, 60),
+                      //           )
+                      //         : Icon(
+                      //             Icons.mic,
+                      //             color: Colors.white,
+                      //             size: ResponsiveUtils.getResponsiveSize(
+                      //                 context, 60),
+                      //           ),
+                      //   ),
+                      // ),
                     ),
                     const SizedBox(width: 50),
                     // Showcase(

@@ -66,13 +66,13 @@ def register_transcription_events(socketio):
                 final_result = json.loads(recognizer.FinalResult())
                 text += " " + final_result.get("text", "")
 
-                text = text.strip() if text.strip() else "[No speech detected]"
+                text = text.strip() if text.strip() else ""
 
                 print(f"📝 Transcription: {text}")
-                if text != "" or text != "[No speech detected]":
+                if text != "" and text != "":
                     socketio.emit("transcription_result", {"text": text})
                 else:
-                    print("Audio is empty")
+                    print("Audio is empty or no speech detected")
 
             except Exception as e:
                 print(f"❌ Error processing audio: {e}")
@@ -109,11 +109,14 @@ def register_transcription_events(socketio):
             final_result = json.loads(recognizer.FinalResult())
             text += " " + final_result.get("text", "")
 
-            text = text.strip() if text.strip() else "[No speech detected]"
+            text = text.strip() if text.strip() else ""
             print(f"📝 Transcription: {text}")
 
             # Send result to frontend
-            socketio.emit("transcription_result", {"text": text})
+            if text != "" and text != "":
+                socketio.emit("transcription_result", {"text": text})
+            else:
+                print("Audio is empty or no speech detected")
 
         except Exception as e:
             print(f"❌ Error processing audio: {e}")
