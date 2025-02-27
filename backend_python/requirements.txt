@@ -75,11 +75,6 @@ SpeechRecognition==3.14.1
 srt==3.5.3
 standard-aifc==3.13.0
 standard-chunk==3.13.0
-tensorboard==2.18.0
-tensorboard-data-server==0.7.2
-tensorflow==2.18.0
-tensorflow-io-gcs-filesystem==0.31.0
-tensorflow_intel==2.18.0
 termcolor==2.5.0
 tqdm==4.67.1
 typing_extensions==4.12.2

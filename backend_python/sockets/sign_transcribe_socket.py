@@ -1,5 +1,4 @@
 import cv2
-import tensorflow as tf
 import mediapipe as mp
 import numpy as np
 import eventlet
@@ -10,7 +9,7 @@ from flask_socketio import SocketIO
 socketio = SocketIO()
 print("Hello")
 
-model = tf.keras.models.load_model("sign_language_model.h5")
+
 
 # English and Filipino translations
 sign_dict_en = {
