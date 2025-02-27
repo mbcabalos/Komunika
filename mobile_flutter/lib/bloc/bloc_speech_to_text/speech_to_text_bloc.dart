@@ -54,6 +54,7 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   // Start recording with stream controller setup
   Future<void> _startRecording(
       StartRecording event, Emitter<SpeechToTextState> emit) async {
+    emit(TranscriptionUpdated(""));
     if (recording) return;
     recording = true;
     Directory tempDir = await getTemporaryDirectory();
@@ -71,6 +72,7 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
 
   Future<void> _startTapRecording(
       StartTapRecording event, Emitter<SpeechToTextState> emit) async {
+    emit(TranscriptionUpdated(""));
     _startNewStream();
     await _recorder.openRecorder();
     await _recorder.startRecorder(
@@ -90,6 +92,7 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   // Stop recording and send audio to the backend
   Future<void> _stopRecording(
       StopRecording event, Emitter<SpeechToTextState> emit) async {
+    emit(TranscriptionUpdated(""));
     if (!recording) return;
     recording = false;
     await _recorder.stopRecorder();
@@ -101,6 +104,7 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
 
   Future<void> _stopTapRecording(
       StopTapRecording event, Emitter<SpeechToTextState> emit) async {
+    emit(TranscriptionUpdated(""));
     await _recorder.stopRecorder();
     await Future.delayed(const Duration(seconds: 7));
     _audioStreamController?.close();
