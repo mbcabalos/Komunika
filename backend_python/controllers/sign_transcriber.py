@@ -12,12 +12,12 @@ sign_language_blueprint = Blueprint('gesture', __name__)
 
 # Initialize hand detector and classifier
 detector = HandDetector(maxHands=1)
-classifier = Classifier("models/A-D_model.h5", "models/A-D_labels.txt")
+classifier = Classifier("models/keras_model.h5", "models/labels.txt")
 imgSize = 300
-labels = ['A', 'B', 'C', 'D']
+labels = ['idle', 'A', 'B', 'C', 'D']
 
 # Gesture detection Route
-@sign_language_blueprint.route('/detect', methods=['POST'])
+@sign_language_blueprint.route('/api/detect', methods=['POST'])
 def detect_gesture():
     try:
         logging.debug("Received request for gesture detection")
@@ -58,10 +58,6 @@ def detect_gesture():
         logging.error(f"An error occurred: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# Function to register routes with the app
-def create_gesture_routes(app):
-    app.register_blueprint(sign_language_blueprint, url_prefix='/gesture')
-
 # import cv2
 # from cvzone.HandTrackingModule import HandDetector
 # from cvzone.ClassificationModule import Classifier
@@ -71,11 +67,11 @@ def create_gesture_routes(app):
 # cap = cv2.VideoCapture(0)
 
 # detector = HandDetector(maxHands=2)
-# classifier = Classifier("models/A-D_model.h5", "models/A-D_labels.txt")
+# classifier = Classifier("models/keras_model.h5", "models/labels.txt")
 # offset = 20
 # imgSize = 300
 
-# labels = ['A', 'B', 'C', 'D']
+# labels = ['idle', 'A', 'B', 'C', 'D']
 
 # while True:
 #     success, img = cap.read()
