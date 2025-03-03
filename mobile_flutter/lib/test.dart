@@ -28,7 +28,7 @@ class _GestureDetectorScreenState extends State<GestureDetectorScreen> {
   Future<void> _sendImageToServer(File imageFile) async {
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse("http://192.168.1.133:5000/gesture/detect"), // Adjust URL if needed
+      Uri.parse("http://192.168.254.154:5000/api/detect"), // Adjust URL if needed
     );
 
     request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
@@ -36,6 +36,7 @@ class _GestureDetectorScreenState extends State<GestureDetectorScreen> {
     var response = await request.send();
     var responseData = await response.stream.bytesToString();
     var decodedData = jsonDecode(responseData);
+    print("Server Response: $responseData"); //test
 
     setState(() {
       _prediction = decodedData['label'] ?? "Error detecting gesture";
