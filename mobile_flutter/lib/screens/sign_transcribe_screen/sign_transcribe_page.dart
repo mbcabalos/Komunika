@@ -5,6 +5,7 @@ import 'package:komunika/bloc/bloc_sign_transcriber/sign_transcriber_bloc.dart';
 import 'dart:math' as math;
 
 import 'package:komunika/utils/themes.dart';
+import 'package:komunika/widgets/global_widgets/app_bar.dart';
 
 class SignTranscriberPage extends StatelessWidget {
   final ThemeProvider themeProvider;
@@ -15,7 +16,12 @@ class SignTranscriberPage extends StatelessWidget {
     return BlocProvider(
       create: (context) => SignTranscriberBloc()..add(InitializeCamera()),
       child: Scaffold(
-        appBar: AppBar(title: const Text("Sign Transcriber")),
+        appBar: const AppBarWidget(
+          title: "Sign Transcriber",
+          titleSize: 20,
+          isBackButton: true,
+          isSettingButton: false,
+        ),
         body: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(

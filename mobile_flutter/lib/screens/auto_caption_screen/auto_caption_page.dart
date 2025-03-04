@@ -81,7 +81,7 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
                 fontSize: 20,
               ),
               decoration: const InputDecoration(
-                hintText: "Waiting for Progress",
+                hintText: "",
                 border: InputBorder.none,
                 fillColor: Colors.transparent,
                 filled: true,
@@ -123,51 +123,51 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
               );
             },
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    margin: EdgeInsets.only(
-                        left: ResponsiveUtils.getResponsiveSize(context, 17)),
-                    child: Text(
-                      "Size",
-                      style: TextStyle(
-                        fontSize: ResponsiveUtils.getResponsiveFontSize(
-                          context,
-                          20,
-                        ),
-                        fontFamily: Fonts.main,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Slider(
-                    value: 50.0,
-                    min: 50.0,
-                    max: 150.0,
-                    divisions: 10,
-                    label: "${25.round()}%",
-                    onChanged: (value) {},
-                  ),
-                ],
-              ),
-            ],
-          ),
-          _buildDropdown("Color", Colors.black, [
-            DropdownMenuItem(value: Colors.white, child: Text("White")),
-            DropdownMenuItem(value: Colors.black, child: Text("Black")),
-            DropdownMenuItem(value: Colors.red, child: Text("Red")),
-            DropdownMenuItem(value: Colors.blue, child: Text("Blue")),
-          ]),
-          _buildDropdown("Background", Colors.black, [
-            DropdownMenuItem(value: Colors.black, child: Text("Black")),
-            DropdownMenuItem(value: Colors.white, child: Text("White")),
-            DropdownMenuItem(value: Colors.grey, child: Text("Grey")),
-            DropdownMenuItem(value: Colors.blue, child: Text("Blue")),
-          ]),
+          // Column(
+          //   crossAxisAlignment: CrossAxisAlignment.start,
+          //   children: [
+          //     Row(
+          //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //       children: [
+          //         Container(
+          //           margin: EdgeInsets.only(
+          //               left: ResponsiveUtils.getResponsiveSize(context, 17)),
+          //           child: Text(
+          //             "Size",
+          //             style: TextStyle(
+          //               fontSize: ResponsiveUtils.getResponsiveFontSize(
+          //                 context,
+          //                 20,
+          //               ),
+          //               fontFamily: Fonts.main,
+          //               fontWeight: FontWeight.w600,
+          //             ),
+          //           ),
+          //         ),
+          //         Slider(
+          //           value: 50.0,
+          //           min: 50.0,
+          //           max: 150.0,
+          //           divisions: 10,
+          //           label: "${25.round()}%",
+          //           onChanged: (value) {},
+          //         ),
+          //       ],
+          //     ),
+          //   ],
+          // ),
+          // _buildDropdown("Color", Colors.black, [
+          //   DropdownMenuItem(value: Colors.white, child: Text("White")),
+          //   DropdownMenuItem(value: Colors.black, child: Text("Black")),
+          //   DropdownMenuItem(value: Colors.red, child: Text("Red")),
+          //   DropdownMenuItem(value: Colors.blue, child: Text("Blue")),
+          // ]),
+          // _buildDropdown("Background", Colors.black, [
+          //   DropdownMenuItem(value: Colors.black, child: Text("Black")),
+          //   DropdownMenuItem(value: Colors.white, child: Text("White")),
+          //   DropdownMenuItem(value: Colors.grey, child: Text("Grey")),
+          //   DropdownMenuItem(value: Colors.blue, child: Text("Blue")),
+          // ]),
         ],
       ),
     );

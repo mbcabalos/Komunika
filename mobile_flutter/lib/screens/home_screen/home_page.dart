@@ -12,6 +12,7 @@ import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
+import 'package:komunika/test.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
@@ -262,8 +263,8 @@ class _HomePageState extends State<HomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SignTranscriberPage(
-                                  themeProvider: themeProvider),
+                              builder: (context) => SignTranscriberPage(themeProvider: themeProvider,
+                                  ),
                             ),
                           );
                         },
