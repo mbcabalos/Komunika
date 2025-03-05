@@ -1,7 +1,7 @@
 part of 'sign_transcriber_bloc.dart';
 
 abstract class SignTranscriberState extends Equatable {
-  const SignTranscriberState();
+  SignTranscriberState();
 
   @override
   List<Object> get props => [];
@@ -9,25 +9,24 @@ abstract class SignTranscriberState extends Equatable {
 
 class SignTranscriberInitial extends SignTranscriberState {}
 
-class CameraInitialized extends SignTranscriberState {
+class SignTranscriberErrorState extends SignTranscriberState {
+  final String message;
+  SignTranscriberErrorState({required this.message});
+}
+
+class SignTranscriberLoadingState extends SignTranscriberState {}
+
+class SignTranscriberLoadedState extends SignTranscriberState {
   final CameraController cameraController;
-  const CameraInitialized(this.cameraController);
+  SignTranscriberLoadedState(this.cameraController);
 
   @override
   List<Object> get props => [cameraController];
 }
 
-class CameraError extends SignTranscriberState {
-  final String message;
-  const CameraError(this.message);
-
-  @override
-  List<Object> get props => [message];
-}
-
 class TranscriptionInProgress extends SignTranscriberState {
   final String message;
-  const TranscriptionInProgress(this.message);
+  TranscriptionInProgress(this.message);
 
   @override
   List<Object> get props => [message];
@@ -35,7 +34,7 @@ class TranscriptionInProgress extends SignTranscriberState {
 
 class TranscriptionCompleted extends SignTranscriberState {
   final String result;
-  const TranscriptionCompleted(this.result);
+  TranscriptionCompleted(this.result);
 
   @override
   List<Object> get props => [result];

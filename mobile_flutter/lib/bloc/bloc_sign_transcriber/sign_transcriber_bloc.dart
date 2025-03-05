@@ -1,93 +1,135 @@
 import 'dart:async';
+import 'package:image/image.dart'; // Add this package to your pubspec.yaml
+import 'dart:typed_data';
 import 'package:bloc/bloc.dart';
 import 'package:camera/camera.dart';
 import 'package:equatable/equatable.dart';
+import 'package:komunika/services/live-service-handler/socket_service.dart';
 
 part 'sign_transcriber_event.dart';
 part 'sign_transcriber_state.dart';
 
-class SignTranscriberBloc extends Bloc<SignTranscriberEvent, SignTranscriberState> {
-  CameraController? _cameraController;
-  List<CameraDescription> _cameras = [];
-  int _currentCameraIndex = 0;
+class SignTranscriberBloc
+    extends Bloc<SignTranscriberEvent, SignTranscriberState> {
+  final socketService = SocketService();
+
+  CameraController? cameraController;
+
+  List<CameraDescription> cameras = [];
+  int currentCameraIndex = 0;
   Timer? _captureTimer;
+  DateTime? lastFrameSent;
 
   SignTranscriberBloc() : super(SignTranscriberInitial()) {
-    on<InitializeCamera>(_onInitializeCamera);
-    on<SwitchCamera>(_onSwitchCamera);
-    on<StartTranslation>(_onStartTranslation);
+    on<SignTranscriberLoadingEvent>(_initialize);
     on<StopTranslation>(_onStopTranslation);
   }
 
-  Future<void> _onInitializeCamera(InitializeCamera event, Emitter<SignTranscriberState> emit) async {
+  Future<void> _initialize(SignTranscriberLoadingEvent event,
+      Emitter<SignTranscriberState> emit) async {
+    emit(SignTranscriberLoadingState());
     try {
-      _cameras = await availableCameras();
-      if (_cameras.isEmpty) {
-        emit(const CameraError("No camera found"));
+      // Get available cameras and select the default one
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        emit(SignTranscriberErrorState(message: "No cameras found"));
         return;
       }
+      // Select the first camera (you can modify this if you want front/back camera logic)
+      final camera = cameras[currentCameraIndex];
 
-      _currentCameraIndex = 0; // Start with the back camera
-      await _setupCamera(_cameras[_currentCameraIndex], emit);
+      cameraController = CameraController(camera, ResolutionPreset.high);
+      await cameraController!.initialize();
+
+      emit(SignTranscriberLoadedState(
+          cameraController!)); // Emit the loaded state with controller
+      _startImageStream();
     } catch (e) {
-      emit(CameraError("Failed to initialize camera: $e"));
+      emit(SignTranscriberErrorState(
+          message: "Failed to initialize the camera: $e"));
     }
   }
 
-  Future<void> _onSwitchCamera(SwitchCamera event, Emitter<SignTranscriberState> emit) async {
-    if (_cameras.isEmpty) return;
+  Future<void> _startImageStream() async {
+    if (cameraController == null || !cameraController!.value.isInitialized) {
+      return;
+    }
 
-    _currentCameraIndex = (_currentCameraIndex + 1) % _cameras.length; // Toggle between front and back
-    await _setupCamera(_cameras[_currentCameraIndex], emit);
-  }
-
-  Future<void> _setupCamera(CameraDescription cameraDescription, Emitter<SignTranscriberState> emit) async {
-    try {
-      await _cameraController?.dispose();
-
-      _cameraController = CameraController(
-        cameraDescription,
-        ResolutionPreset.medium,
-        enableAudio: false,
-      );
-
-      await _cameraController!.initialize();
-
-      if (_cameraController!.value.isInitialized) {
-        emit(CameraInitialized(_cameraController!));
+    cameraController!.startImageStream((CameraImage image) async {
+      final frame = await _convertCameraImageToBytes(image);
+      if (frame != null) {
+        // Send the frame to the backend via socket service
+        socketService.sendFrame(frame);
       }
-    } catch (e) {
-      emit(CameraError("Failed to switch camera: $e"));
-    }
-  }
-
-  void _onStartTranslation(StartTranslation event, Emitter<SignTranscriberState> emit) {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) return;
-
-    emit(const TranscriptionInProgress("Starting transcription..."));
-
-    // Start capturing frames every 3 seconds
-    _captureTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
-      final transcription = await _processSignLanguage();
-      emit(TranscriptionInProgress(transcription));
     });
   }
 
-  void _onStopTranslation(StopTranslation event, Emitter<SignTranscriberState> emit) {
+  Future<Uint8List?> _convertCameraImageToBytes(CameraImage image) async {
+    try {
+      // Convert CameraImage to an Image object (from the image package)
+      final img = _convertYUV420toImage(image);
+
+      // Encode the image as JPEG
+      final jpeg = encodeJpg(img);
+
+      return Uint8List.fromList(jpeg);
+    } catch (e) {
+      print("Failed to convert CameraImage to bytes: $e");
+      return null;
+    }
+  }
+
+  Image _convertYUV420toImage(CameraImage image) {
+    final width = image.width;
+    final height = image.height;
+
+    final yBuffer = image.planes[0].bytes;
+    final uBuffer = image.planes[1].bytes;
+    final vBuffer = image.planes[2].bytes;
+
+    final img = Image(width: width, height: height);
+
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        final yIndex = y * width + x;
+        final uvIndex = (y ~/ 2) * (width ~/ 2) + (x ~/ 2);
+
+        final yValue = yBuffer[yIndex];
+        final uValue = uBuffer[uvIndex];
+        final vValue = vBuffer[uvIndex];
+
+        // Convert YUV to RGB
+        final r = yValue + 1.402 * (vValue - 128);
+        final g =
+            yValue - 0.344136 * (uValue - 128) - 0.714136 * (vValue - 128);
+        final b = yValue + 1.772 * (uValue - 128);
+
+        img.setPixelRgb(x, y, r.toInt(), g.toInt(), b.toInt());
+      }
+    }
+
+    return img;
+  }
+
+  void _onStopTranslation(
+      StopTranslation event, Emitter<SignTranscriberState> emit) {
     _captureTimer?.cancel();
+    _stopImageStream();
+    close();
     emit(SignTranscriberInitial());
   }
 
-  Future<String> _processSignLanguage() async {
-    await Future.delayed(const Duration(seconds: 2)); // Simulate processing time
-    return "Recognized sign: Hello"; // Replace this with ML model output
+  Future<void> _stopImageStream() async {
+    if (cameraController != null) {
+      await cameraController!.stopImageStream();
+    }
   }
 
   @override
-  Future<void> close() {
+  Future<void> close() async {
+    await cameraController?.dispose();
+    _stopImageStream();
     _captureTimer?.cancel();
-    _cameraController?.dispose();
-    return super.close();
+    super.close();
   }
 }
-

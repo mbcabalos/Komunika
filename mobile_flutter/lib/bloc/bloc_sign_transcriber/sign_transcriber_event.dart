@@ -8,7 +8,11 @@ abstract class SignTranscriberEvent extends Equatable {
 
 class InitializeCamera extends SignTranscriberEvent {}
 
+class SignTranscriberLoadingEvent extends SignTranscriberEvent {}
+
 class SwitchCamera extends SignTranscriberEvent {}
+
+class StartImageStream extends SignTranscriberEvent {}
 
 class StartTranslation extends SignTranscriberEvent {}
 

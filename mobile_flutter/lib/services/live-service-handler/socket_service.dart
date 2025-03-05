@@ -45,7 +45,6 @@ class SocketService {
         _transcriptionController.add(data["text"]);
       }
     });
-    
 
     socket?.onDisconnect((_) {
       print("❌ Disconnected from WebSocket");
@@ -78,6 +77,14 @@ class SocketService {
   Future<void> sendCaptionAudio(Uint8List audioChunk) async {
     if (isSocketInitialized) {
       socket?.emit('caption_stream', audioChunk);
+    } else {
+      print("❌ Socket is not connected yet!");
+    }
+  }
+
+  Future<void> sendFrame(Uint8List frame) async {
+    if (isSocketInitialized) {
+      socket?.emit('frame', frame);
     } else {
       print("❌ Socket is not connected yet!");
     }
