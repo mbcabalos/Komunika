@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_home/home_bloc.dart';
+import 'package:komunika/bloc/bloc_sign_transcriber/sign_transcriber_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_walkthrough/walkthrough_bloc.dart';
@@ -39,6 +40,7 @@ class _HomePageState extends State<HomePage> {
   late HomeBloc homeBloc;
   late SpeechToTextBloc sttBloc;
   late TextToSpeechBloc ttsBloc;
+  late SignTranscriberBloc stBloc;
   final socketService = SocketService();
   final globalService = GlobalRepositoryImpl();
   final databaseHelper = DatabaseHelper();
@@ -55,6 +57,7 @@ class _HomePageState extends State<HomePage> {
     homeBloc = HomeBloc(databaseHelper);
     sttBloc = SpeechToTextBloc(socketService);
     ttsBloc = TextToSpeechBloc(globalService, databaseHelper);
+    stBloc = SignTranscriberBloc();
     homeBloc.add(HomeLoadingEvent());
     homeBloc.add(RequestPermissionEvent());
     homeBloc.add(FetchAudioEvent());
@@ -95,6 +98,9 @@ class _HomePageState extends State<HomePage> {
         ),
         BlocProvider<TextToSpeechBloc>(
           create: (context) => ttsBloc,
+        ),
+        BlocProvider<SignTranscriberBloc>(
+          create: (context) => stBloc,
         ),
       ],
       child: Consumer<ThemeProvider>(
@@ -270,6 +276,7 @@ class _HomePageState extends State<HomePage> {
                             MaterialPageRoute(
                               builder: (context) => SignTranscriberPage(
                                 themeProvider: themeProvider,
+                                signTranscriberBloc: stBloc,
                               ),
                             ),
                           );

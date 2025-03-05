@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:komunika/bloc/bloc_sign_transcriber/sign_transcriber_bloc.dart';
 import 'package:komunika/screens/home_screen/home_page.dart';
 import 'package:komunika/screens/splash_screen/splash_screen.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
@@ -22,6 +23,7 @@ Future<void> main() async {
       storedLanguage == 'Filipino' ? Locale('fil', 'PH') : Locale('en', 'US');
 
   runApp(
+
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
       child: MyApp(initialLocale: initialLocale),
