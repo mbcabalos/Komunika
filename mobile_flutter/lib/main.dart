@@ -31,7 +31,7 @@ Future<void> main() async {
 
 Future<void> checkDatabaseExistence() async {
   DatabaseHelper databaseHelper = DatabaseHelper();
-  String path = join(await getDatabasesPath(), 'audio_database.db');
+  String path = join(await getDatabasesPath(), 'komunika_database.db');
   // await deleteDatabase(path);
   bool exists = await databaseExists(path);
   bool isWalkthroughDone = await PreferencesUtils.getWalkthrough();
@@ -39,6 +39,16 @@ Future<void> checkDatabaseExistence() async {
     await openDatabase(path, version: 1, onCreate: (db, version) {
       db.execute(
           'CREATE TABLE audio_items(id INTEGER PRIMARY KEY, audioName TEXT, favorites INTEGER DEFAULT 0)');
+      // Create the history tables
+      db.execute(
+        'CREATE TABLE speech_to_text_history(id INTEGER PRIMARY KEY, text TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
+      );
+      db.execute(
+        'CREATE TABLE auto_caption_history(id INTEGER PRIMARY KEY, text TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
+      );
+      db.execute(
+        'CREATE TABLE sign_transcriber_history(id INTEGER PRIMARY KEY, text TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
+      );
     });
     if (!isWalkthroughDone) {
       databaseHelper.moveAudioFiles();

@@ -8,7 +8,8 @@ import 'package:komunika/widgets/global_widgets/app_bar.dart';
 import 'package:provider/provider.dart';
 
 class FAQPage extends StatefulWidget {
-  const FAQPage({super.key});
+  final ThemeProvider themeProvider;
+  const FAQPage({super.key, required this.themeProvider});
 
   @override
   State<FAQPage> createState() => _FAQPageState();
@@ -45,8 +46,11 @@ class _FAQPageState extends State<FAQPage> {
           appBar: AppBarWidget(
             title: context.translate("faq_title"),
             titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+            themeProvider: widget.themeProvider,
             isBackButton: true,
             isSettingButton: false,
+            isHistoryButton: false,
+            database: '',
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -63,7 +67,9 @@ class _FAQPageState extends State<FAQPage> {
                     color: themeProvider.themeData.textTheme.bodyMedium?.color,
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(
+                  height: ResponsiveUtils.getResponsiveSize(context, 20),
+                ),
                 ExpansionPanelList(
                   elevation: 0,
                   expandedHeaderPadding: EdgeInsets.zero,
@@ -91,7 +97,12 @@ class _FAQPageState extends State<FAQPage> {
                         );
                       },
                       body: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        padding: EdgeInsets.fromLTRB(
+                          ResponsiveUtils.getResponsiveSize(context, 16),
+                          0,
+                          ResponsiveUtils.getResponsiveSize(context, 16),
+                          ResponsiveUtils.getResponsiveSize(context, 16),
+                        ),
                         child: Text(
                           context.translate(faq.answer), // Translate here
                           style: TextStyle(

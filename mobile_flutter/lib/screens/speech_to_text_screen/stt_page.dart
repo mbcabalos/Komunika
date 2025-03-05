@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
+import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:komunika/widgets/global_widgets/history.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 class SpeechToTextPage extends StatefulWidget {
@@ -20,6 +21,7 @@ class SpeechToTextPage extends StatefulWidget {
 
 class SpeechToTextPageState extends State<SpeechToTextPage> {
   final TextEditingController _textController = TextEditingController();
+  final dbHelper = DatabaseHelper();
   final GlobalKey _microphoneKey = GlobalKey();
   final GlobalKey _textFieldKey = GlobalKey();
   final GlobalKey _saveKey = GlobalKey();
@@ -79,19 +81,45 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
             ),
           ),
           leading: Padding(
-            padding: const EdgeInsets.only(top: 7.0),
+            padding: EdgeInsets.only(
+              top: ResponsiveUtils.getResponsiveSize(context, 7),
+            ),
             child: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back_ios_new_rounded,
-                size: 10,
+                size: ResponsiveUtils.getResponsiveSize(context, 10),
               ),
               onPressed: () {
+                if (_textController.text.isNotEmpty) {
+                  dbHelper.saveSpeechToTextHistory(_textController.text);
+                }
                 _textController.clear();
                 widget.speechToTextBloc.add(StopTapRecording());
                 Navigator.pop(context);
               },
             ),
           ),
+          actions: [
+            Padding(
+              padding: EdgeInsets.only(
+                top: ResponsiveUtils.getResponsiveSize(context, 7),
+                right: ResponsiveUtils.getResponsiveSize(context, 8),
+              ),
+              child: IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HistoryPage(
+                          themeProvider: widget.themeProvider,
+                          database: 'stt',
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.history_rounded)),
+            ),
+          ],
         ),
         body: BlocConsumer<SpeechToTextBloc, SpeechToTextState>(
           listener: (context, state) {
@@ -124,14 +152,18 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
     return RefreshIndicator.adaptive(
       onRefresh: _initialize,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(
+          ResponsiveUtils.getResponsiveSize(context, 16),
+        ),
         child: ListView(
           children: [
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 20),
+                SizedBox(
+                  height: ResponsiveUtils.getResponsiveSize(context, 20),
+                ),
                 SizedBox(
                   width: phoneWidth,
                   height: phoneHeight,
@@ -148,8 +180,9 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                         child: Card(
                           elevation: 1, // Adds shadow effect
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(12), // Rounded corners
+                            borderRadius: BorderRadius.circular(
+                              ResponsiveUtils.getResponsiveSize(context, 12),
+                            ), // Rounded corners
                           ),
                           color: themeProvider.themeData.cardColor,
                           child: SingleChildScrollView(
@@ -160,15 +193,20 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                               style: TextStyle(
                                 color: themeProvider
                                     .themeData.textTheme.bodyMedium?.color,
-                                fontSize: 20,
+                                fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                    context, 20),
                               ),
                               decoration: InputDecoration(
                                 hintText: context.translate("stt_hint"),
                                 border: InputBorder.none,
                                 fillColor: Colors.transparent,
                                 filled: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 16),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: ResponsiveUtils.getResponsiveSize(
+                                      context, 12),
+                                  vertical: ResponsiveUtils.getResponsiveSize(
+                                      context, 16),
+                                ),
                               ),
                               textAlignVertical: TextAlignVertical.center,
                               maxLines: null, // Allows for infinite lines
@@ -180,7 +218,9 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                     },
                   ),
                 ),
-                const SizedBox(height: 50),
+                SizedBox(
+                  height: ResponsiveUtils.getResponsiveSize(context, 50),
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -190,6 +230,8 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                       child: GestureDetector(
                         onTap: () {
                           print("clicked");
+                          dbHelper
+                              .saveSpeechToTextHistory(_textController.text);
                           _textController.clear();
                         },
                         child: Container(
@@ -206,7 +248,9 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 20),
+                    SizedBox(
+                      width: ResponsiveUtils.getResponsiveSize(context, 20),
+                    ),
                     Showcase(
                       key: _microphoneKey,
                       description: "Tap and hold to start recording",
@@ -281,7 +325,9 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                       //   ),
                       // ),
                     ),
-                    const SizedBox(width: 50),
+                    SizedBox(
+                      width: ResponsiveUtils.getResponsiveSize(context, 50),
+                    ),
                     // Showcase(
                     //   key: _saveKey,
                     //   description: "Save transcription",
@@ -307,7 +353,9 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                     // ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                SizedBox(
+                  height: ResponsiveUtils.getResponsiveSize(context, 10),
+                ),
                 Text(
                   context.translate("stt_hold_microphone"),
                   style: TextStyle(

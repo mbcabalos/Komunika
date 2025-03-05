@@ -32,11 +32,13 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
       create: (context) => autoCaptionBloc,
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
-        appBar: const AppBarWidget(
+        appBar: AppBarWidget(
           title: "Screen Caption",
           titleSize: 20,
+          themeProvider: widget.themeProvider,
           isBackButton: true,
           isSettingButton: false,
+          isHistoryButton: true, database: 'auto_caption',
         ),
         body: BlocConsumer<AutoCaptionBloc, AutoCaptionState>(
           listener: (context, state) {

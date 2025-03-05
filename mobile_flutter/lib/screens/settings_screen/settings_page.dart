@@ -12,7 +12,8 @@ import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/global_widgets/app_bar.dart';
 
 class SettingPage extends StatefulWidget {
-  const SettingPage({super.key});
+  final ThemeProvider themeProvider;
+  const SettingPage({super.key, required this.themeProvider});
 
   @override
   State<SettingPage> createState() => SettingPageState();
@@ -45,11 +46,16 @@ class SettingPageState extends State<SettingPage> {
           appBar: AppBarWidget(
             title: context.translate('settings_title'),
             titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+            themeProvider: widget.themeProvider,
             isBackButton: true,
             isSettingButton: false,
+            isHistoryButton: false,
+            database: '',
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(
+              ResponsiveUtils.getResponsiveSize(context, 20),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -75,7 +81,8 @@ class SettingPageState extends State<SettingPage> {
                         child: Text(
                           value,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                context, 14),
                             color: themeProvider
                                 .themeData.textTheme.bodyMedium?.color,
                           ),
@@ -86,7 +93,8 @@ class SettingPageState extends State<SettingPage> {
                   ),
                 ),
                 _buildSectionHeader(
-                    context.translate('settings_language_region'), themeProvider),
+                    context.translate('settings_language_region'),
+                    themeProvider),
                 _buildSettingItem(
                   themeProvider: themeProvider,
                   icon: Icons.language,
@@ -130,9 +138,13 @@ class SettingPageState extends State<SettingPage> {
                   title: context.translate('settings_faq'),
                   onTap: () {
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const FAQPage()));
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FAQPage(
+                          themeProvider: themeProvider,
+                        ),
+                      ),
+                    );
                   },
                 ),
                 _buildSettingItem(
@@ -141,9 +153,13 @@ class SettingPageState extends State<SettingPage> {
                   title: context.translate('settings_about'),
                   onTap: () {
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const AboutPage()));
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AboutPage(
+                          themeProvider: themeProvider,
+                        ),
+                      ),
+                    );
                   },
                 ),
                 // _buildSettingItem(
@@ -181,7 +197,10 @@ class SettingPageState extends State<SettingPage> {
 
   Widget _buildSectionHeader(String title, ThemeProvider themeProvider) {
     return Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 10),
+      padding: EdgeInsets.only(
+        top: ResponsiveUtils.getResponsiveSize(context, 20),
+        bottom: ResponsiveUtils.getResponsiveSize(context, 10),
+      ),
       child: Text(
         title,
         style: TextStyle(
@@ -204,7 +223,9 @@ class SettingPageState extends State<SettingPage> {
     return Card(
       color: themeProvider.themeData.cardColor,
       elevation: 0,
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: EdgeInsets.only(
+        bottom: ResponsiveUtils.getResponsiveSize(context, 10),
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: ColorsPalette.grey.withOpacity(0.2), width: 1),

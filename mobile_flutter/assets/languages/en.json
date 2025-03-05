@@ -11,6 +11,8 @@
   "home_speech_to_text_description": "Tap here to test speech-to-text functionality",
   "home_text_to_speech_description": "Tap here to test text-to-speech functionality",
 
+  "history_title": "History",
+
   "stt_title": "Speech to Text",
   "stt_hint": "Message...",
   "stt_hold_microphone": "Tap/Hold to Start",
