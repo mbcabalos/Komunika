@@ -16,11 +16,14 @@ class SignTranscriberPage extends StatelessWidget {
     return BlocProvider(
       create: (context) => SignTranscriberBloc()..add(InitializeCamera()),
       child: Scaffold(
-        appBar: const AppBarWidget(
+        appBar: AppBarWidget(
           title: "Sign Transcriber",
           titleSize: 20,
+          themeProvider: themeProvider,
           isBackButton: true,
           isSettingButton: false,
+          isHistoryButton: true,
+          database: 'sign_trancriber',
         ),
         body: Padding(
           padding: const EdgeInsets.all(8.0),

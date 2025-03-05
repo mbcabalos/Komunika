@@ -51,8 +51,11 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
         appBar: AppBarWidget(
           title: context.translate("tts_title"),
           titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+          themeProvider: widget.themeProvider,
           isBackButton: true,
           isSettingButton: false,
+          isHistoryButton: false,
+          database: '',
         ),
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
           listener: (context, state) {
@@ -94,7 +97,9 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
           children: [
             Container(
               height: MediaQuery.of(context).size.height * 0.85,
-              margin: const EdgeInsets.all(16),
+              margin: EdgeInsets.all(
+                ResponsiveUtils.getResponsiveSize(context, 16),
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -169,7 +174,7 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: Icon(Icons.record_voice_over),
+                leading: const Icon(Icons.record_voice_over),
                 title: Text(favorites == 1
                     ? "Remove From Quick Speech"
                     : "Add To Quick Speech"),
@@ -185,8 +190,8 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.delete),
-                title: Text("Delete"),
+                leading: const Icon(Icons.delete),
+                title: const Text("Delete"),
                 onTap: () {
                   widget.textToSpeechBloc.add(DeleteQuickSpeech(audioId: id));
                   Navigator.pop(context);

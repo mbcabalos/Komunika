@@ -25,13 +25,8 @@ import 'package:komunika/widgets/home_widgets/home_catalogs_card.dart';
 import 'package:komunika/widgets/home_widgets/home_quick_speech_card.dart';
 import 'package:komunika/widgets/home_widgets/home_tips_card.dart';
 import 'package:komunika/widgets/home_widgets/home_walkthrough.dart';
-import 'package:komunika/widgets/text_to_speech_widgets/tts_card.dart';
-import 'package:path/path.dart'
-    as p; //renamed as p to avoid conflict with showcase context eme
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'package:sqflite/sqflite.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -109,8 +104,11 @@ class _HomePageState extends State<HomePage> {
             appBar: AppBarWidget(
               title: context.translate("home_title"),
               titleSize: ResponsiveUtils.getResponsiveFontSize(context, 35),
+              themeProvider: themeProvider,
               isBackButton: false,
               isSettingButton: true,
+              isHistoryButton: false,
+              database: '',
             ),
             body: BlocConsumer<HomeBloc, HomeState>(
               listener: (context, state) {
@@ -151,7 +149,11 @@ class _HomePageState extends State<HomePage> {
         children: [
           // Header Section
           Container(
-            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+            margin: EdgeInsets.only(
+              left: ResponsiveUtils.getResponsiveSize(context, 16),
+              right: ResponsiveUtils.getResponsiveSize(context, 16),
+              bottom: ResponsiveUtils.getResponsiveSize(context, 16),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -182,9 +184,9 @@ class _HomePageState extends State<HomePage> {
 
           // Body Section with white background
           Container(
-              height: quickSpeechItems.length <= 2
-                  ? MediaQuery.of(context).size.height * 0.6
-                  : null,
+            height: quickSpeechItems.length <= 2
+                ? MediaQuery.of(context).size.height * 0.6
+                : null,
             decoration: BoxDecoration(
               color: themeProvider.themeData.scaffoldBackgroundColor,
               borderRadius: const BorderRadius.vertical(
@@ -192,7 +194,10 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 30),
+              padding: EdgeInsets.symmetric(
+                horizontal: ResponsiveUtils.getResponsiveSize(context, 16),
+                vertical: ResponsiveUtils.getResponsiveSize(context, 30),
+              ),
               child: Column(
                 children: [
                   Row(
@@ -263,8 +268,9 @@ class _HomePageState extends State<HomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SignTranscriberPage(themeProvider: themeProvider,
-                                  ),
+                              builder: (context) => SignTranscriberPage(
+                                themeProvider: themeProvider,
+                              ),
                             ),
                           );
                         },

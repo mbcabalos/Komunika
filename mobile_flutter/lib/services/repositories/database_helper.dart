@@ -34,14 +34,27 @@ class DatabaseHelper {
   // Initialize the database
   Future<Database> _initDatabase() async {
     // <-- Add return type
-    String path = join(await getDatabasesPath(), 'audio_database.db');
+    String path = join(await getDatabasesPath(), 'komunika_database.db');
 
     return await openDatabase(
       path,
       onCreate: (db, version) async {
+        // Create the audio_items table
         await db.execute(
           'CREATE TABLE audio_items(id INTEGER PRIMARY KEY, audioName TEXT, favorites INTEGER DEFAULT 0)',
         );
+
+        // Create the history tables
+        await db.execute(
+          'CREATE TABLE speech_to_text_history(id INTEGER PRIMARY KEY, text TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
+        );
+        await db.execute(
+          'CREATE TABLE auto_caption_history(id INTEGER PRIMARY KEY, text TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
+        );
+        await db.execute(
+          'CREATE TABLE sign_transcriber_history(id INTEGER PRIMARY KEY, text TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
+        );
+
         await moveAudioFiles();
         await insertAudioItems(audioItems);
       },
@@ -54,6 +67,8 @@ class DatabaseHelper {
       // Get the directory to store files in the app's "files" folder
       Directory? appDocDirectory = await getExternalStorageDirectory();
       String targetDir = '${appDocDirectory?.path}/audio';
+
+      print('Target directory: $targetDir');
 
       // Create the target folder if it doesn't exist
       final targetDirectory = Directory(targetDir);
@@ -90,6 +105,10 @@ class DatabaseHelper {
       print("Error moving audio files: $e");
     }
   }
+
+  // =============================================
+  // Audio Methods
+  // =============================================
 
   Future<List<Map<String, dynamic>>> fetchAllAudioItems() async {
     final db = await database;
@@ -197,5 +216,170 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  // =============================================
+  // Speech-to-Text History Methods
+  // =============================================
+
+  Future<void> saveSpeechToTextHistory(String text) async {
+    try {
+      final db = await database;
+      await db.insert(
+        'speech_to_text_history',
+        {'text': text},
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      print('Speech-to-Text history saved: $text');
+    } catch (e) {
+      print('Error saving Speech-to-Text history: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getSpeechToTextHistory() async {
+    try {
+      final db = await database;
+      return await db.query(
+        'speech_to_text_history',
+        orderBy: 'timestamp DESC',
+      );
+    } catch (e) {
+      print('Error retrieving Speech-to-Text history: $e');
+      return [];
+    }
+  }
+
+  Future<void> deleteSpeechToTextHistory(int id) async {
+    try {
+      final db = await database;
+      await db.delete(
+        'speech_to_text_history',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      print('Speech-to-Text history deleted: $id');
+    } catch (e) {
+      print('Error deleting Speech-to-Text history: $e');
+    }
+  }
+
+  Future<void> clearSpeechToTextHistory() async {
+    try {
+      final db = await database;
+      await db.delete('speech_to_text_history');
+      print('All Speech-to-Text history cleared.');
+    } catch (e) {
+      print('Error clearing Speech-to-Text history: $e');
+    }
+  }
+
+  // =============================================
+  // Auto Caption History Methods
+  // =============================================
+
+  Future<void> saveAutoCaptionHistory(String text) async {
+    try {
+      final db = await database;
+      await db.insert(
+        'auto_caption_history',
+        {'text': text},
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      print('Auto Caption history saved: $text');
+    } catch (e) {
+      print('Error saving Auto Caption history: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getAutoCaptionHistory() async {
+    try {
+      final db = await database;
+      return await db.query(
+        'auto_caption_history',
+        orderBy: 'timestamp DESC',
+      );
+    } catch (e) {
+      print('Error retrieving Auto Caption history: $e');
+      return [];
+    }
+  }
+
+  Future<void> deleteAutoCaptionHistory(int id) async {
+    try {
+      final db = await database;
+      await db.delete(
+        'auto_caption_history',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      print('Auto Caption history deleted: $id');
+    } catch (e) {
+      print('Error deleting Auto Caption history: $e');
+    }
+  }
+
+  Future<void> clearAutoCaptionHistory() async {
+    try {
+      final db = await database;
+      await db.delete('auto_caption_history');
+      print('All Auto Caption history cleared.');
+    } catch (e) {
+      print('Error clearing Auto Caption history: $e');
+    }
+  }
+
+  // =============================================
+  // Sign Transcriber History Methods
+  // =============================================
+
+  Future<void> saveSignTranscriberHistory(String text) async {
+    try {
+      final db = await database;
+      await db.insert(
+        'sign_transcriber_history',
+        {'text': text},
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      print('Sign Transcriber history saved: $text');
+    } catch (e) {
+      print('Error saving Sign Transcriber history: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getSignTranscriberHistory() async {
+    try {
+      final db = await database;
+      return await db.query(
+        'sign_transcriber_history',
+        orderBy: 'timestamp DESC',
+      );
+    } catch (e) {
+      print('Error retrieving Sign Transcriber history: $e');
+      return [];
+    }
+  }
+
+  Future<void> deleteSignTranscriberHistory(int id) async {
+    try {
+      final db = await database;
+      await db.delete(
+        'sign_transcriber_history',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      print('Sign Transcriber history deleted: $id');
+    } catch (e) {
+      print('Error deleting Sign Transcriber history: $e');
+    }
+  }
+
+  Future<void> clearSignTranscriberHistory() async {
+    try {
+      final db = await database;
+      await db.delete('sign_transcriber_history');
+      print('All Sign Transcriber history cleared.');
+    } catch (e) {
+      print('Error clearing Sign Transcriber history: $e');
+    }
   }
 }

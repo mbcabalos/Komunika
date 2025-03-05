@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
+import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 
 class TTSCard extends StatefulWidget {
@@ -26,8 +27,6 @@ class TTSCard extends StatefulWidget {
 class _TTSCardState extends State<TTSCard> {
   @override
   Widget build(BuildContext context) {
-    final double cardWidth = MediaQuery.of(context).size.width * 0.9;
-
     return GestureDetector(
       onTap: widget.isPlaying ? null : widget.onTap, // Disable if playing
       onLongPress:
@@ -35,8 +34,8 @@ class _TTSCardState extends State<TTSCard> {
       child: Opacity(
         opacity: widget.isPlaying ? 0.5 : 1.0, // Reduce opacity if playing
         child: Container(
-          margin: const EdgeInsets.only(top: 12, left: 12),
-          width: cardWidth,
+          margin: const EdgeInsets.only(top: 12, left: 12, right: 12),
+          width: MediaQuery.of(context).size.width * 0.9,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: widget.themeProvider.themeData.cardColor,
@@ -59,7 +58,7 @@ class _TTSCardState extends State<TTSCard> {
                   fontFamily: Fonts.main,
                   color: widget
                       .themeProvider.themeData.textTheme.bodyMedium?.color,
-                  fontSize: 20,
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -68,7 +67,7 @@ class _TTSCardState extends State<TTSCard> {
                 widget.isPlaying
                     ? Icons.pause_circle_filled
                     : Icons.play_circle_fill,
-                size: 30,
+                size: ResponsiveUtils.getResponsiveFontSize(context, 30),
                 color: widget.isPlaying
                     ? Colors.grey // Gray out if playing
                     : widget.themeProvider.themeData.primaryColor,

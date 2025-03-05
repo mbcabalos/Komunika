@@ -53,10 +53,14 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
-            title: context.translate("tts_title"),
-            titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
-            isBackButton: false,
-            isSettingButton: false),
+          title: context.translate("tts_title"),
+          titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+          themeProvider: widget.themeProvider,
+          isBackButton: true,
+          isSettingButton: false,
+          isHistoryButton: false,
+          database: '',
+        ),
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
           listener: (context, state) {
             if (state is TextToSpeechErrorState) {
@@ -91,7 +95,9 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     return RefreshIndicator.adaptive(
       onRefresh: _initialize,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(
+          ResponsiveUtils.getResponsiveSize(context, 16),
+        ),
         child: ListView(
           children: [
             SizedBox(
@@ -105,14 +111,17 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     child: Card(
                       elevation: 1,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(
+                          ResponsiveUtils.getResponsiveSize(context, 12),
+                        ),
                       ),
                       child: TextField(
                         controller: _titleController,
                         style: TextStyle(
                           color: themeProvider
                               .themeData.textTheme.bodyMedium?.color,
-                          fontSize: 20,
+                          fontSize: ResponsiveUtils.getResponsiveFontSize(
+                              context, 20),
                         ),
                         decoration: InputDecoration(
                           hintText: 'Title',
@@ -123,14 +132,18 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: ResponsiveUtils.getResponsiveSize(context, 10),
+                  ),
                   Showcase(
                     key: _typeSomethingKey,
                     description: "Type the message",
                     child: Card(
                       elevation: 1,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(
+                          ResponsiveUtils.getResponsiveSize(context, 12),
+                        ),
                       ),
                       color: themeProvider.themeData.cardColor,
                       child: TextField(
@@ -139,15 +152,20 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                         style: TextStyle(
                           color: themeProvider
                               .themeData.textTheme.bodyMedium?.color,
-                          fontSize: 20,
+                          fontSize: ResponsiveUtils.getResponsiveFontSize(
+                              context, 20),
                         ),
                         decoration: InputDecoration(
                           hintText: context.translate("tts_hint"),
                           border: InputBorder.none,
                           fillColor: Colors.transparent,
                           filled: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 16),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal:
+                                ResponsiveUtils.getResponsiveSize(context, 12),
+                            vertical:
+                                ResponsiveUtils.getResponsiveSize(context, 16),
+                          ),
                         ),
                         textAlignVertical: TextAlignVertical.center,
                         maxLines: 15,

@@ -9,7 +9,8 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutPage extends StatelessWidget {
-  const AboutPage({super.key});
+  final ThemeProvider themeProvider;
+  const AboutPage({super.key, required this.themeProvider});
 
   @override
   Widget build(BuildContext context) {
@@ -20,11 +21,16 @@ class AboutPage extends StatelessWidget {
           appBar: AppBarWidget(
             title: context.translate("about_title"),
             titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+            themeProvider: themeProvider,
             isBackButton: true,
             isSettingButton: false,
+            isHistoryButton: false,
+            database: '',
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(
+              ResponsiveUtils.getResponsiveSize(context, 20),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -35,7 +41,9 @@ class AboutPage extends StatelessWidget {
                   height: ResponsiveUtils.getResponsiveSize(context, 150),
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(100),
+                    borderRadius: BorderRadius.circular(
+                      ResponsiveUtils.getResponsiveSize(context, 100),
+                    ),
                   ),
                   alignment: Alignment.center,
                   child: ClipRRect(
