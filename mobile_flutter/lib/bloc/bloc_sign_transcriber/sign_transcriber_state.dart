@@ -18,7 +18,7 @@ class SignTranscriberLoadingState extends SignTranscriberState {}
 
 class SignTranscriberLoadedState extends SignTranscriberState {
   final CameraController cameraController;
-  SignTranscriberLoadedState(this.cameraController);
+  SignTranscriberLoadedState({required this.cameraController});
 
   @override
   List<Object> get props => [cameraController];

@@ -21,7 +21,6 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
     on<StopAutoCaption>(_stopAutoCaption);
 
     void emitTextToFloatingWindow(String text) {
-      // Pass the 'updatedText' as a named argument
       platform.invokeMethod('updateText', {'updatedText': text});
     }
 
