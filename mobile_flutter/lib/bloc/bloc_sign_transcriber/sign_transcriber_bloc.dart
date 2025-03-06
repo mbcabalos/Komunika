@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'package:image/image.dart'; // Add this package to your pubspec.yaml
 import 'dart:typed_data';
 import 'package:bloc/bloc.dart';
 import 'package:camera/camera.dart';
+import 'package:image/image.dart'; // Image processing
 import 'package:equatable/equatable.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 
@@ -14,7 +14,6 @@ class SignTranscriberBloc
   final socketService = SocketService();
 
   CameraController? cameraController;
-
   List<CameraDescription> cameras = [];
   int currentCameraIndex = 0;
   Timer? _captureTimer;
@@ -30,19 +29,17 @@ class SignTranscriberBloc
     emit(SignTranscriberLoadingState());
     try {
       // Get available cameras and select the default one
-      final cameras = await availableCameras();
+      cameras = await availableCameras();
       if (cameras.isEmpty) {
         emit(SignTranscriberErrorState(message: "No cameras found"));
         return;
       }
-      // Select the first camera (you can modify this if you want front/back camera logic)
-      final camera = cameras[currentCameraIndex];
 
-      cameraController = CameraController(camera, ResolutionPreset.high);
+      final camera = cameras[currentCameraIndex];
+      cameraController = CameraController(camera, ResolutionPreset.low);
       await cameraController!.initialize();
 
-      emit(SignTranscriberLoadedState(
-          cameraController!)); // Emit the loaded state with controller
+      emit(SignTranscriberLoadedState(cameraController: cameraController!));
       _startImageStream();
     } catch (e) {
       emit(SignTranscriberErrorState(
@@ -55,21 +52,27 @@ class SignTranscriberBloc
       return;
     }
 
+    int frameCount = 0; // Frame counter to limit how often we process
+
     cameraController!.startImageStream((CameraImage image) async {
-      final frame = await _convertCameraImageToBytes(image);
-      if (frame != null) {
-        // Send the frame to the backend via socket service
-        socketService.sendFrame(frame);
+      frameCount++;
+
+      // Process only every Nth frame (for example, every 30 frames)
+      if (frameCount % 30 == 0) {
+        final frame = await _convertCameraImageToBytes(image);
+        if (frame != null) {
+          socketService.sendFrame(frame); // Send the frame via socket
+        }
       }
     });
   }
 
   Future<Uint8List?> _convertCameraImageToBytes(CameraImage image) async {
     try {
-      // Convert CameraImage to an Image object (from the image package)
+      // Convert CameraImage to Image
       final img = _convertYUV420toImage(image);
 
-      // Encode the image as JPEG
+      // Encode the image as JPEG (can be optimized further)
       final jpeg = encodeJpg(img);
 
       return Uint8List.fromList(jpeg);
@@ -82,7 +85,6 @@ class SignTranscriberBloc
   Image _convertYUV420toImage(CameraImage image) {
     final width = image.width;
     final height = image.height;
-
     final yBuffer = image.planes[0].bytes;
     final uBuffer = image.planes[1].bytes;
     final vBuffer = image.planes[2].bytes;
@@ -98,7 +100,6 @@ class SignTranscriberBloc
         final uValue = uBuffer[uvIndex];
         final vValue = vBuffer[uvIndex];
 
-        // Convert YUV to RGB
         final r = yValue + 1.402 * (vValue - 128);
         final g =
             yValue - 0.344136 * (uValue - 128) - 0.714136 * (vValue - 128);
