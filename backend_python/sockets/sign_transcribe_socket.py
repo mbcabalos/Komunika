@@ -91,10 +91,6 @@ def register_sign_transcriber(socketio):
             # Emit translation update
             socketio.emit('translationupdate', {'translation': translation})
 
-            # Encode the processed frame as JPEG and send it back
-            # _, jpeg = cv2.imencode('.jpg', frame)
-            # frame_bytes = jpeg.tobytes()
-            # socketio.emit('frame_response', {'frame': frame_bytes})
 
         except Exception as e:
             print(f"❌ Error processing frame: {str(e)}")

@@ -1,7 +1,7 @@
 part of 'sign_transcriber_bloc.dart';
 
 abstract class SignTranscriberState extends Equatable {
-  SignTranscriberState();
+  const SignTranscriberState();
 
   @override
   List<Object> get props => [];
@@ -9,33 +9,41 @@ abstract class SignTranscriberState extends Equatable {
 
 class SignTranscriberInitial extends SignTranscriberState {}
 
-class SignTranscriberErrorState extends SignTranscriberState {
-  final String message;
-  SignTranscriberErrorState({required this.message});
-}
-
 class SignTranscriberLoadingState extends SignTranscriberState {}
 
 class SignTranscriberLoadedState extends SignTranscriberState {
   final CameraController cameraController;
-  SignTranscriberLoadedState({required this.cameraController});
+  final String translationText; 
+
+  const SignTranscriberLoadedState({
+    required this.cameraController,
+    this.translationText = '',
+  });
 
   @override
-  List<Object> get props => [cameraController];
+  List<Object> get props => [cameraController, translationText];
+
+  SignTranscriberLoadedState copyWith({String? translationText}) {
+    return SignTranscriberLoadedState(
+      cameraController: cameraController,
+      translationText: translationText ?? this.translationText,
+    );
+  }
 }
 
-class TranscriptionInProgress extends SignTranscriberState {
+class TranslationUpdated extends SignTranscriberState {
+  final String text;
+
+  const TranslationUpdated(this.text);
+  @override
+  List<Object> get props => [text];
+}
+
+class SignTranscriberErrorState extends SignTranscriberState {
   final String message;
-  TranscriptionInProgress(this.message);
+
+  const SignTranscriberErrorState({required this.message});
 
   @override
   List<Object> get props => [message];
-}
-
-class TranscriptionCompleted extends SignTranscriberState {
-  final String result;
-  TranscriptionCompleted(this.result);
-
-  @override
-  List<Object> get props => [result];
 }

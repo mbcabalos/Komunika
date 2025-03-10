@@ -17,3 +17,12 @@ class StartImageStream extends SignTranscriberEvent {}
 class StartTranslation extends SignTranscriberEvent {}
 
 class StopTranslation extends SignTranscriberEvent {}
+
+class NewTranscriptEvent extends SignTranscriberEvent {
+  final String text;
+
+  const NewTranscriptEvent(this.text);
+
+  @override
+  List<Object> get props => [text];
+}
