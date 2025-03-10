@@ -14,8 +14,12 @@ class _HomeWalkthroughState extends State<HomeWalkthrough> {
 
   final List<String> _imagePaths = [
     'assets/images/welcome.jpg', 
-    'assets/images/stt4.jpg',
-    'assets/images/vm4.jpg',
+    'assets/images/stt5.jpg',
+    'assets/images/vm5.jpg',
+    'assets/images/st5.jpg',
+    'assets/images/sc5.jpg',
+    'assets/images/s5.jpg',
+
   ];
 
   @override
