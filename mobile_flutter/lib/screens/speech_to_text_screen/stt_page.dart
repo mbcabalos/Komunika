@@ -170,19 +170,22 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                   child: BlocBuilder<SpeechToTextBloc, SpeechToTextState>(
                     builder: (context, state) {
                       if (state is TranscriptionUpdated) {
-                        _textController.text += state.text;
-                        _textController.selection = TextSelection.fromPosition(
-                            TextPosition(offset: _textController.text.length));
+                        setState(() {
+                          _textController.text += state.text;
+                          _textController.selection =
+                              TextSelection.fromPosition(TextPosition(
+                                  offset: _textController.text.length));
+                        });
                       }
                       return Showcase(
                         key: _textFieldKey,
                         description: "See translated message here",
                         child: Card(
-                          elevation: 1, // Adds shadow effect
+                          elevation: 1,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(
                               ResponsiveUtils.getResponsiveSize(context, 12),
-                            ), // Rounded corners
+                            ),
                           ),
                           color: themeProvider.themeData.cardColor,
                           child: SingleChildScrollView(
@@ -209,7 +212,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                                 ),
                               ),
                               textAlignVertical: TextAlignVertical.center,
-                              maxLines: null, // Allows for infinite lines
+                              maxLines: null,
                               keyboardType: TextInputType.multiline,
                             ),
                           ),
@@ -274,83 +277,10 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                           ),
                         ),
                       ),
-
-                      // child: GestureDetector(
-                      //   onTap: () async {
-                      //     if (!_isRecording) {
-                      //       setState(() {
-                      //         _isRecording = true;
-                      //       });
-                      //       widget.speechToTextBloc.add(StartTapRecording());
-                      //     } else {
-                      //       setState(() {
-                      //         _isRecording = false;
-                      //       });
-                      //       widget.speechToTextBloc.add(StopTapRecording());
-                      //     }
-                      //   },
-                      //   onLongPress: () async {
-                      //     setState(() {
-                      //       _isRecording = true;
-                      //     });
-                      //     widget.speechToTextBloc.add(StartRecording());
-                      //   },
-                      //   onLongPressUp: () async {
-                      //     setState(() {
-                      //       _isRecording = false;
-                      //     });
-                      //     widget.speechToTextBloc.add(StopRecording());
-                      //   },
-                      //   child: Container(
-                      //     width: ResponsiveUtils.getResponsiveSize(context, 80),
-                      //     height:
-                      //         ResponsiveUtils.getResponsiveSize(context, 80),
-                      //     decoration: BoxDecoration(
-                      //       shape: BoxShape.circle,
-                      //       color: themeProvider.themeData.primaryColor,
-                      //     ),
-                      //     child: _isRecording
-                      //         ? Icon(
-                      //             Icons.graphic_eq_rounded,
-                      //             color: Colors.white,
-                      //             size: ResponsiveUtils.getResponsiveSize(
-                      //                 context, 60),
-                      //           )
-                      //         : Icon(
-                      //             Icons.mic,
-                      //             color: Colors.white,
-                      //             size: ResponsiveUtils.getResponsiveSize(
-                      //                 context, 60),
-                      //           ),
-                      //   ),
-                      // ),
                     ),
                     SizedBox(
                       width: ResponsiveUtils.getResponsiveSize(context, 50),
                     ),
-                    // Showcase(
-                    //   key: _saveKey,
-                    //   description: "Save transcription",
-                    //   child: GestureDetector(
-                    //     onTap: () async {
-                    //       final SharedPreferences prefs =
-                    //           await SharedPreferences.getInstance();
-                    //       await prefs.setBool('pageOneDone', true);
-                    //     },
-                    //     child: Container(
-                    //       width: ResponsiveUtils.getResponsiveSize(context, 40),
-                    //       height:
-                    //           ResponsiveUtils.getResponsiveSize(context, 40),
-                    //       decoration: const BoxDecoration(
-                    //         shape: BoxShape.rectangle,
-                    //         image: DecorationImage(
-                    //           image: AssetImage('assets/icons/saved.png'),
-                    //           fit: BoxFit.contain,
-                    //         ),
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ),
                   ],
                 ),
                 SizedBox(

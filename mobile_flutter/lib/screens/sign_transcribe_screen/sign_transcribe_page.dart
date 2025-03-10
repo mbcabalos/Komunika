@@ -20,6 +20,8 @@ class SignTranscriberPage extends StatefulWidget {
 }
 
 class _SignTranscriberPageState extends State<SignTranscriberPage> {
+  final TextEditingController _textController = TextEditingController();
+
   @override
   void dispose() {
     super.dispose();
@@ -51,19 +53,14 @@ class _SignTranscriberPageState extends State<SignTranscriberPage> {
           isHistoryButton: true,
           database: 'sign_trancriber',
         ),
-        body: BlocConsumer<SignTranscriberBloc, SignTranscriberState>(
-          listener: (context, state) {
-            if (state is SignTranscriberErrorState) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
-            }
-          },
+        body: BlocBuilder<SignTranscriberBloc, SignTranscriberState>(
+          buildWhen: (previous, current) =>
+              current is SignTranscriberLoadedState,
           builder: (context, state) {
             if (state is SignTranscriberLoadingState) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is SignTranscriberLoadedState) {
-              return _buildContent(state);
+              return _buildCameraView(state.cameraController);
             } else if (state is SignTranscriberErrorState) {
               return Center(
                   child: Text('Failed to load camera: ${state.message}'));
@@ -76,12 +73,11 @@ class _SignTranscriberPageState extends State<SignTranscriberPage> {
     );
   }
 
-  Widget _buildContent(state) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          Stack(
+  Widget _buildCameraView(CameraController cameraController) {
+    return Column(
+      children: [
+        Expanded(
+          child: Stack(
             alignment: Alignment.center,
             children: [
               Container(
@@ -97,14 +93,13 @@ class _SignTranscriberPageState extends State<SignTranscriberPage> {
                     alignment: Alignment.center,
                     transform: Matrix4.identity()
                       ..rotateZ(math.pi / 2)
-                      ..rotateY(
-                          state.cameraController.description.lensDirection ==
-                                  CameraLensDirection.front
-                              ? math.pi
-                              : 0),
+                      ..rotateY(cameraController.description.lensDirection ==
+                              CameraLensDirection.front
+                          ? math.pi
+                          : 0),
                     child: AspectRatio(
                       aspectRatio: 9 / 16,
-                      child: CameraPreview(state.cameraController),
+                      child: CameraPreview(cameraController),
                     ),
                   ),
                 ),
@@ -115,60 +110,60 @@ class _SignTranscriberPageState extends State<SignTranscriberPage> {
                 child: IconButton(
                   icon: const Icon(Icons.switch_camera, color: Colors.white),
                   onPressed: () {
-                    context.read<SignTranscriberBloc>().add(SwitchCamera());
+                    widget.signTranscriberBloc.add(SwitchCamera());
                   },
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          BlocBuilder<SignTranscriberBloc, SignTranscriberState>(
-            builder: (context, state) {
-              String message = "Translated message will appear here...";
-              if (state is TranscriptionInProgress) {
-                message = state.message;
-              }
+        ),
+        const SizedBox(height: 10),
+        BlocBuilder<SignTranscriberBloc, SignTranscriberState>(
+          buildWhen: (previous, current) {
+            if (previous is SignTranscriberLoadedState &&
+                current is SignTranscriberLoadedState) {
+              return previous.translationText != current.translationText;
+            }
+            return false;
+          },
+          builder: (context, state) {
+            if (state is SignTranscriberLoadedState) {
+              _textController.text += state.translationText;
+              _textController.selection = TextSelection.fromPosition(
+                  TextPosition(offset: _textController.text.length));
+              return _buildTextDisplay();
+            }
+            return const Center(
+                child: Text("Translated text will appear here..."));
+          },
+        ),
+      ],
+    );
+  }
 
-              return Container(
-                height: 130,
-                width: double.infinity,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: widget.themeProvider.themeData.cardColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: Text(
-                    message,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: widget
-                          .themeProvider.themeData.textTheme.bodyMedium?.color,
-                    ),
-                  ),
-                ),
-              );
-            },
+// ✅ Extracted Widget for Text Display
+  Widget _buildTextDisplay() {
+    return Container(
+      height: 130,
+      width: double.infinity,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: widget.themeProvider.themeData.cardColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: TextField(
+          controller: _textController,
+          readOnly: true,
+          style: TextStyle(
+            fontSize: 14,
+            color: widget.themeProvider.themeData.textTheme.bodyMedium?.color,
           ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  context.read<SignTranscriberBloc>().add(StartTranslation());
-                },
-                child: const Text("Start"),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  context.read<SignTranscriberBloc>().add(StopTranslation());
-                },
-                child: const Text("Stop"),
-              ),
-            ],
+          decoration: const InputDecoration(
+            border: InputBorder.none,
+            hintText: "Translated text will appear here...",
           ),
-        ],
+        ),
       ),
     );
   }

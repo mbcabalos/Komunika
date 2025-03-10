@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:bloc/bloc.dart';
 import 'package:camera/camera.dart';
-import 'package:image/image.dart'; // Image processing
+import 'package:image/image.dart';
 import 'package:equatable/equatable.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 
@@ -12,6 +12,8 @@ part 'sign_transcriber_state.dart';
 class SignTranscriberBloc
     extends Bloc<SignTranscriberEvent, SignTranscriberState> {
   final socketService = SocketService();
+  final StreamController<String> _transcriptionController =
+      StreamController<String>();
 
   CameraController? cameraController;
   List<CameraDescription> cameras = [];
@@ -22,13 +24,38 @@ class SignTranscriberBloc
   SignTranscriberBloc() : super(SignTranscriberInitial()) {
     on<SignTranscriberLoadingEvent>(_initialize);
     on<StopTranslation>(_onStopTranslation);
+    on<SwitchCamera>(_switchCamera);
+
+    socketService.socket?.on("translationupdate", (data) {
+      if (data != null && data["translation"] != null) {
+        if (state is SignTranscriberLoadedState ||
+            state is TranslationUpdated) {
+          _transcriptionController.add(data["translation"]);
+          add(NewTranscriptEvent(data["translation"]));
+          print("❌❌❌❌❌❌❌");
+        } else {
+          print("Camera is still initializing, skipping text append.");
+        }
+      }
+    });
+
+    on<NewTranscriptEvent>((event, emit) {
+      if (state is SignTranscriberLoadedState) {
+        final currentState = state as SignTranscriberLoadedState;
+
+        if (currentState.translationText == event.text) return;
+
+        print("✅ Updating translation text: ${event.text}");
+
+        emit(currentState.copyWith(translationText: event.text));
+      }
+    });
   }
 
   Future<void> _initialize(SignTranscriberLoadingEvent event,
       Emitter<SignTranscriberState> emit) async {
     emit(SignTranscriberLoadingState());
     try {
-      // Get available cameras and select the default one
       cameras = await availableCameras();
       if (cameras.isEmpty) {
         emit(SignTranscriberErrorState(message: "No cameras found"));
@@ -36,7 +63,7 @@ class SignTranscriberBloc
       }
 
       final camera = cameras[currentCameraIndex];
-      cameraController = CameraController(camera, ResolutionPreset.low);
+      cameraController = CameraController(camera, ResolutionPreset.high);
       await cameraController!.initialize();
 
       emit(SignTranscriberLoadedState(cameraController: cameraController!));
@@ -52,19 +79,50 @@ class SignTranscriberBloc
       return;
     }
 
-    int frameCount = 0; // Frame counter to limit how often we process
+    int frameCount = 0;
 
     cameraController!.startImageStream((CameraImage image) async {
       frameCount++;
 
-      // Process only every Nth frame (for example, every 30 frames)
       if (frameCount % 30 == 0) {
         final frame = await _convertCameraImageToBytes(image);
         if (frame != null) {
-          socketService.sendFrame(frame); // Send the frame via socket
+          socketService.sendFrame(frame);
         }
       }
     });
+  }
+
+  Future<void> _switchCamera(
+    SwitchCamera event,
+    Emitter<SignTranscriberState> emit,
+  ) async {
+    if (state is SignTranscriberLoadedState) {
+      final currentState = state as SignTranscriberLoadedState;
+
+      final cameras = await availableCameras();
+      final currentCamera = currentState.cameraController.description;
+
+      CameraDescription newCamera;
+      if (currentCamera.lensDirection == CameraLensDirection.back) {
+        newCamera = cameras.firstWhere(
+          (camera) => camera.lensDirection == CameraLensDirection.front,
+        );
+      } else {
+        newCamera = cameras.firstWhere(
+          (camera) => camera.lensDirection == CameraLensDirection.back,
+        );
+      }
+
+      final newController = CameraController(
+        newCamera,
+        ResolutionPreset.high,
+      );
+
+      await newController.initialize();
+
+      emit(SignTranscriberLoadedState(cameraController: newController));
+    }
   }
 
   Future<Uint8List?> _convertCameraImageToBytes(CameraImage image) async {
