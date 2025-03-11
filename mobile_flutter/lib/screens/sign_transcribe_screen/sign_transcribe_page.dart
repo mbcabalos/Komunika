@@ -1,37 +1,62 @@
+import 'dart:math' as math;
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_sign_transcriber/sign_transcriber_bloc.dart';
-import 'dart:math' as math;
-
+import 'package:komunika/services/repositories/database_helper.dart';
+import 'package:komunika/utils/app_localization_translate.dart';
+import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
-import 'package:komunika/widgets/global_widgets/app_bar.dart';
+import 'package:komunika/widgets/global_widgets/history.dart';
 
 class SignTranscriberPage extends StatefulWidget {
   final ThemeProvider themeProvider;
   final SignTranscriberBloc signTranscriberBloc;
 
-  const SignTranscriberPage(
-      {super.key,
-      required this.themeProvider,
-      required this.signTranscriberBloc});
+  const SignTranscriberPage({
+    super.key,
+    required this.themeProvider,
+    required this.signTranscriberBloc,
+  });
+
   @override
   State<SignTranscriberPage> createState() => _SignTranscriberPageState();
 }
 
-class _SignTranscriberPageState extends State<SignTranscriberPage> {
+class _SignTranscriberPageState extends State<SignTranscriberPage>
+    with WidgetsBindingObserver {
   final TextEditingController _textController = TextEditingController();
-
-  @override
-  void dispose() {
-    super.dispose();
-    context.read<SignTranscriberBloc>().close();
-  }
+  final dbHelper = DatabaseHelper();
 
   @override
   void initState() {
-    _initialize();
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initialize();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    widget.signTranscriberBloc.add(SignTranscriberLoadingEvent());
+  }
+
+  @override
+  void dispose() {
+    widget.signTranscriberBloc.add(StopTranslation());
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      // App is in the background, dispose of the camera controller
+      widget.signTranscriberBloc.add(StopTranslation());
+    } else if (state == AppLifecycleState.resumed) {
+      // App is in the foreground, reinitialize the camera controller
+      _initialize();
+    }
   }
 
   Future<void> _initialize() async {
@@ -44,14 +69,55 @@ class _SignTranscriberPageState extends State<SignTranscriberPage> {
       value: widget.signTranscriberBloc,
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
-        appBar: AppBarWidget(
-          title: "Sign Transcriber",
-          titleSize: 20,
-          themeProvider: widget.themeProvider,
-          isBackButton: true,
-          isSettingButton: false,
-          isHistoryButton: true,
-          database: 'sign_trancriber',
+        appBar: AppBar(
+          title: Padding(
+            padding: const EdgeInsets.only(top: 7.0),
+            child: Text(
+              context.translate("sign_transcribe_title"),
+              style: TextStyle(
+                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+              ),
+            ),
+          ),
+          leading: Padding(
+            padding: EdgeInsets.only(
+              top: ResponsiveUtils.getResponsiveSize(context, 7),
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: ResponsiveUtils.getResponsiveSize(context, 10),
+              ),
+              onPressed: () {
+                if (_textController.text.isNotEmpty) {
+                  dbHelper.saveSignTranscriberHistory(_textController.text);
+                }
+                _textController.clear();
+                Navigator.pop(context);
+              },
+            ),
+          ),
+          actions: [
+            Padding(
+              padding: EdgeInsets.only(
+                top: ResponsiveUtils.getResponsiveSize(context, 7),
+                right: ResponsiveUtils.getResponsiveSize(context, 8),
+              ),
+              child: IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HistoryPage(
+                          themeProvider: widget.themeProvider,
+                          database: 'sign_transcriber',
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.history_rounded)),
+            ),
+          ],
         ),
         body: BlocBuilder<SignTranscriberBloc, SignTranscriberState>(
           buildWhen: (previous, current) =>
@@ -141,7 +207,6 @@ class _SignTranscriberPageState extends State<SignTranscriberPage> {
     );
   }
 
-// ✅ Extracted Widget for Text Display
   Widget _buildTextDisplay() {
     return Container(
       height: 130,

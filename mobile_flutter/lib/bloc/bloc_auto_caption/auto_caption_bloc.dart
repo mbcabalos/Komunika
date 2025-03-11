@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
+import 'package:komunika/services/repositories/database_helper.dart';
 part 'auto_caption_event.dart';
 part 'auto_caption_state.dart';
 
@@ -10,10 +11,10 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
   static const platform = MethodChannel('com.example.komunika/recorder');
 
   final socketService = SocketService();
-
+  final dbHelper = DatabaseHelper();
   final StreamController<Uint8List> _audioStreamController =
       StreamController<Uint8List>.broadcast();
-
+  String capturedText = "";
   AutoCaptionBloc() : super(AutoCaptionLoadingState()) {
     on<AutoCaptionLoadingEvent>(autoCaptionLoadingEvent);
     on<ToggleAutoCaptionEvent>(_onToggleAutoCaption);
@@ -22,13 +23,12 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
 
     void emitTextToFloatingWindow(String text) {
       platform.invokeMethod('updateText', {'updatedText': text});
-    }
-
+    }  
     socketService.socket?.on("caption_result", (data) {
       if (data != null && data["text"] != null) {
         final text = data["text"] as String;
-        // Trigger an event to BLoC
-        emitTextToFloatingWindow(text);
+        capturedText += "$text "; // Append text to retain history
+        emitTextToFloatingWindow(capturedText);
       }
     });
 
@@ -102,8 +102,10 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
     print("called");
 
     try {
+      dbHelper.saveAutoCaptionHistory(capturedText);
       await platform.invokeMethod('stopForegroundService');
       emit(AutoCaptionLoadedSuccessState(isEnabled: false));
+      
       print("called");
     } on PlatformException catch (e) {
       emit(AutoCaptionErrorState(

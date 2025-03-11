@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_auto_caption/auto_caption_bloc.dart';
+import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
@@ -33,12 +34,13 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
-          title: "Screen Caption",
+          title: context.translate('auto_caption_title'),
           titleSize: 20,
           themeProvider: widget.themeProvider,
           isBackButton: true,
           isSettingButton: false,
-          isHistoryButton: true, database: 'auto_caption',
+          isHistoryButton: true,
+          database: 'auto_caption',
         ),
         body: BlocConsumer<AutoCaptionBloc, AutoCaptionState>(
           listener: (context, state) {
