@@ -5,7 +5,7 @@
   "home_speech_to_text": "Pagsasalita sa Teksto",
   "home_text_to_speech": "Teksto sa Pagsasalita",
   "home_sign_transcribe": "Transcribe ng Senyas",
-  "home_screen_captions": "Mga Caption ng Screen",
+  "home_screen_captions": "Caption ng Screen",
   "home_quick_speech": "Quick Speech",
   "home_no_quick_speech": "Walang available",
   "home_speech_to_text_description": "I-tap dito upang subukan ang pagsasalita sa teksto na kakayahan",
@@ -19,6 +19,10 @@
 
   "tts_title": "Teksto sa Boses",
   "tts_hint": "Mag-type ng Anuman...",
+
+  "sign_transcribe_title": "Transcribe ng Senyas",
+
+  "auto_caption_title": "Caption ng Screen",
 
   "settings_title": "Settings",
   "settings_appearance": "Hitsura",

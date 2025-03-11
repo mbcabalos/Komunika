@@ -20,6 +20,10 @@
   "tts_title": "Text to Speech",
   "tts_hint": "Type Something...",
 
+  "sign_transcribe_title": "Sign Transcribe",
+
+  "auto_caption_title": "Auto Caption",
+
   "settings_title": "Settings",
   "settings_appearance": "Appearance",
   "settings_theme": "Theme",

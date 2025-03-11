@@ -55,6 +55,12 @@ class SignTranscriberBloc
   Future<void> _initialize(SignTranscriberLoadingEvent event,
       Emitter<SignTranscriberState> emit) async {
     emit(SignTranscriberLoadingState());
+
+    if (cameraController != null && cameraController!.value.isInitialized) {
+      emit(SignTranscriberLoadedState(cameraController: cameraController!));
+      return;
+    }
+
     try {
       cameras = await availableCameras();
       if (cameras.isEmpty) {
@@ -174,7 +180,12 @@ class SignTranscriberBloc
       StopTranslation event, Emitter<SignTranscriberState> emit) {
     _captureTimer?.cancel();
     _stopImageStream();
-    close();
+
+    if (cameraController != null) {
+      cameraController!.dispose();
+      cameraController = null;
+    }
+
     emit(SignTranscriberInitial());
   }
 

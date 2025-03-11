@@ -170,12 +170,9 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                   child: BlocBuilder<SpeechToTextBloc, SpeechToTextState>(
                     builder: (context, state) {
                       if (state is TranscriptionUpdated) {
-                        setState(() {
-                          _textController.text += state.text;
-                          _textController.selection =
-                              TextSelection.fromPosition(TextPosition(
-                                  offset: _textController.text.length));
-                        });
+                        _textController.text += state.text;
+                        _textController.selection = TextSelection.fromPosition(
+                            TextPosition(offset: _textController.text.length));
                       }
                       return Showcase(
                         key: _textFieldKey,
