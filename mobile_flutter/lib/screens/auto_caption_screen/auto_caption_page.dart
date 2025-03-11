@@ -4,6 +4,7 @@ import 'package:komunika/bloc/bloc_auto_caption/auto_caption_bloc.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
+import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/global_widgets/app_bar.dart';
 
@@ -19,12 +20,43 @@ class AutoCaptionScreen extends StatefulWidget {
 class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
   late AutoCaptionBloc autoCaptionBloc;
   final TextEditingController _textController = TextEditingController();
+  double _captionSize = 50.0;
+  Color _captionTextColor = Colors.black;
+  Color _captionBackgroundColor = Colors.white;
+  final String _caption = "Caption here...";
 
   @override
   void initState() {
     super.initState();
     autoCaptionBloc = AutoCaptionBloc();
     autoCaptionBloc.add(AutoCaptionLoadingEvent());
+  }
+
+  Future<void> _loadPreferences() async {
+    double size = await PreferencesUtils.getCaptionSize();
+    Color textColor = await PreferencesUtils.getCaptionTextColor();
+    Color bgColor = await PreferencesUtils.getCaptionBackgroundColor();
+
+    setState(() {
+      _captionSize = size;
+      _captionTextColor = textColor;
+      _captionBackgroundColor = bgColor;
+    });
+  }
+
+  Future<void> _updateCaptionSize(double size) async {
+    setState(() => _captionSize = size);
+    await PreferencesUtils.storeCaptionSize(size);
+  }
+
+  Future<void> _updateCaptionTextColor(Color color) async {
+    setState(() => _captionTextColor = color);
+    await PreferencesUtils.storeCaptionTextColor(color);
+  }
+
+  Future<void> _updateCaptionBackgroundColor(Color color) async {
+    setState(() => _captionBackgroundColor = color);
+    await PreferencesUtils.storeCaptionBackgroundColor(color);
   }
 
   @override
@@ -75,27 +107,41 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            color: widget.themeProvider.themeData.cardColor,
-            child: TextField(
-              readOnly: true,
-              controller: _textController,
-              style: TextStyle(
-                color:
-                    widget.themeProvider.themeData.textTheme.bodyMedium?.color,
-                fontSize: 20,
+            //color: widget.themeProvider.themeData.cardColor,
+            color: _captionBackgroundColor,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text(
+                _caption,
+                style: TextStyle(
+                  fontSize: _captionSize,
+                  color: _captionTextColor,
+                ),
+                maxLines: 5, 
+                overflow: TextOverflow.ellipsis, 
               ),
-              decoration: const InputDecoration(
-                hintText: "",
-                border: InputBorder.none,
-                fillColor: Colors.transparent,
-                filled: true,
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-              ),
-              textAlignVertical: TextAlignVertical.center,
-              maxLines: 5,
-              keyboardType: TextInputType.multiline,
             ),
+            // child: TextField(
+            //   readOnly: true,
+            //   controller: _textController,
+            //   style: TextStyle(
+            //     //color: widget.themeProvider.themeData.textTheme.bodyMedium?.color,
+            //     color: _captionTextColor, 
+            //     fontSize: 20,
+            //     //fontSize: _captionSize,
+            //   ),
+            //   decoration: const InputDecoration(
+            //     hintText: "",
+            //     border: InputBorder.none,
+            //     fillColor: Colors.transparent,
+            //     filled: true,
+            //     contentPadding:
+            //         EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            //   ),
+            //   textAlignVertical: TextAlignVertical.center,
+            //   maxLines: 5,
+            //   keyboardType: TextInputType.multiline,
+            // ),
           ),
           SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 20)),
           BlocBuilder<AutoCaptionBloc, AutoCaptionState>(
@@ -127,58 +173,77 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
               );
             },
           ),
-          // Column(
-          //   crossAxisAlignment: CrossAxisAlignment.start,
-          //   children: [
-          //     Row(
-          //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //       children: [
-          //         Container(
-          //           margin: EdgeInsets.only(
-          //               left: ResponsiveUtils.getResponsiveSize(context, 17)),
-          //           child: Text(
-          //             "Size",
-          //             style: TextStyle(
-          //               fontSize: ResponsiveUtils.getResponsiveFontSize(
-          //                 context,
-          //                 20,
-          //               ),
-          //               fontFamily: Fonts.main,
-          //               fontWeight: FontWeight.w600,
-          //             ),
-          //           ),
-          //         ),
-          //         Slider(
-          //           value: 50.0,
-          //           min: 50.0,
-          //           max: 150.0,
-          //           divisions: 10,
-          //           label: "${25.round()}%",
-          //           onChanged: (value) {},
-          //         ),
-          //       ],
-          //     ),
-          //   ],
-          // ),
-          // _buildDropdown("Color", Colors.black, [
-          //   DropdownMenuItem(value: Colors.white, child: Text("White")),
-          //   DropdownMenuItem(value: Colors.black, child: Text("Black")),
-          //   DropdownMenuItem(value: Colors.red, child: Text("Red")),
-          //   DropdownMenuItem(value: Colors.blue, child: Text("Blue")),
-          // ]),
-          // _buildDropdown("Background", Colors.black, [
-          //   DropdownMenuItem(value: Colors.black, child: Text("Black")),
-          //   DropdownMenuItem(value: Colors.white, child: Text("White")),
-          //   DropdownMenuItem(value: Colors.grey, child: Text("Grey")),
-          //   DropdownMenuItem(value: Colors.blue, child: Text("Blue")),
-          // ]),
+          //_buildSwitch(state),
+          _buildSizeSlider(),
+          _buildDropdown("Color", _captionTextColor, [
+            DropdownMenuItem(value: Colors.white, child: Text("White")),
+            DropdownMenuItem(value: Colors.black, child: Text("Black")),
+            DropdownMenuItem(value: Colors.red, child: Text("Red")),
+            DropdownMenuItem(value: Colors.blue, child: Text("Blue")),
+          ], _updateCaptionTextColor),
+          _buildDropdown("Background", _captionBackgroundColor, [
+            DropdownMenuItem(value: Colors.black, child: Text("Black")),
+            DropdownMenuItem(value: Colors.white, child: Text("White")),
+            DropdownMenuItem(value: Colors.grey, child: Text("Grey")),
+            DropdownMenuItem(value: Colors.blue, child: Text("Blue")),
+          ], _updateCaptionBackgroundColor),
         ],
       ),
     );
   }
 
+  Widget _buildSwitch(AutoCaptionLoadedSuccessState state) {
+    bool isEnabled = state.isEnabled;
+
+    return SwitchListTile(
+      title: Text(
+        "Enable",
+        style: TextStyle(
+          fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+          fontFamily: Fonts.main,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      value: isEnabled,
+      onChanged: (value) {
+        context.read<AutoCaptionBloc>().add(ToggleAutoCaptionEvent(value));
+      },
+    );
+  }
+
+  Widget _buildSizeSlider() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Container(
+          margin: EdgeInsets.only(left: ResponsiveUtils.getResponsiveSize(context, 17)),
+          child: Text(
+            "Size",
+            style: TextStyle(
+              fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+              fontFamily: Fonts.main,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Slider(
+            value: _captionSize,
+            min: 20.0,
+            max: 100.0,
+            divisions: 13,
+            label: "${_captionSize.round()}",
+            onChanged: (value) {
+              _updateCaptionSize(value);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildDropdown(
-      String title, Color selectedValue, List<DropdownMenuItem<Color>> items) {
+      String title, Color selectedValue, List<DropdownMenuItem<Color>> items, Function(Color) onChanged,) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -190,10 +255,7 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
             child: Text(
               title,
               style: TextStyle(
-                fontSize: ResponsiveUtils.getResponsiveFontSize(
-                  context,
-                  20,
-                ),
+                fontSize: ResponsiveUtils.getResponsiveFontSize(context,20,),
                 fontFamily: Fonts.main,
                 fontWeight: FontWeight.w600,
               ),
@@ -206,7 +268,7 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
                 value: selectedValue,
                 items: items,
                 onChanged: (value) {
-                  if (value != null) {}
+                  if (value != null) onChanged(value);
                 },
               ),
             ),
