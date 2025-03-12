@@ -16,52 +16,25 @@ class PreferencesUtils {
     return prefs.getDouble(_sizeKey) ?? 50.0;
   }
 
-  static Future<void> storeCaptionTextColor(Color color) async {
+  static Future<void> storeCaptionTextColor(String colorName) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    int colorInt = (color.a.toInt() << 24) |
-                   (color.r.toInt() << 16) |
-                   (color.g.toInt() << 8) |
-                   color.b.toInt();
-    await prefs.setInt(_textColorKey, colorInt);
+    await prefs.setString(_textColorKey, colorName);
   }
 
-  static Future<Color> getCaptionTextColor() async {
+  static Future<String> getCaptionTextColor() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    int colorInt = prefs.getInt(_textColorKey) ?? 
-    ((Colors.black.a.toInt() << 24) |
-     (Colors.black.r.toInt() << 16) |
-     (Colors.black.g.toInt() << 8) |
-     Colors.black.b.toInt());
-    return Color.fromARGB(
-      (colorInt >> 24) & 0xFF,  // Alpha
-      (colorInt >> 16) & 0xFF,  // Red
-      (colorInt >> 8) & 0xFF,   // Green
-      colorInt & 0xFF           // Blue
-    );
+    return prefs.getString(_textColorKey) ?? "black";
   }
 
-  static Future<void> storeCaptionBackgroundColor(Color color) async {
+
+  static Future<void> storeCaptionBackgroundColor(String colorName) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    int colorInt = (color.a.toInt() << 24) |
-                   (color.r.toInt() << 16) |
-                   (color.g.toInt() << 8) |
-                   color.b.toInt();
-    await prefs.setInt(_backgroundColorKey, colorInt);
+    await prefs.setString(_backgroundColorKey, colorName);
   }
 
-  static Future<Color> getCaptionBackgroundColor() async {
+  static Future<String> getCaptionBackgroundColor() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    int colorInt = prefs.getInt(_backgroundColorKey) ?? 
-    ((Colors.white.a.toInt() << 24) |
-     (Colors.white.r.toInt() << 16) |
-     (Colors.white.g.toInt() << 8) |
-     Colors.white.b.toInt());
-    return Color.fromARGB(
-      (colorInt >> 24) & 0xFF,  // Alpha
-      (colorInt >> 16) & 0xFF,  // Red
-      (colorInt >> 8) & 0xFF,   // Green
-      colorInt & 0xFF           // Blue
-    );
+    return prefs.getString(_backgroundColorKey) ?? "white";
   }
 
   static Future<void> storeTheme(String theme) async {

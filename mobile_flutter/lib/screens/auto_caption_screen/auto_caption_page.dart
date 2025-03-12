@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_auto_caption/auto_caption_bloc.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
@@ -30,34 +31,74 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
     super.initState();
     autoCaptionBloc = AutoCaptionBloc();
     autoCaptionBloc.add(AutoCaptionLoadingEvent());
-  }
-
-  Future<void> _loadPreferences() async {
-    double size = await PreferencesUtils.getCaptionSize();
-    Color textColor = await PreferencesUtils.getCaptionTextColor();
-    Color bgColor = await PreferencesUtils.getCaptionBackgroundColor();
-
-    setState(() {
-      _captionSize = size;
-      _captionTextColor = textColor;
-      _captionBackgroundColor = bgColor;
-    });
+    _loadCaptionPreferences();
   }
 
   Future<void> _updateCaptionSize(double size) async {
     setState(() => _captionSize = size);
     await PreferencesUtils.storeCaptionSize(size);
+    _loadCaptionPreferences();
   }
 
   Future<void> _updateCaptionTextColor(Color color) async {
-    setState(() => _captionTextColor = color);
-    await PreferencesUtils.storeCaptionTextColor(color);
+  String colorName = _getColorName(color);
+  setState(() => _captionTextColor = color);
+  await PreferencesUtils.storeCaptionTextColor(colorName);
+  _loadCaptionPreferences();
+}
+
+Future<void> _updateCaptionBackgroundColor(Color color) async {
+  String colorName = _getColorName(color);
+  setState(() => _captionBackgroundColor = color);
+  await PreferencesUtils.storeCaptionBackgroundColor(colorName);
+  _loadCaptionPreferences();
+}
+
+String _getColorName(Color color) {
+  if (color == Colors.red) return "red";
+  if (color == Colors.blue) return "blue";
+  if (color == Colors.black) return "black";
+  if (color == Colors.white) return "white";
+  if (color == Colors.grey) return "grey";
+  return "black"; 
+}
+
+  Future<void> _sendCaptionPreferences() async {
+    final platform = MethodChannel('com.example.komunika/recorder');
+    await platform.invokeMethod('updateCaptionPreferences', {
+      "size": _captionSize,
+      "textColor": await PreferencesUtils.getCaptionTextColor(),
+      "backgroundColor": await PreferencesUtils.getCaptionBackgroundColor(),
+    });
   }
 
-  Future<void> _updateCaptionBackgroundColor(Color color) async {
-    setState(() => _captionBackgroundColor = color);
-    await PreferencesUtils.storeCaptionBackgroundColor(color);
+Future<void> _loadCaptionPreferences() async {
+  _captionSize = await PreferencesUtils.getCaptionSize();
+  String textColorName = await PreferencesUtils.getCaptionTextColor();
+  String backgroundColorName = await PreferencesUtils.getCaptionBackgroundColor();
+
+  _captionTextColor = _getColorFromName(textColorName);
+  _captionBackgroundColor = _getColorFromName(backgroundColorName);
+
+  _sendCaptionPreferences();
+}
+
+Color _getColorFromName(String colorName) {
+  switch (colorName.toLowerCase()) {
+    case "red":
+      return Colors.red;
+    case "blue":
+      return Colors.blue;
+    case "black":
+      return Colors.black;
+    case "white":
+      return Colors.white;
+    case "grey":
+      return Colors.grey;
+    default:
+      return Colors.black; 
   }
+}
 
   @override
   Widget build(BuildContext context) {
