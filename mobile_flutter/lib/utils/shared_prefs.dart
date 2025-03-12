@@ -1,6 +1,42 @@
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferencesUtils {
+  static const String _sizeKey = "captionSize";
+  static const String _textColorKey = "captionTextColor";
+  static const String _backgroundColorKey = "captionBackgroundColor";
+
+  static Future<void> storeCaptionSize(double size) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_sizeKey, size);
+  }
+
+  static Future<double> getCaptionSize() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_sizeKey) ?? 50.0;
+  }
+
+  static Future<void> storeCaptionTextColor(String colorName) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_textColorKey, colorName);
+  }
+
+  static Future<String> getCaptionTextColor() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_textColorKey) ?? "black";
+  }
+
+
+  static Future<void> storeCaptionBackgroundColor(String colorName) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_backgroundColorKey, colorName);
+  }
+
+  static Future<String> getCaptionBackgroundColor() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_backgroundColorKey) ?? "white";
+  }
+
   static Future<void> storeTheme(String theme) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('theme', theme);
@@ -38,10 +74,4 @@ class PreferencesUtils {
     return prefs.getString('theme').toString();
   }
 
-  static Future<void> resetShowcaseFlags() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('pageOneDone'); // Remove specific flags
-    await prefs.remove('pageTwoDone');
-    await prefs.remove('pageThreeDone');
-  }
 }

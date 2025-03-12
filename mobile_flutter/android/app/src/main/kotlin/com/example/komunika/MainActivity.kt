@@ -53,7 +53,21 @@ class MainActivity : FlutterActivity() {
                     val updatedText = call.argument<String>("updatedText")
                     handleUpdatedText(updatedText)
                     result.success(null)
-                } 
+                }"updateCaptionPreferences" -> {
+                    val sharedPrefs = getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE)
+                    val editor = sharedPrefs.edit()
+                    
+                    val size = call.argument<Double>("size")?.toFloat() ?: 50.0f
+                    val textColor = call.argument<String>("textColor") ?: "black"
+                    val backgroundColor = call.argument<String>("backgroundColor") ?: "white"
+                    
+                    editor.putFloat("captionSize", size)
+                    editor.putString("captionTextColor", textColor)
+                    editor.putString("captionBackgroundColor", backgroundColor)
+                    editor.apply()
+                    
+                    result.success(null)
+                }
                 else -> result.notImplemented()
             }
         }
