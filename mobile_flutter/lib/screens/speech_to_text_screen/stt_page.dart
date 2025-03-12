@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
+import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
@@ -225,11 +226,14 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                         width: ResponsiveUtils.getResponsiveSize(context, 35),
                         height: ResponsiveUtils.getResponsiveSize(context, 35),
                         decoration: const BoxDecoration(
-                          shape: BoxShape.rectangle,
-                          image: DecorationImage(
-                            image: AssetImage('assets/icons/plus.png'),
-                            fit: BoxFit.contain,
-                          ),
+                          shape: BoxShape.circle,
+                          color: ColorsPalette.red,
+                        ),
+                        child: Icon(
+                          Icons.cleaning_services_outlined,
+                          color: themeProvider
+                              .themeData.textTheme.bodySmall?.color,
+                          size: ResponsiveUtils.getResponsiveSize(context, 20),
                         ),
                       ),
                     ),
