@@ -36,6 +36,19 @@ class FloatingWindowService : Service() {
         }
     }
 
+    private fun updateCaptionStyle(size: Float, textColor: Int, backgroundColor: Int) {
+        textView.textSize = size
+        textView.setTextColor(textColor)
+        val transparentBackground = android.graphics.Color.argb(180, 
+            android.graphics.Color.red(backgroundColor),
+            android.graphics.Color.green(backgroundColor),
+            android.graphics.Color.blue(backgroundColor)
+        )
+        floatingView.setBackgroundColor(transparentBackground)
+        windowManager.updateViewLayout(floatingView, layoutParams)
+    }
+
+
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
@@ -154,7 +167,29 @@ class FloatingWindowService : Service() {
         if (transcribedText != null) {
             updateText(transcribedText)
         }
+
+        val sharedPrefs = getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE)
+        val captionSize = sharedPrefs.getFloat("captionSize", 50.0f)
+        val textColorName = sharedPrefs.getString("captionTextColor", "black") ?: "black"
+        val backgroundColorName = sharedPrefs.getString("captionBackgroundColor", "white") ?: "white"
+
+        val textColor = getColorFromName(textColorName)
+        val backgroundColor = getColorFromName(backgroundColorName)
+
+        updateCaptionStyle(captionSize, textColor, backgroundColor)
+
         return START_STICKY
+    }
+
+    private fun getColorFromName(colorName: String): Int {
+        return when (colorName.lowercase()) {
+            "red" -> android.graphics.Color.RED
+            "blue" -> android.graphics.Color.BLUE
+            "black" -> android.graphics.Color.BLACK
+            "white" -> android.graphics.Color.WHITE
+            "grey" -> android.graphics.Color.GRAY
+            else -> android.graphics.Color.BLACK // Default
+        }
     }
 
     private fun updateText(text: String) {
