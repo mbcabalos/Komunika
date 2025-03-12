@@ -17,9 +17,9 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
     on<TextToSpeechLoadingEvent>(textToSpeechLoadingEvent);
     on<CreateTextToSpeechEvent>(createTextToSpeechEvent);
     on<PlayAudioEvent>(playAudioEvent);
-    on<AddToFavorite>(addToFavorite);
-    on<RemoveFromFavorite>(removeFromFavorite);
-    on<DeleteQuickSpeech>(deleteQuickspeech);
+    on<AddToFavoriteEvent>(addToFavoriteEvent);
+    on<RemoveFromFavoriteEvent>(removeFromFavoriteEvent);
+    on<DeleteQuickSpeechEvent>(deleteQuickspeechEvent);
   }
 
   /// Helper function to fetch audio items and emit state
@@ -50,8 +50,8 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
     }
   }
 
-  FutureOr<void> addToFavorite(
-      AddToFavorite event, Emitter<TextToSpeechState> emit) async {
+  FutureOr<void> addToFavoriteEvent(
+      AddToFavoriteEvent event, Emitter<TextToSpeechState> emit) async {
     try {
       await _databaseHelper.favorite(event.audioName);
       await _fetchAndEmitAudioItems(emit);
@@ -60,8 +60,8 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
     }
   }
 
-  FutureOr<void> removeFromFavorite(
-      RemoveFromFavorite event, Emitter<TextToSpeechState> emit) async {
+  FutureOr<void> removeFromFavoriteEvent(
+      RemoveFromFavoriteEvent event, Emitter<TextToSpeechState> emit) async {
     try {
       await _databaseHelper.removeFavorite(event.audioName);
       await _fetchAndEmitAudioItems(emit);
@@ -70,8 +70,8 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
     }
   }
 
-  FutureOr<void> deleteQuickspeech(
-      DeleteQuickSpeech event, Emitter<TextToSpeechState> emit) async {
+  FutureOr<void> deleteQuickspeechEvent(
+      DeleteQuickSpeechEvent event, Emitter<TextToSpeechState> emit) async {
     try {
       await _databaseHelper.deleteAudioItem(event.audioId);
       await _fetchAndEmitAudioItems(emit);

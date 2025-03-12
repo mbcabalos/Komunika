@@ -44,23 +44,22 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
 
   @override
   void dispose() {
-    widget.signTranscriberBloc.add(StopTranslation());
+    widget.signTranscriberBloc.add(StopTranslationEvent());
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
-      // App is in the background, dispose of the camera controller
-      widget.signTranscriberBloc.add(StopTranslation());
+      widget.signTranscriberBloc.add(StopTranslationEvent());
     } else if (state == AppLifecycleState.resumed) {
-      // App is in the foreground, reinitialize the camera controller
       _initialize();
     }
   }
 
   Future<void> _initialize() async {
     widget.signTranscriberBloc.add(SignTranscriberLoadingEvent());
+    widget.signTranscriberBloc.add(RequestPermissionEvent());
   }
 
   @override
@@ -176,7 +175,7 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
                 child: IconButton(
                   icon: const Icon(Icons.switch_camera, color: Colors.white),
                   onPressed: () {
-                    widget.signTranscriberBloc.add(SwitchCamera());
+                    widget.signTranscriberBloc.add(SwitchCameraEvent());
                   },
                 ),
               ),

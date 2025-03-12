@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:image/image.dart';
 import 'package:equatable/equatable.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 part 'sign_transcriber_event.dart';
 part 'sign_transcriber_state.dart';
@@ -22,17 +23,18 @@ class SignTranscriberBloc
   DateTime? lastFrameSent;
 
   SignTranscriberBloc() : super(SignTranscriberInitial()) {
-    on<SignTranscriberLoadingEvent>(_initialize);
-    on<StopTranslation>(_onStopTranslation);
-    on<SwitchCamera>(_switchCamera);
+    on<SignTranscriberLoadingEvent>(signTranscriberLoadingEvent);
+    on<RequestPermissionEvent>(requestPermissionEvent);
+    on<StopTranslationEvent>(stopTranslationEvent);
+    on<SwitchCameraEvent>(switchCameraEvent);
 
     socketService.socket?.on("translationupdate", (data) {
       if (data != null && data["translation"] != null) {
         if (state is SignTranscriberLoadedState ||
-            state is TranslationUpdated) {
+            state is TranslationUpdatedState) {
           _transcriptionController.add(data["translation"]);
           add(NewTranscriptEvent(data["translation"]));
-          print("❌❌❌❌❌❌❌");
+          print(data["translation"]);
         } else {
           print("Camera is still initializing, skipping text append.");
         }
@@ -52,7 +54,7 @@ class SignTranscriberBloc
     });
   }
 
-  Future<void> _initialize(SignTranscriberLoadingEvent event,
+  Future<void> signTranscriberLoadingEvent(SignTranscriberLoadingEvent event,
       Emitter<SignTranscriberState> emit) async {
     emit(SignTranscriberLoadingState());
 
@@ -80,6 +82,23 @@ class SignTranscriberBloc
     }
   }
 
+  FutureOr<void> requestPermissionEvent(
+      RequestPermissionEvent event, Emitter<SignTranscriberState> emit) async {
+    try {
+      Future<void> requestPermission(Permission permission) async {
+        var status = await permission.request();
+        if (status.isDenied || status.isPermanentlyDenied) {
+          await permission.request();
+        }
+      }
+
+      // Request permissions
+      await requestPermission(Permission.camera);
+    } catch (e) {
+      emit(SignTranscriberErrorState(message: "$e"));
+    }
+  }
+
   Future<void> _startImageStream() async {
     if (cameraController == null || !cameraController!.value.isInitialized) {
       return;
@@ -99,8 +118,8 @@ class SignTranscriberBloc
     });
   }
 
-  Future<void> _switchCamera(
-    SwitchCamera event,
+  Future<void> switchCameraEvent(
+    SwitchCameraEvent event,
     Emitter<SignTranscriberState> emit,
   ) async {
     if (state is SignTranscriberLoadedState) {
@@ -176,8 +195,8 @@ class SignTranscriberBloc
     return img;
   }
 
-  void _onStopTranslation(
-      StopTranslation event, Emitter<SignTranscriberState> emit) {
+  void stopTranslationEvent(
+      StopTranslationEvent event, Emitter<SignTranscriberState> emit) {
     _captureTimer?.cancel();
     _stopImageStream();
 

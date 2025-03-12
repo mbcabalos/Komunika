@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
+import 'package:permission_handler/permission_handler.dart';
 part 'auto_caption_event.dart';
 part 'auto_caption_state.dart';
 
@@ -17,13 +18,15 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
   String capturedText = "";
   AutoCaptionBloc() : super(AutoCaptionLoadingState()) {
     on<AutoCaptionLoadingEvent>(autoCaptionLoadingEvent);
-    on<ToggleAutoCaptionEvent>(_onToggleAutoCaption);
-    on<StartAutoCaption>(_startAudioCaption);
-    on<StopAutoCaption>(_stopAutoCaption);
+    on<RequestPermissionEvent>(requestPermissionEvent);
+    on<ToggleAutoCaptionEvent>(toggleAutoCaptionEvent);
+    on<StartAutoCaptionEvent>(startAudioCaptionEvent);
+    on<StopAutoCaptionEvent>(stopAutoCaptionEvent);
 
     void emitTextToFloatingWindow(String text) {
       platform.invokeMethod('updateText', {'updatedText': text});
-    }  
+    }
+
     socketService.socket?.on("caption_result", (data) {
       if (data != null && data["text"] != null) {
         final text = data["text"] as String;
@@ -47,38 +50,55 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
     emit(AutoCaptionLoadedSuccessState(isEnabled: false));
   }
 
+  FutureOr<void> requestPermissionEvent(
+      RequestPermissionEvent event, Emitter<AutoCaptionState> emit) async {
+    try {
+      Future<void> requestPermission(Permission permission) async {
+        var status = await permission.request();
+        if (status.isDenied || status.isPermanentlyDenied) {
+          await permission.request();
+        }
+      }
+      // Request permissions
+      await requestPermission(Permission.notification);
+      await requestPermission(Permission.systemAlertWindow);
+    } catch (e) {
+      emit(AutoCaptionErrorState(message: "$e"));
+    }
+  }
+
   Future<void> listenForAutoCaptionToggle() async {
     platform.setMethodCallHandler((MethodCall call) async {
       if (call.method == 'toggleAutoCaption') {
         bool isEnabled = call.arguments ?? false;
         // Trigger the auto-caption toggle event
         if (isEnabled) {
-          add(StartAutoCaption());
+          add(StartAutoCaptionEvent());
         } else {
-          add(StopAutoCaption());
+          add(StopAutoCaptionEvent());
         }
       }
     });
   }
 
-  Future<void> _onToggleAutoCaption(
+  Future<void> toggleAutoCaptionEvent(
     ToggleAutoCaptionEvent event,
     Emitter<AutoCaptionState> emit,
   ) async {
     try {
       emit(AutoCaptionLoadedSuccessState(isEnabled: event.isEnabled));
       if (event.isEnabled) {
-        add(StartAutoCaption());
+        add(StartAutoCaptionEvent());
       } else {
-        add(StopAutoCaption());
+        add(StopAutoCaptionEvent());
       }
     } catch (e) {
       emit(AutoCaptionErrorState(message: '${e}'));
     }
   }
 
-  Future<void> _startAudioCaption(
-    StartAutoCaption event,
+  Future<void> startAudioCaptionEvent(
+    StartAutoCaptionEvent event,
     Emitter<AutoCaptionState> emit,
   ) async {
     try {
@@ -95,8 +115,8 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
     }
   }
 
-  Future<void> _stopAutoCaption(
-    StopAutoCaption event,
+  Future<void> stopAutoCaptionEvent(
+    StopAutoCaptionEvent event,
     Emitter<AutoCaptionState> emit,
   ) async {
     print("called");
@@ -105,7 +125,7 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
       dbHelper.saveAutoCaptionHistory(capturedText);
       await platform.invokeMethod('stopForegroundService');
       emit(AutoCaptionLoadedSuccessState(isEnabled: false));
-      
+
       print("called");
     } on PlatformException catch (e) {
       emit(AutoCaptionErrorState(

@@ -11,15 +11,15 @@ import 'package:komunika/widgets/global_widgets/app_bar.dart';
 
 class AutoCaptionScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
-
-  const AutoCaptionScreen({super.key, required this.themeProvider});
+  final AutoCaptionBloc autoCaptionBloc;
+  const AutoCaptionScreen(
+      {super.key, required this.themeProvider, required this.autoCaptionBloc});
 
   @override
   State<AutoCaptionScreen> createState() => _AutoCaptionScreenState();
 }
 
 class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
-  late AutoCaptionBloc autoCaptionBloc;
   final TextEditingController _textController = TextEditingController();
   double _captionSize = 50.0;
   Color _captionTextColor = Colors.black;
@@ -29,9 +29,8 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
   @override
   void initState() {
     super.initState();
-    autoCaptionBloc = AutoCaptionBloc();
-    autoCaptionBloc.add(AutoCaptionLoadingEvent());
-    _loadCaptionPreferences();
+    widget.autoCaptionBloc.add(AutoCaptionLoadingEvent());
+    widget.autoCaptionBloc.add(RequestPermissionEvent());
   }
 
   Future<void> _updateCaptionSize(double size) async {
@@ -102,8 +101,8 @@ Color _getColorFromName(String colorName) {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<AutoCaptionBloc>(
-      create: (context) => autoCaptionBloc,
+    return BlocProvider.value(
+      value: widget.autoCaptionBloc,
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
@@ -207,9 +206,7 @@ Color _getColorFromName(String colorName) {
                 value: isEnabled,
                 onChanged: (value) {
                   // Dispatch the ToggleAutoCaptionEvent with the new value
-                  context
-                      .read<AutoCaptionBloc>()
-                      .add(ToggleAutoCaptionEvent(value));
+                  widget.autoCaptionBloc.add(ToggleAutoCaptionEvent(value));
                 },
               );
             },

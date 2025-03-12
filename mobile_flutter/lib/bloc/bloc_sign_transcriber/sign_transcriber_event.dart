@@ -6,17 +6,19 @@ abstract class SignTranscriberEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class InitializeCamera extends SignTranscriberEvent {}
-
 class SignTranscriberLoadingEvent extends SignTranscriberEvent {}
 
-class SwitchCamera extends SignTranscriberEvent {}
+class InitializeCameraEvent extends SignTranscriberEvent {}
 
-class StartImageStream extends SignTranscriberEvent {}
+class RequestPermissionEvent extends SignTranscriberEvent {}
 
-class StartTranslation extends SignTranscriberEvent {}
+class SwitchCameraEvent extends SignTranscriberEvent {}
 
-class StopTranslation extends SignTranscriberEvent {}
+class StartImageStreamEvent extends SignTranscriberEvent {}
+
+class StartTranslationEvent extends SignTranscriberEvent {}
+
+class StopTranslationEvent extends SignTranscriberEvent {}
 
 class NewTranscriptEvent extends SignTranscriberEvent {
   final String text;

@@ -9,14 +9,14 @@ final class SpeechToTextLoadingState extends SpeechToTextState {}
 
 final class SpeechToTextLoadedSuccessState extends SpeechToTextState {}
 
-class SpeechRecording extends SpeechToTextState {}
+class SpeechRecordingState extends SpeechToTextState {}
 
-class SpeechStopped extends SpeechToTextState {}
+class SpeechStoppedState extends SpeechToTextState {}
 
-class TranscriptionUpdated extends SpeechToTextState {
+class TranscriptionUpdatedState extends SpeechToTextState {
   final String text;
 
-  TranscriptionUpdated(this.text);
+  TranscriptionUpdatedState(this.text);
 
   @override
   List<Object> get props => [text];

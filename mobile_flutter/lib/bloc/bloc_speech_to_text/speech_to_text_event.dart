@@ -9,21 +9,22 @@ class CreateSpeechToTextEvent extends SpeechToTextEvent {
   CreateSpeechToTextEvent(this.audioData);
 }
 
-class StartRecording extends SpeechToTextEvent {}
+class RequestPermissionEvent extends SpeechToTextEvent {}
 
-class StopRecording extends SpeechToTextEvent {}
+class StartRecordingEvent extends SpeechToTextEvent {}
 
-class StartTapRecording extends SpeechToTextEvent {}
+class StopRecordingEvent extends SpeechToTextEvent {}
 
-class StopTapRecording extends SpeechToTextEvent {}
+class StartTapRecordingEvent extends SpeechToTextEvent {}
 
-class StartListeningEvent extends SpeechToTextEvent {}
+class StopTapRecordingEvent extends SpeechToTextEvent {}
+
+class StartListeningEventEvent extends SpeechToTextEvent {}
 
 class NewTranscriptionEvent extends SpeechToTextEvent {
   final String text;
 
   NewTranscriptionEvent(this.text);
 
-  @override
   List<Object> get props => [text];
 }

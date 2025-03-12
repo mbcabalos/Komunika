@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 part 'speech_to_text_event.dart';
 part 'speech_to_text_state.dart';
@@ -21,11 +22,12 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
 
   SpeechToTextBloc(this.socketService) : super(SpeechToTextLoadingState()) {
     on<SpeechToTextLoadingEvent>(speechToTextLoadingEvent);
+    on<RequestPermissionEvent>(requestPermissionEvent);
     on<CreateSpeechToTextEvent>(createSpeechToTextLoadingEvent);
-    on<StartRecording>(_startRecording);
-    on<StopRecording>(_stopRecording);
-    on<StartTapRecording>(_startTapRecording);
-    on<StopTapRecording>(_stopTapRecording);
+    on<StartRecordingEvent>(startRecordingEvent);
+    on<StopRecordingEvent>(stopRecordingEvent);
+    on<StartTapRecordingEvent>(startTapRecordingEvent);
+    on<StopTapRecordingEvent>(stopTapRecordingEvent);
 
     socketService.socket?.on("transcription_result", (data) {
       if (data != null && data["text"] != null) {
@@ -35,11 +37,11 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     });
 
     on<NewTranscriptionEvent>((event, emit) {
-      final currentText = state is TranscriptionUpdated
-          ? (state as TranscriptionUpdated).text
+      final currentText = state is TranscriptionUpdatedState
+          ? (state as TranscriptionUpdatedState).text
           : '';
       final updatedText = "${event.text}\n";
-      emit(TranscriptionUpdated(updatedText));
+      emit(TranscriptionUpdatedState(updatedText));
     });
   }
 
@@ -48,13 +50,30 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     emit(SpeechToTextLoadedSuccessState());
   }
 
+  FutureOr<void> requestPermissionEvent(
+      RequestPermissionEvent event, Emitter<SpeechToTextState> emit) async {
+    try {
+      Future<void> requestPermission(Permission permission) async {
+        var status = await permission.request();
+        if (status.isDenied || status.isPermanentlyDenied) {
+          await permission.request();
+        }
+      }
+
+      // Request permissions
+      await requestPermission(Permission.microphone);
+    } catch (e) {
+      emit(SpeechToTextErrorState(message: "$e"));
+    }
+  }
+
   FutureOr<void> createSpeechToTextLoadingEvent(
       CreateSpeechToTextEvent event, Emitter<SpeechToTextState> emit) async {}
 
   // Start recording with stream controller setup
-  Future<void> _startRecording(
-      StartRecording event, Emitter<SpeechToTextState> emit) async {
-    emit(TranscriptionUpdated(""));
+  Future<void> startRecordingEvent(
+      StartRecordingEvent event, Emitter<SpeechToTextState> emit) async {
+    emit(TranscriptionUpdatedState(""));
     if (recording) return;
     recording = true;
     Directory tempDir = await getTemporaryDirectory();
@@ -70,9 +89,9 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     print("🎙️ Recording started...");
   }
 
-  Future<void> _startTapRecording(
-      StartTapRecording event, Emitter<SpeechToTextState> emit) async {
-    emit(TranscriptionUpdated(""));
+  Future<void> startTapRecordingEvent(
+      StartTapRecordingEvent event, Emitter<SpeechToTextState> emit) async {
+    emit(TranscriptionUpdatedState(""));
     _startNewStream();
     await _recorder.openRecorder();
     await _recorder.startRecorder(
@@ -90,9 +109,9 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   }
 
   // Stop recording and send audio to the backend
-  Future<void> _stopRecording(
-      StopRecording event, Emitter<SpeechToTextState> emit) async {
-    emit(TranscriptionUpdated(""));
+  Future<void> stopRecordingEvent(
+      StopRecordingEvent event, Emitter<SpeechToTextState> emit) async {
+    emit(TranscriptionUpdatedState(""));
     if (!recording) return;
     recording = false;
     await _recorder.stopRecorder();
@@ -102,9 +121,9 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     }
   }
 
-  Future<void> _stopTapRecording(
-      StopTapRecording event, Emitter<SpeechToTextState> emit) async {
-    emit(TranscriptionUpdated(""));
+  Future<void> stopTapRecordingEvent(
+      StopTapRecordingEvent event, Emitter<SpeechToTextState> emit) async {
+    emit(TranscriptionUpdatedState(""));
     await _recorder.stopRecorder();
     await Future.delayed(const Duration(seconds: 7));
     _audioStreamController?.close();

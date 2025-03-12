@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:komunika/bloc/bloc_auto_caption/auto_caption_bloc.dart';
 import 'package:komunika/bloc/bloc_home/home_bloc.dart';
 import 'package:komunika/bloc/bloc_sign_transcriber/sign_transcriber_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
@@ -13,7 +14,6 @@ import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
-import 'package:komunika/test.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
@@ -27,7 +27,6 @@ import 'package:komunika/widgets/home_widgets/home_quick_speech_card.dart';
 import 'package:komunika/widgets/home_widgets/home_tips_card.dart';
 import 'package:komunika/widgets/home_widgets/home_walkthrough.dart';
 import 'package:provider/provider.dart';
-import 'package:showcaseview/showcaseview.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -38,28 +37,26 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late HomeBloc homeBloc;
-  late SpeechToTextBloc sttBloc;
-  late TextToSpeechBloc ttsBloc;
-  late SignTranscriberBloc stBloc;
+  late SpeechToTextBloc speechToTextBloc;
+  late TextToSpeechBloc textToSpeechBloc;
+  late SignTranscriberBloc signTranscriberBloc;
+  late AutoCaptionBloc autoCaptionBloc;
   final socketService = SocketService();
   final globalService = GlobalRepositoryImpl();
   final databaseHelper = DatabaseHelper();
   List<Map<String, dynamic>> quickSpeechItems = [];
   String? currentlyPlaying;
-  GlobalKey _speechToTextKey = GlobalKey();
-  GlobalKey _textToSpeechKey = GlobalKey();
-  bool _isShowcaseSeen = false;
   String theme = "";
 
   @override
   void initState() {
     super.initState();
     homeBloc = HomeBloc(databaseHelper);
-    sttBloc = SpeechToTextBloc(socketService);
-    ttsBloc = TextToSpeechBloc(globalService, databaseHelper);
-    stBloc = SignTranscriberBloc();
+    speechToTextBloc = SpeechToTextBloc(socketService);
+    textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
+    signTranscriberBloc = SignTranscriberBloc();
+    autoCaptionBloc = AutoCaptionBloc();
     homeBloc.add(HomeLoadingEvent());
-    homeBloc.add(RequestPermissionEvent());
     homeBloc.add(FetchAudioEvent());
     //PreferencesUtils.storeWalkthrough(false); //use to test walthrough
     _showWalkthrough();
@@ -94,13 +91,13 @@ class _HomePageState extends State<HomePage> {
           create: (context) => homeBloc,
         ),
         BlocProvider<SpeechToTextBloc>(
-          create: (context) => sttBloc,
+          create: (context) => speechToTextBloc,
         ),
         BlocProvider<TextToSpeechBloc>(
-          create: (context) => ttsBloc,
+          create: (context) => textToSpeechBloc,
         ),
         BlocProvider<SignTranscriberBloc>(
-          create: (context) => stBloc,
+          create: (context) => signTranscriberBloc,
         ),
       ],
       child: Consumer<ThemeProvider>(
@@ -176,7 +173,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                SizedBox(
+                    height: ResponsiveUtils.getResponsiveSize(context, 20)),
                 HomeTipsCard(
                   content: context.translate("home_tips"),
                   contentSize:
@@ -186,7 +184,7 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+          SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 10)),
 
           // Body Section with white background
           Container(
@@ -195,8 +193,10 @@ class _HomePageState extends State<HomePage> {
                 : null,
             decoration: BoxDecoration(
               color: themeProvider.themeData.scaffoldBackgroundColor,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(30),
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(
+                  ResponsiveUtils.getResponsiveSize(context, 30),
+                ),
               ),
             ),
             child: Padding(
@@ -208,64 +208,57 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Row(
                     children: [
-                      Showcase(
-                        key: _speechToTextKey,
-                        description: context
-                            .translate("home_speech_to_text_description"),
-                        child: GestureDetector(
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SpeechToTextPage(
-                                  themeProvider: themeProvider,
-                                  speechToTextBloc: sttBloc,
-                                ),
+                      GestureDetector(
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SpeechToTextPage(
+                                themeProvider: themeProvider,
+                                speechToTextBloc: speechToTextBloc,
                               ),
-                            );
-                            _refreshScreen();
-                          },
-                          child: HomeCatalogsCard(
-                            imagePath: 'assets/icons/word-of-mouth.png',
-                            isImagePath: true,
-                            content: context.translate("home_speech_to_text"),
-                            contentSize: ResponsiveUtils.getResponsiveFontSize(
-                                context, 14),
-                            themeProvider: themeProvider,
-                          ),
+                            ),
+                          );
+                          _refreshScreen();
+                        },
+                        child: HomeCatalogsCard(
+                          imagePath: 'assets/icons/word-of-mouth.png',
+                          isImagePath: true,
+                          content: context.translate("home_speech_to_text"),
+                          contentSize: ResponsiveUtils.getResponsiveFontSize(
+                              context, 14),
+                          themeProvider: themeProvider,
                         ),
                       ),
-                      SizedBox(width: MediaQuery.of(context).size.width * 0.04),
-                      Showcase(
-                        key: _textToSpeechKey,
-                        description: context
-                            .translate("home_text_to_speech_description"),
-                        child: GestureDetector(
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => TextToSpeechScreen(
-                                  themeProvider: themeProvider,
-                                  ttsBloc: ttsBloc,
-                                ),
+                      SizedBox(
+                          width:
+                              ResponsiveUtils.getResponsiveSize(context, 20)),
+                      GestureDetector(
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TextToSpeechScreen(
+                                themeProvider: themeProvider,
+                                ttsBloc: textToSpeechBloc,
                               ),
-                            );
-                            _refreshScreen();
-                          },
-                          child: HomeCatalogsCard(
-                            imagePath: 'assets/icons/text-to-speech.png',
-                            isImagePath: true,
-                            content: context.translate("home_text_to_speech"),
-                            contentSize: ResponsiveUtils.getResponsiveFontSize(
-                                context, 14),
-                            themeProvider: themeProvider,
-                          ),
+                            ),
+                          );
+                          _refreshScreen();
+                        },
+                        child: HomeCatalogsCard(
+                          imagePath: 'assets/icons/text-to-speech.png',
+                          isImagePath: true,
+                          content: context.translate("home_text_to_speech"),
+                          contentSize: ResponsiveUtils.getResponsiveFontSize(
+                              context, 14),
+                          themeProvider: themeProvider,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                  SizedBox(
+                      height: ResponsiveUtils.getResponsiveSize(context, 20)),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
@@ -276,7 +269,7 @@ class _HomePageState extends State<HomePage> {
                             MaterialPageRoute(
                               builder: (context) => SignTranscriberPage(
                                 themeProvider: themeProvider,
-                                signTranscriberBloc: stBloc,
+                                signTranscriberBloc: signTranscriberBloc,
                               ),
                             ),
                           );
@@ -290,14 +283,20 @@ class _HomePageState extends State<HomePage> {
                           themeProvider: themeProvider,
                         ),
                       ),
-                      SizedBox(width: MediaQuery.of(context).size.width * 0.04),
+                      SizedBox(
+                          width:
+                              ResponsiveUtils.getResponsiveSize(context, 20)),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => AutoCaptionScreen(
-                                      themeProvider: themeProvider)));
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AutoCaptionScreen(
+                                themeProvider: themeProvider,
+                                autoCaptionBloc: autoCaptionBloc,
+                              ),
+                            ),
+                          );
                         },
                         child: HomeCatalogsCard(
                           imagePath: 'assets/icons/transcription.png',
@@ -310,13 +309,19 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.04),
+                  SizedBox(
+                      height: ResponsiveUtils.getResponsiveSize(context, 30)),
                   Material(
                     elevation: 2,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(
+                      ResponsiveUtils.getResponsiveSize(context, 20),
+                    ),
                     child: Container(
                       width: MediaQuery.of(context).size.width * 0.95,
-                      padding: const EdgeInsets.only(top: 12, bottom: 24),
+                      padding: EdgeInsets.only(
+                        top: ResponsiveUtils.getResponsiveSize(context, 12),
+                        bottom: ResponsiveUtils.getResponsiveSize(context, 24),
+                      ),
                       decoration: BoxDecoration(
                         color: themeProvider.themeData.cardColor,
                         borderRadius: BorderRadius.circular(20),
@@ -335,8 +340,14 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            margin: const EdgeInsets.only(
-                                left: 20, right: 20, top: 8),
+                            margin: EdgeInsets.only(
+                              left: ResponsiveUtils.getResponsiveSize(
+                                  context, 20),
+                              right: ResponsiveUtils.getResponsiveSize(
+                                  context, 20),
+                              top:
+                                  ResponsiveUtils.getResponsiveSize(context, 8),
+                            ),
                             child: Text(
                               "Quick Speech",
                               style: TextStyle(
@@ -353,26 +364,36 @@ class _HomePageState extends State<HomePage> {
                           // Check if audioItems is empty
                           state.audioItems.isEmpty
                               ? Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 20),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: ResponsiveUtils.getResponsiveSize(
+                                        context, 20),
+                                  ),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Container(
-                                        margin: const EdgeInsets.symmetric(
-                                            horizontal: 20),
+                                        margin: EdgeInsets.symmetric(
+                                          horizontal:
+                                              ResponsiveUtils.getResponsiveSize(
+                                                  context, 20),
+                                        ),
                                         child: Text(
                                           "No items for Quick Speech. Add one here!",
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            fontSize: 16,
+                                            fontSize: ResponsiveUtils
+                                                .getResponsiveFontSize(
+                                                    context, 16),
                                             fontWeight: FontWeight.w400,
                                             color: themeProvider.themeData
                                                 .textTheme.bodyMedium?.color,
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(height: 12),
+                                      SizedBox(
+                                          height:
+                                              ResponsiveUtils.getResponsiveSize(
+                                                  context, 12)),
                                       ElevatedButton(
                                         onPressed: () async {
                                           await Navigator.push(
@@ -381,7 +402,8 @@ class _HomePageState extends State<HomePage> {
                                               builder: (context) =>
                                                   VoiceMessagePage(
                                                 themeProvider: themeProvider,
-                                                textToSpeechBloc: ttsBloc,
+                                                textToSpeechBloc:
+                                                    textToSpeechBloc,
                                               ),
                                             ),
                                           );
@@ -394,8 +416,12 @@ class _HomePageState extends State<HomePage> {
                                             borderRadius:
                                                 BorderRadius.circular(10),
                                           ),
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 24, vertical: 12),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: ResponsiveUtils
+                                                .getResponsiveSize(context, 24),
+                                            vertical: ResponsiveUtils
+                                                .getResponsiveSize(context, 12),
+                                          ),
                                         ),
                                         child: Text(
                                           "Add",
@@ -440,11 +466,14 @@ class _HomePageState extends State<HomePage> {
                                           onTap: currentlyPlaying != null
                                               ? null
                                               : () {
-                                                  setState(() {
-                                                    currentlyPlaying = isPlaying
-                                                        ? null
-                                                        : audioPath;
-                                                  });
+                                                  setState(
+                                                    () {
+                                                      currentlyPlaying =
+                                                          isPlaying
+                                                              ? null
+                                                              : audioPath;
+                                                    },
+                                                  );
                                                   homeBloc.add(PlayAudioEvent(
                                                       audioName: audioPath));
                                                 },

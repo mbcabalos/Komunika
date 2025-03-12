@@ -19,20 +19,20 @@ class PlayAudioEvent extends TextToSpeechEvent {
   PlayAudioEvent({required this.audioName});
 }
 
-class AddToFavorite extends TextToSpeechEvent {
+class AddToFavoriteEvent extends TextToSpeechEvent {
   final String audioName;
 
-  AddToFavorite({required this.audioName});
+  AddToFavoriteEvent({required this.audioName});
 }
 
-class RemoveFromFavorite extends TextToSpeechEvent {
+class RemoveFromFavoriteEvent extends TextToSpeechEvent {
   final String audioName;
 
-  RemoveFromFavorite({required this.audioName});
+  RemoveFromFavoriteEvent({required this.audioName});
 }
 
-class DeleteQuickSpeech extends TextToSpeechEvent {
+class DeleteQuickSpeechEvent extends TextToSpeechEvent {
   final int audioId;
 
-  DeleteQuickSpeech({required this.audioId});
+  DeleteQuickSpeechEvent({required this.audioId});
 }
