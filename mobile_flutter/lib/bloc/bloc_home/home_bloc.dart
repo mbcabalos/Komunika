@@ -4,7 +4,6 @@ import 'package:bloc/bloc.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 part 'home_event.dart';
 part 'home_state.dart';
 
@@ -12,7 +11,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final DatabaseHelper _databaseHelper;
   HomeBloc(this._databaseHelper) : super(HomeLoadingState()) {
     on<HomeLoadingEvent>(homeLoadingEvent);
-    on<RequestPermissionEvent>(requestPermissionEvent);
     on<FetchAudioEvent>(fetchAudioEvent);
     on<PlayAudioEvent>(playAudioEvent);
   }
@@ -31,21 +29,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   FutureOr<void> homeLoadingEvent(
       HomeLoadingEvent event, Emitter<HomeState> emit) async {
     await _fetchAndEmitAudioItems(emit);
-  }
-
-  FutureOr<void> requestPermissionEvent(
-      RequestPermissionEvent event, Emitter<HomeState> emit) async {
-    try {
-      var status = await Permission.microphone.request();
-      if (status.isDenied || status.isPermanentlyDenied) {
-        print("Microphone permission is required!");
-        // Optionally, guide the user to the app settings to enable it
-        openAppSettings();
-      }
-      await _fetchAndEmitAudioItems(emit);
-    } catch (e) {
-      emit(HomeErrorState(message: "$e"));
-    }
   }
 
   FutureOr<void> fetchAudioEvent(

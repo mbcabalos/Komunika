@@ -31,10 +31,10 @@ class SignTranscriberLoadedState extends SignTranscriberState {
   }
 }
 
-class TranslationUpdated extends SignTranscriberState {
+class TranslationUpdatedState extends SignTranscriberState {
   final String text;
 
-  const TranslationUpdated(this.text);
+  const TranslationUpdatedState(this.text);
   @override
   List<Object> get props => [text];
 }

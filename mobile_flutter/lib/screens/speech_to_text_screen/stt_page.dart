@@ -7,7 +7,6 @@ import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/global_widgets/history.dart';
-import 'package:showcaseview/showcaseview.dart';
 
 class SpeechToTextPage extends StatefulWidget {
   final ThemeProvider themeProvider;
@@ -22,11 +21,6 @@ class SpeechToTextPage extends StatefulWidget {
 class SpeechToTextPageState extends State<SpeechToTextPage> {
   final TextEditingController _textController = TextEditingController();
   final dbHelper = DatabaseHelper();
-  final GlobalKey _microphoneKey = GlobalKey();
-  final GlobalKey _textFieldKey = GlobalKey();
-  final GlobalKey _saveKey = GlobalKey();
-  final GlobalKey _plusKey = GlobalKey();
-  final bool _isShowcaseSeen = false;
   bool _isRecording = false;
 
   @override
@@ -38,6 +32,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
 
   Future<void> _initialize() async {
     widget.speechToTextBloc.add(SpeechToTextLoadingEvent());
+    widget.speechToTextBloc.add(RequestPermissionEvent());
   }
 
   void _toggleTapRecording() {
@@ -45,23 +40,23 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
       setState(() {
         _isRecording = true;
       });
-      widget.speechToTextBloc.add(StartTapRecording());
+      widget.speechToTextBloc.add(StartTapRecordingEvent());
     } else {
       setState(() {
         _isRecording = false;
       });
-      widget.speechToTextBloc.add(StopTapRecording());
+      widget.speechToTextBloc.add(StopTapRecordingEvent());
     }
   }
 
   void _startRecording() {
     setState(() => _isRecording = true);
-    widget.speechToTextBloc.add(StartRecording());
+    widget.speechToTextBloc.add(StartRecordingEvent());
   }
 
   void _stopRecording() {
     setState(() => _isRecording = false);
-    widget.speechToTextBloc.add(StopRecording());
+    widget.speechToTextBloc.add(StopRecordingEvent());
   }
 
   @override
@@ -94,7 +89,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                   dbHelper.saveSpeechToTextHistory(_textController.text);
                 }
                 _textController.clear();
-                widget.speechToTextBloc.add(StopTapRecording());
+                widget.speechToTextBloc.add(StopTapRecordingEvent());
                 Navigator.pop(context);
               },
             ),
@@ -169,49 +164,45 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                   height: phoneHeight,
                   child: BlocBuilder<SpeechToTextBloc, SpeechToTextState>(
                     builder: (context, state) {
-                      if (state is TranscriptionUpdated) {
+                      if (state is TranscriptionUpdatedState) {
                         _textController.text += state.text;
                         _textController.selection = TextSelection.fromPosition(
                             TextPosition(offset: _textController.text.length));
                       }
-                      return Showcase(
-                        key: _textFieldKey,
-                        description: "See translated message here",
-                        child: Card(
-                          elevation: 1,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              ResponsiveUtils.getResponsiveSize(context, 12),
-                            ),
+                      return Card(
+                        elevation: 1,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            ResponsiveUtils.getResponsiveSize(context, 12),
                           ),
-                          color: themeProvider.themeData.cardColor,
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child: TextField(
-                              readOnly: true,
-                              controller: _textController,
-                              style: TextStyle(
-                                color: themeProvider
-                                    .themeData.textTheme.bodyMedium?.color,
-                                fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                    context, 20),
-                              ),
-                              decoration: InputDecoration(
-                                hintText: context.translate("stt_hint"),
-                                border: InputBorder.none,
-                                fillColor: Colors.transparent,
-                                filled: true,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: ResponsiveUtils.getResponsiveSize(
-                                      context, 12),
-                                  vertical: ResponsiveUtils.getResponsiveSize(
-                                      context, 16),
-                                ),
-                              ),
-                              textAlignVertical: TextAlignVertical.center,
-                              maxLines: null,
-                              keyboardType: TextInputType.multiline,
+                        ),
+                        color: themeProvider.themeData.cardColor,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          child: TextField(
+                            readOnly: true,
+                            controller: _textController,
+                            style: TextStyle(
+                              color: themeProvider
+                                  .themeData.textTheme.bodyMedium?.color,
+                              fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                  context, 20),
                             ),
+                            decoration: InputDecoration(
+                              hintText: context.translate("stt_hint"),
+                              border: InputBorder.none,
+                              fillColor: Colors.transparent,
+                              filled: true,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: ResponsiveUtils.getResponsiveSize(
+                                    context, 12),
+                                vertical: ResponsiveUtils.getResponsiveSize(
+                                    context, 16),
+                              ),
+                            ),
+                            textAlignVertical: TextAlignVertical.center,
+                            maxLines: null,
+                            keyboardType: TextInputType.multiline,
                           ),
                         ),
                       );
@@ -224,26 +215,20 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Showcase(
-                      key: _plusKey,
-                      description: "Add new entry",
-                      child: GestureDetector(
-                        onTap: () {
-                          print("clicked");
-                          dbHelper
-                              .saveSpeechToTextHistory(_textController.text);
-                          _textController.clear();
-                        },
-                        child: Container(
-                          width: ResponsiveUtils.getResponsiveSize(context, 35),
-                          height:
-                              ResponsiveUtils.getResponsiveSize(context, 35),
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.rectangle,
-                            image: DecorationImage(
-                              image: AssetImage('assets/icons/plus.png'),
-                              fit: BoxFit.contain,
-                            ),
+                    GestureDetector(
+                      onTap: () {
+                        print("clicked");
+                        dbHelper.saveSpeechToTextHistory(_textController.text);
+                        _textController.clear();
+                      },
+                      child: Container(
+                        width: ResponsiveUtils.getResponsiveSize(context, 35),
+                        height: ResponsiveUtils.getResponsiveSize(context, 35),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.rectangle,
+                          image: DecorationImage(
+                            image: AssetImage('assets/icons/plus.png'),
+                            fit: BoxFit.contain,
                           ),
                         ),
                       ),
@@ -251,27 +236,21 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                     SizedBox(
                       width: ResponsiveUtils.getResponsiveSize(context, 20),
                     ),
-                    Showcase(
-                      key: _microphoneKey,
-                      description: "Tap and hold to start recording",
-                      child: GestureDetector(
-                        onTap: _toggleTapRecording,
-                        onLongPress: _startRecording,
-                        onLongPressUp: _stopRecording,
-                        child: Container(
-                          width: ResponsiveUtils.getResponsiveSize(context, 80),
-                          height:
-                              ResponsiveUtils.getResponsiveSize(context, 80),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: themeProvider.themeData.primaryColor,
-                          ),
-                          child: Icon(
-                            _isRecording ? Icons.graphic_eq_rounded : Icons.mic,
-                            color: Colors.white,
-                            size:
-                                ResponsiveUtils.getResponsiveSize(context, 60),
-                          ),
+                    GestureDetector(
+                      onTap: _toggleTapRecording,
+                      onLongPress: _startRecording,
+                      onLongPressUp: _stopRecording,
+                      child: Container(
+                        width: ResponsiveUtils.getResponsiveSize(context, 80),
+                        height: ResponsiveUtils.getResponsiveSize(context, 80),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: themeProvider.themeData.primaryColor,
+                        ),
+                        child: Icon(
+                          _isRecording ? Icons.graphic_eq_rounded : Icons.mic,
+                          color: Colors.white,
+                          size: ResponsiveUtils.getResponsiveSize(context, 60),
                         ),
                       ),
                     ),

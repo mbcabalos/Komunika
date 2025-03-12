@@ -4,9 +4,11 @@ abstract class AutoCaptionEvent {}
 
 class AutoCaptionLoadingEvent extends AutoCaptionEvent {}
 
-class StartAutoCaption extends AutoCaptionEvent {}
+class RequestPermissionEvent extends AutoCaptionEvent {}
 
-class StopAutoCaption extends AutoCaptionEvent {}
+class StartAutoCaptionEvent extends AutoCaptionEvent {}
+
+class StopAutoCaptionEvent extends AutoCaptionEvent {}
 
 class ToggleAutoCaptionEvent extends AutoCaptionEvent {
   final bool isEnabled;

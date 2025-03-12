@@ -27,8 +27,7 @@ class VoiceMessagePage extends StatefulWidget {
 
 class _VoiceMessagePageState extends State<VoiceMessagePage> {
   List<Map<String, dynamic>> audioItems = [];
-  String? currentlyPlaying; // Store the name of the currently playing audio
-  final GlobalKey _fabKey = GlobalKey();
+  String? currentlyPlaying;
 
   @override
   void initState() {
@@ -63,10 +62,9 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
               showCustomSnackBar(
                   context, "Errr, Please try again", ColorsPalette.red);
             }
-
             if (state is AudioPlaybackCompletedState) {
               setState(() {
-                currentlyPlaying = null; // Reset when audio finishes
+                currentlyPlaying = null;
               });
             }
           },
@@ -181,10 +179,10 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
                 onTap: () {
                   if (favorites == 1) {
                     widget.textToSpeechBloc
-                        .add(RemoveFromFavorite(audioName: audioPath));
+                        .add(RemoveFromFavoriteEvent(audioName: audioPath));
                   } else {
                     widget.textToSpeechBloc
-                        .add(AddToFavorite(audioName: audioPath));
+                        .add(AddToFavoriteEvent(audioName: audioPath));
                   }
                   Navigator.pop(context);
                 },
@@ -193,7 +191,8 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
                 leading: const Icon(Icons.delete),
                 title: const Text("Delete"),
                 onTap: () {
-                  widget.textToSpeechBloc.add(DeleteQuickSpeech(audioId: id));
+                  widget.textToSpeechBloc
+                      .add(DeleteQuickSpeechEvent(audioId: id));
                   Navigator.pop(context);
                 },
               ),
