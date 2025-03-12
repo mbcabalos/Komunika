@@ -177,15 +177,16 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     );
                   },
                   child: Container(
-                    width: ResponsiveUtils.getResponsiveSize(context, 40),
-                    height: ResponsiveUtils.getResponsiveSize(context, 40),
+                    width: ResponsiveUtils.getResponsiveSize(context, 50),
+                    height: ResponsiveUtils.getResponsiveSize(context, 50),
                     decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      image: const DecorationImage(
-                        image: AssetImage('assets/icons/clipboard.png'),
-                        fit: BoxFit.contain,
-                      ),
-                      color: themeProvider.themeData.cardColor,
+                      shape: BoxShape.circle,
+                      color: themeProvider.themeData.primaryColor,
+                    ),
+                    child: Icon(
+                      Icons.list_rounded,
+                      color: themeProvider.themeData.textTheme.bodySmall?.color,
+                      size: ResponsiveUtils.getResponsiveSize(context, 40),
                     ),
                   ),
                 ),
@@ -256,15 +257,16 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     }
                   },
                   child: Container(
-                    width: ResponsiveUtils.getResponsiveSize(context, 40),
-                    height: ResponsiveUtils.getResponsiveSize(context, 40),
+                    width: ResponsiveUtils.getResponsiveSize(context, 50),
+                    height: ResponsiveUtils.getResponsiveSize(context, 50),
                     decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      image: const DecorationImage(
-                        image: AssetImage('assets/icons/saved.png'),
-                        fit: BoxFit.contain,
-                      ),
-                      color: themeProvider.themeData.cardColor,
+                      shape: BoxShape.circle,
+                      color: themeProvider.themeData.primaryColor,
+                    ),
+                    child: Icon(
+                      Icons.save_alt_rounded,
+                      color: themeProvider.themeData.textTheme.bodySmall?.color,
+                      size: ResponsiveUtils.getResponsiveSize(context, 35),
                     ),
                   ),
                 ),
