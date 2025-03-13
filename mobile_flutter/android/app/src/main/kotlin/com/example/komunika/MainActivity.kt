@@ -74,10 +74,14 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun startRecording() {
+        val serviceIntent = Intent(this, ForegroundService::class.java)
+        ContextCompat.startForegroundService(this, serviceIntent) 
+    
         mediaProjectionManager = getSystemService(MediaProjectionManager::class.java)
         val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
         startActivityForResult(captureIntent, REQUEST_CODE)
     }
+    
 
     private fun stopRecording() {
         isRecording = false
@@ -174,7 +178,7 @@ class MainActivity : FlutterActivity() {
         val serviceIntent = Intent(this, ForegroundService::class.java)
         ContextCompat.startForegroundService(this, serviceIntent)
         Log.d("AudioCapture", "Foreground service started")
-        startRecording()
+        // startRecording()
     }
 
     private fun stopForegroundService() {

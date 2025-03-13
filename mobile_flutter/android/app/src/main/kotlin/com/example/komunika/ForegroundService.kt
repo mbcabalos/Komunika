@@ -19,10 +19,15 @@ class ForegroundService : Service() {
         return null
     }
 
-    override fun onCreate() {
-        super.onCreate()
+    // override fun onCreate() {
+    //     super.onCreate()
+    //     createNotificationChannel()
+    // }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         createNotificationChannel()
-        startForegroundService()
+        startForegroundService() // ✅ Correctly starts foreground notification
+        return START_STICKY
     }
 
     private fun createNotificationChannel() {

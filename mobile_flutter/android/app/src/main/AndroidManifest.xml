@@ -63,7 +63,7 @@
                 android:name=".ForegroundService"
                 android:exported="true"
                 android:foregroundServiceType="mediaProjection"
-                android:permission="android.permission.FOREGROUND_SERVICE"/>
+                android:permission="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
 
             <service
                 android:name=".FloatingWindowService"

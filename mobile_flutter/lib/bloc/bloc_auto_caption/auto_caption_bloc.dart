@@ -59,6 +59,7 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
           await permission.request();
         }
       }
+
       // Request permissions
       await requestPermission(Permission.notification);
       await requestPermission(Permission.systemAlertWindow);
@@ -102,7 +103,7 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
     Emitter<AutoCaptionState> emit,
   ) async {
     try {
-      await platform.invokeMethod('startForegroundService');
+      await platform.invokeMethod('startRecording');
       // await platform.invokeMethod('startRecording');
       emit(AutoCaptionLoadedSuccessState(isEnabled: true));
 
