@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_sign_transcriber/sign_transcriber_bloc.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
+import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/global_widgets/history.dart';
@@ -28,6 +29,7 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
     with WidgetsBindingObserver {
   final TextEditingController _textController = TextEditingController();
   final dbHelper = DatabaseHelper();
+  bool _noHandDetected = false;
 
   @override
   void initState() {
@@ -125,7 +127,7 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
             if (state is SignTranscriberLoadingState) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is SignTranscriberLoadedState) {
-              return _buildCameraView(state.cameraController);
+              return _buildCameraView(state.cameraController, state);
             } else if (state is SignTranscriberErrorState) {
               return Center(
                   child: Text('Failed to load camera: ${state.message}'));
@@ -138,7 +140,17 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
     );
   }
 
-  Widget _buildCameraView(CameraController cameraController) {
+  Widget _buildCameraView(
+      CameraController cameraController, SignTranscriberLoadedState state) {
+    // Check if no hand is detected
+    if (state.translationText.toLowerCase() == "no hand detected") {
+      if (!_noHandDetected) {
+        _noHandDetected = true;
+      }
+    } else {
+      _noHandDetected = false;
+    }
+
     return Column(
       children: [
         // Circular Camera Preview
@@ -150,7 +162,9 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: widget.themeProvider.themeData.primaryColor,
+              color: _noHandDetected
+                  ? ColorsPalette.red
+                  : widget.themeProvider.themeData.primaryColor,
               width: 4,
             ),
             boxShadow: [
@@ -201,18 +215,23 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
           },
           builder: (context, state) {
             if (state is SignTranscriberLoadedState) {
-              _textController.text += state.translationText;
-              _textController.selection = TextSelection.fromPosition(
-                  TextPosition(offset: _textController.text.length));
-              return Container(
-                margin: const EdgeInsets.only(top: 20),
-                child: _buildTextDisplay(),
-              );
+              if (state.translationText.toLowerCase() != "no hand detected") {
+                _textController.text += state.translationText;
+
+                _textController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: _textController.text.length));
+                return Container(
+                  margin: EdgeInsets.only(
+                      top: ResponsiveUtils.getResponsiveFontSize(context, 20)),
+                  child: _buildTextDisplay(),
+                );
+              }
             }
             return Container(
-              margin: const EdgeInsets.only(top: 20),
-              child: const Center(
-                child: Text("Translated text will appear here..."),
+              margin: EdgeInsets.only(
+                  top: ResponsiveUtils.getResponsiveFontSize(context, 20)),
+              child: Center(
+                child: _buildTextDisplay(),
               ),
             );
           },
@@ -248,9 +267,9 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
               fontWeight: FontWeight.w500,
               color: widget.themeProvider.themeData.textTheme.bodyMedium?.color,
             ),
-            maxLines: 5,
-            minLines: 3,
-            expands: false, 
+            maxLines: 8,
+            minLines: 5,
+            expands: false,
             decoration: InputDecoration(
               border: InputBorder.none,
               hintText: "Translated text will appear here...",
@@ -266,16 +285,16 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
             right: 0,
             child: Container(
               width: 30,
-              height: 30, 
+              height: 30,
               decoration: BoxDecoration(
                 color: Colors.grey.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(15), 
+                borderRadius: BorderRadius.circular(15),
               ),
               child: IconButton(
-                icon: const Icon(Icons.clear,
-                    size: 16, color: Colors.grey), 
+                icon: const Icon(Icons.clear, size: 16, color: Colors.grey),
                 onPressed: () {
                   // Clear the text field
+                  dbHelper.saveSignTranscriberHistory(_textController.text);
                   _textController.clear();
                 },
               ),

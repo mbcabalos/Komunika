@@ -5,6 +5,17 @@ class PreferencesUtils {
   static const String _sizeKey = "captionSize";
   static const String _textColorKey = "captionTextColor";
   static const String _backgroundColorKey = "captionBackgroundColor";
+  static const String _captionEnableStateKey = 'captionEnableState';
+
+  static Future<void> storeCaptionEnableState(bool isEnabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_captionEnableStateKey, isEnabled);
+  }
+
+  static Future<bool> getCaptionEnableState() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_captionEnableStateKey) ?? false; // Default to false
+  }
 
   static Future<void> storeCaptionSize(double size) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -25,7 +36,6 @@ class PreferencesUtils {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_textColorKey) ?? "black";
   }
-
 
   static Future<void> storeCaptionBackgroundColor(String colorName) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -73,5 +83,4 @@ class PreferencesUtils {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('theme').toString();
   }
-
 }
