@@ -20,6 +20,7 @@ def create_app():
     # Sockets
     register_transcription_events(socketio)
     register_sign_transcriber(socketio)
+    
     @app.route("/")
     def home():
         return "Flask SocketIO Server is Running!"
@@ -43,4 +44,5 @@ if __name__ == '__main__':
     print(f"Network: http://{local_ip}:5000 (for mobile access)")
     socketio.run(app, host="0.0.0.0", port=5000, debug=True )  #use_preloader=False
     eventlet.monkey_patch() 
+
 

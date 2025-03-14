@@ -156,10 +156,11 @@ class SignTranscriberBloc
     try {
       final imglib.Image img = _convertYUV420toImageFast(image);
 
-      final imglib.Image smallImg = imglib.copyResize(img, width: 320);
+      final imglib.Image smallImg =
+          imglib.copyResize(img, height: 520, width: 520);
 
       final Uint8List jpeg =
-          Uint8List.fromList(imglib.encodeJpg(smallImg, quality: 50));
+          Uint8List.fromList(imglib.encodeJpg(smallImg, quality: 100));
 
       return jpeg;
     } catch (e) {
@@ -197,7 +198,8 @@ class SignTranscriberBloc
       }
     }
 
-    return img;
+    return imglib.copyRotate(img,
+        angle: 180); // 180 degree rotation for horizontal flip
   }
 
   void stopTranslationEvent(

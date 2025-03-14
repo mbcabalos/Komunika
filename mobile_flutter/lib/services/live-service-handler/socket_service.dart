@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:komunika/services/endpoint.dart';
+import 'dart:typed_data';
+import 'package:image/image.dart' as img; // The image package
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SocketService {
@@ -83,13 +85,26 @@ class SocketService {
   }
 
   void sendFrame(Uint8List frame) {
-  if (socket != null && isSocketInitialized) {
-    print("✅ Sending frame...");
-    socket!.emit('frame', frame);
-  } else {
-    print("❌ Socket not connected!");
+    if (socket != null && isSocketInitialized) {
+      try {
+        // Decode the frame into an image object
+        img.Image? image = img.decodeImage(frame);
+        if (image == null) {
+          print("❌ Failed to decode the image!");
+          return;
+        }
+
+        Uint8List jpegBytes = Uint8List.fromList(img.encodeJpg(image));
+
+        print("✅ Sending frame...");
+        socket!.emit('frame', jpegBytes);
+      } catch (e) {
+        print("❌ Error while encoding image: $e");
+      }
+    } else {
+      print("❌ Socket not connected!");
+    }
   }
-}
 
   void closeSocket() {
     if (socket != null && isSocketInitialized) {
