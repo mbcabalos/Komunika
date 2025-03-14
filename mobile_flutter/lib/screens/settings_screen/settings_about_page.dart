@@ -117,7 +117,7 @@ class AboutPage extends StatelessWidget {
                 ),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.005),
                 _buildAuthorCard(
-                  name: "Davd Aldrin Mondero",
+                  name: "David Aldrin Mondero",
                   role: "Full Stack Developer",
                   fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
                   themeProvider: themeProvider,

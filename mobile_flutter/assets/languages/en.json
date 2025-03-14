@@ -50,5 +50,9 @@
   "faq_question2": "How to use the app?",
   "faq_answer2": "Explore the features for communication, announcements, and more.",
   "faq_question3": "How do I contact support?",
-  "faq_answer3": "You can contact support by sending an email to support@komunika.com"
+  "faq_answer3": "You can contact support by sending an email to komunika.up@gmail.com",
+  "faq_question4": "How do I get latest updates?",
+  "faq_answer4": "You can get latest updates by following our Facebook page Komunika.",
+  "faq_question5": "How do I contribute to the growing Komunika project?",
+  "faq_answer5": "You can contribute to the project by forking the GitHub repository, creating a new branch, making changes, and submitting a pull request for review."
 }
