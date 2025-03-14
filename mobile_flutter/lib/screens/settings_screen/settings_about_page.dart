@@ -117,7 +117,7 @@ class AboutPage extends StatelessWidget {
                 ),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.005),
                 _buildAuthorCard(
-                  name: "Davd Aldrin Mondero",
+                  name: "David Aldrin Mondero",
                   role: "Full Stack Developer",
                   fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
                   themeProvider: themeProvider,
@@ -138,7 +138,7 @@ class AboutPage extends StatelessWidget {
                       themeProvider: themeProvider,
                       onPressed: () {
                         launchUrl(
-                            Uri.parse('https://www.facebook.com/yourpage'));
+                            Uri.parse('https://web.facebook.com/profile.php?id=61573900271206'));
                       },
                       size: ResponsiveUtils.getResponsiveSize(context, 25),
                     ),
@@ -157,7 +157,14 @@ class AboutPage extends StatelessWidget {
                       assetPath: 'assets/icons/mail.png',
                       themeProvider: themeProvider,
                       onPressed: () {
-                        // Open website link
+                        final Uri emailUri = Uri(
+                          scheme: 'mailto',
+                          path: 'komunika.up@gmail.com',
+                          // queryParameters: {
+                          //   'subject': 'Inquiry about Komunika App'
+                          // },
+                        );
+                        launchUrl(emailUri);
                       },
                       size: ResponsiveUtils.getResponsiveSize(context, 25),
                     ),

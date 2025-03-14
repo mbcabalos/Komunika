@@ -34,6 +34,14 @@ class _FAQPageState extends State<FAQPage> {
         question: "faq_question3",
         answer: "faq_answer3",
       ),
+      FAQItem(
+        question: "faq_question4",
+        answer: "faq_answer4",
+      ),
+      FAQItem(
+        question: "faq_question5",
+        answer: "faq_answer5",
+      ),
     ];
   }
 

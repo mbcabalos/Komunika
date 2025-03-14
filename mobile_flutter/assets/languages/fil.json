@@ -52,5 +52,9 @@
   "faq_question2": "Paano gamitin ang app?",
   "faq_answer2": "I-explore ang mga tampok para sa komunikasyon, anunsyo, at iba pa.",
   "faq_question3": "Paano ako makakaugnay sa suporta?",
-  "faq_answer3": "Maaari kang makipag-ugnayan sa suporta sa pamamagitan ng pagpapadala ng email sa support@komunika.com"
+  "faq_answer3": "Maaari kang makipag-ugnayan sa suporta sa pamamagitan ng pagpapadala ng email sa komunika.up@gmail.com",
+  "faq_question4": "Paano ako makakakuha ng pinakabagong update?",
+  "faq_answer4": "Maaari mong makuha ang pinakabagong update sa pamamagitan ng pagsubaybay sa aming Facebook page Komunika.",
+  "faq_question5": "Paano ako makakatulong sa lumalaking proyekto ng Komunika?",
+  "faq_answer5": "Maaari kang mag-ambag sa proyekto sa pamamagitan ng pag-fork ng GitHub repository, paggawa ng bagong branch, paggawa ng mga pagbabago, at pagsusumite ng pull request para sa pagsusuri."
 }
