@@ -6,7 +6,7 @@ import 'package:image/image.dart';
 import 'package:equatable/equatable.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import 'package:image/image.dart' as imglib;
 part 'sign_transcriber_event.dart';
 part 'sign_transcriber_state.dart';
 
@@ -122,6 +122,7 @@ class SignTranscriberBloc
     SwitchCameraEvent event,
     Emitter<SignTranscriberState> emit,
   ) async {
+    _stopImageStream();
     if (state is SignTranscriberLoadedState) {
       final currentState = state as SignTranscriberLoadedState;
 
@@ -147,48 +148,52 @@ class SignTranscriberBloc
       await newController.initialize();
 
       emit(SignTranscriberLoadedState(cameraController: newController));
+      _startImageStream();
     }
   }
 
   Future<Uint8List?> _convertCameraImageToBytes(CameraImage image) async {
     try {
-      // Convert CameraImage to Image
-      final img = _convertYUV420toImage(image);
+      final imglib.Image img = _convertYUV420toImageFast(image);
 
-      // Encode the image as JPEG (can be optimized further)
-      final jpeg = encodeJpg(img);
+      final imglib.Image smallImg = imglib.copyResize(img, width: 320);
 
-      return Uint8List.fromList(jpeg);
+      final Uint8List jpeg =
+          Uint8List.fromList(imglib.encodeJpg(smallImg, quality: 50));
+
+      return jpeg;
     } catch (e) {
       print("Failed to convert CameraImage to bytes: $e");
       return null;
     }
   }
 
-  Image _convertYUV420toImage(CameraImage image) {
+  imglib.Image _convertYUV420toImageFast(CameraImage image) {
     final width = image.width;
     final height = image.height;
-    final yBuffer = image.planes[0].bytes;
-    final uBuffer = image.planes[1].bytes;
-    final vBuffer = image.planes[2].bytes;
+    final yPlane = image.planes[0];
+    final uPlane = image.planes[1];
+    final vPlane = image.planes[2];
 
-    final img = Image(width: width, height: height);
+    final img = imglib.Image(width: width, height: height);
 
-    for (var y = 0; y < height; y++) {
-      for (var x = 0; x < width; x++) {
-        final yIndex = y * width + x;
-        final uvIndex = (y ~/ 2) * (width ~/ 2) + (x ~/ 2);
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        final yIndex = y * yPlane.bytesPerRow + x;
+        final uvIndex = (y ~/ 2) * uPlane.bytesPerRow + (x ~/ 2);
 
-        final yValue = yBuffer[yIndex];
-        final uValue = uBuffer[uvIndex];
-        final vValue = vBuffer[uvIndex];
+        final yValue = yPlane.bytes[yIndex];
+        final uValue = uPlane.bytes[uvIndex];
+        final vValue = vPlane.bytes[uvIndex];
 
-        final r = yValue + 1.402 * (vValue - 128);
+        final r = (yValue + 1.402 * (vValue - 128)).clamp(0, 255).toInt();
         final g =
-            yValue - 0.344136 * (uValue - 128) - 0.714136 * (vValue - 128);
-        final b = yValue + 1.772 * (uValue - 128);
+            (yValue - 0.344136 * (uValue - 128) - 0.714136 * (vValue - 128))
+                .clamp(0, 255)
+                .toInt();
+        final b = (yValue + 1.772 * (uValue - 128)).clamp(0, 255).toInt();
 
-        img.setPixelRgb(x, y, r.toInt(), g.toInt(), b.toInt());
+        img.setPixel(x, y, imglib.ColorInt8.rgb(r, g, b));
       }
     }
 
