@@ -96,7 +96,7 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
             Container(
               height: MediaQuery.of(context).size.height * 0.85,
               margin: EdgeInsets.all(
-                ResponsiveUtils.getResponsiveSize(context, 16),
+                ResponsiveUtils.getResponsiveSize(context, 8),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -112,26 +112,8 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
                         final isPlaying = currentlyPlaying == audioPath;
 
                         return GestureDetector(
-                          onTap: currentlyPlaying != null
-                              ? null // Disable onTap if audio is playing
-                              : () {
-                                  setState(() {
-                                    currentlyPlaying =
-                                        isPlaying ? null : audioPath;
-                                  });
-                                  widget.textToSpeechBloc.add(
-                                      PlayAudioEvent(audioName: audioPath));
-                                },
-                          onLongPress: currentlyPlaying != null
-                              ? null // Disable onLongPress if audio is playing
-                              : () {
-                                  _showOptionsMenu(
-                                      context, id, audioPath, favorites);
-                                },
-                          child: TTSCard(
-                            audioName: audioPath,
                             onTap: currentlyPlaying != null
-                                ? null // Disable onTap if audio is playing
+                                ? null
                                 : () {
                                     setState(() {
                                       currentlyPlaying =
@@ -141,15 +123,34 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
                                         PlayAudioEvent(audioName: audioPath));
                                   },
                             onLongPress: currentlyPlaying != null
-                                ? null // Disable onLongPress if audio is playing
+                                ? null
                                 : () {
                                     _showOptionsMenu(
                                         context, id, audioPath, favorites);
                                   },
-                            themeProvider: themeProvider,
-                            isPlaying: isPlaying,
-                          ),
-                        );
+                            child: TTSCard(
+                              audioName: audioPath,
+                              onTap: currentlyPlaying != null
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        currentlyPlaying =
+                                            isPlaying ? null : audioPath;
+                                      });
+                                      widget.textToSpeechBloc.add(
+                                          PlayAudioEvent(audioName: audioPath));
+                                    },
+                              onLongPress: currentlyPlaying != null
+                                  ? null
+                                  : () {
+                                      _showOptionsMenu(
+                                          context, id, audioPath, favorites);
+                                    },
+                              themeProvider: themeProvider,
+                              isPlaying: isPlaying,
+                              isFavorite:
+                                  favorites == 1, // NEW: Pass favorite status
+                            ));
                       },
                     ),
                   ),
@@ -163,6 +164,9 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
   }
 
   void _showOptionsMenu(BuildContext context, id, audioPath, favorites) {
+    final favoriteCount =
+        audioItems.where((item) => item['favorites'] == 1).length;
+
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -181,8 +185,16 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
                     widget.textToSpeechBloc
                         .add(RemoveFromFavoriteEvent(audioName: audioPath));
                   } else {
-                    widget.textToSpeechBloc
-                        .add(AddToFavoriteEvent(audioName: audioPath));
+                    if (favoriteCount >= 5) {
+                      showCustomSnackBar(
+                        context,
+                        "Quick Speech items can only be 5",
+                        ColorsPalette.red,
+                      );
+                    } else {
+                      widget.textToSpeechBloc
+                          .add(AddToFavoriteEvent(audioName: audioPath));
+                    }
                   }
                   Navigator.pop(context);
                 },

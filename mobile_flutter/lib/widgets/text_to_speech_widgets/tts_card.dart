@@ -9,7 +9,8 @@ class TTSCard extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final ThemeProvider themeProvider;
-  final bool isPlaying; // Track if the audio is playing
+  final bool isPlaying;
+  final bool isFavorite;
 
   const TTSCard({
     super.key,
@@ -18,6 +19,7 @@ class TTSCard extends StatefulWidget {
     required this.onLongPress,
     required this.themeProvider,
     required this.isPlaying,
+    required this.isFavorite,
   });
 
   @override
@@ -28,18 +30,25 @@ class _TTSCardState extends State<TTSCard> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: widget.isPlaying ? null : widget.onTap, // Disable if playing
-      onLongPress:
-          widget.isPlaying ? null : widget.onLongPress, // Disable if playing
+      onTap: widget.isPlaying ? null : widget.onTap,
+      onLongPress: widget.isPlaying ? null : widget.onLongPress,
       child: Opacity(
-        opacity: widget.isPlaying ? 0.5 : 1.0, // Reduce opacity if playing
+        opacity: widget.isPlaying ? 0.5 : 1.0,
         child: Container(
-          margin: const EdgeInsets.only(top: 12, left: 12, right: 12),
+          margin: EdgeInsets.only(
+            top: ResponsiveUtils.getResponsiveSize(context, 12),
+            left: ResponsiveUtils.getResponsiveSize(context, 12),
+            right: ResponsiveUtils.getResponsiveSize(context, 12),
+          ),
           width: MediaQuery.of(context).size.width * 0.9,
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(
+            ResponsiveUtils.getResponsiveSize(context, 16),
+          ),
           decoration: BoxDecoration(
             color: widget.themeProvider.themeData.cardColor,
-            borderRadius: BorderRadius.circular(25),
+            borderRadius: BorderRadius.circular(
+              ResponsiveUtils.getResponsiveSize(context, 25),
+            ),
             boxShadow: [
               BoxShadow(
                 color: ColorsPalette.black.withOpacity(0.2),
@@ -62,15 +71,30 @@ class _TTSCardState extends State<TTSCard> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              // Play/Pause Icon
-              Icon(
-                widget.isPlaying
-                    ? Icons.pause_circle_filled
-                    : Icons.play_circle_fill,
-                size: ResponsiveUtils.getResponsiveFontSize(context, 30),
-                color: widget.isPlaying
-                    ? Colors.grey // Gray out if playing
-                    : widget.themeProvider.themeData.primaryColor,
+
+              // Play/Pause Icon + Favorite Icon
+              Row(
+                children: [
+                  // Favorite Icon
+                  if (widget.isFavorite)
+                    Icon(
+                      Icons.star,
+                      size: ResponsiveUtils.getResponsiveSize(context, 24),
+                      color: Colors.amber,
+                    ),
+                  // Play/Pause Icon
+                  SizedBox(
+                      width: ResponsiveUtils.getResponsiveSize(context, 8)),
+                  Icon(
+                    widget.isPlaying
+                        ? Icons.pause_circle_filled
+                        : Icons.play_circle_fill,
+                    size: ResponsiveUtils.getResponsiveFontSize(context, 30),
+                    color: widget.isPlaying
+                        ? Colors.grey
+                        : widget.themeProvider.themeData.primaryColor,
+                  ),
+                ],
               ),
             ],
           ),

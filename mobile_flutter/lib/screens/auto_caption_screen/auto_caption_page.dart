@@ -24,6 +24,7 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
   Color _captionTextColor = Colors.black;
   Color _captionBackgroundColor = Colors.white;
   final String _caption = "Caption here...";
+  bool _isEnabled = false; // Track the enable/disable state
 
   @override
   void initState() {
@@ -53,6 +54,12 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
     _sendCaptionPreferences();
   }
 
+  Future<void> _updateEnableState(bool isEnabled) async {
+    setState(() => _isEnabled = isEnabled);
+    await PreferencesUtils.storeCaptionEnableState(isEnabled);
+    widget.autoCaptionBloc.add(ToggleAutoCaptionEvent(isEnabled));
+  }
+
   String _getColorName(Color color) {
     if (color == Colors.red) return "red";
     if (color == Colors.blue) return "blue";
@@ -68,6 +75,7 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
       "size": _captionSize,
       "textColor": await PreferencesUtils.getCaptionTextColor(),
       "backgroundColor": await PreferencesUtils.getCaptionBackgroundColor(),
+      "isEnabled": _isEnabled, // Send enable state to the platform
     });
   }
 
@@ -76,11 +84,16 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
     String textColorName = await PreferencesUtils.getCaptionTextColor();
     String backgroundColorName =
         await PreferencesUtils.getCaptionBackgroundColor();
+    bool isEnabled = await PreferencesUtils.getCaptionEnableState();
 
     setState(() {
       _captionTextColor = _getColorFromName(textColorName);
       _captionBackgroundColor = _getColorFromName(backgroundColorName);
+      _isEnabled = isEnabled;
     });
+
+
+    widget.autoCaptionBloc.add(ToggleAutoCaptionEvent(isEnabled));
 
     _sendCaptionPreferences();
   }
@@ -170,36 +183,27 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
             ),
             SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 20)),
             // Enable Switch
-            BlocBuilder<AutoCaptionBloc, AutoCaptionState>(
-              builder: (context, state) {
-                bool isEnabled = false;
-                if (state is AutoCaptionLoadedSuccessState) {
-                  isEnabled = state.isEnabled;
-                }
-
-                return Card(
-                  color: widget.themeProvider.themeData.cardColor,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            Card(
+              color: widget.themeProvider.themeData.cardColor,
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: SwitchListTile(
+                title: Text(
+                  "Enable Auto Caption",
+                  style: TextStyle(
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 18),
+                    fontFamily: Fonts.main,
+                    fontWeight: FontWeight.w600,
                   ),
-                  child: SwitchListTile(
-                    title: Text(
-                      "Enable Auto Caption",
-                      style: TextStyle(
-                        fontSize:
-                            ResponsiveUtils.getResponsiveFontSize(context, 18),
-                        fontFamily: Fonts.main,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    value: isEnabled,
-                    onChanged: (value) {
-                      widget.autoCaptionBloc.add(ToggleAutoCaptionEvent(value));
-                    },
-                  ),
-                );
-              },
+                ),
+                value: _isEnabled,
+                onChanged: (value) {
+                  _updateEnableState(value);
+                },
+              ),
             ),
             SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 20)),
             // Size Slider
@@ -291,9 +295,9 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
         ),
         Slider(
           value: _captionSize,
-          min: 20.0,
+          min: 10.0,
           max: 100.0,
-          divisions: 13,
+          divisions: 17,
           label: "${_captionSize.round()}",
           onChanged: (value) {
             _updateCaptionSize(value);

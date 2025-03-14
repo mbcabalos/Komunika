@@ -19,8 +19,9 @@ class HistoryPage extends StatefulWidget {
 
 class HistoryPageState extends State<HistoryPage> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  List<Map<String, dynamic>> history = [];
   List<Map<String, dynamic>> _historyEntries = [];
-  bool _isFabExpanded = false; 
+  bool _isFabExpanded = false;
 
   @override
   void initState() {
@@ -31,24 +32,56 @@ class HistoryPageState extends State<HistoryPage> {
   Future<void> _loadHistory() async {
     switch (widget.database) {
       case "stt":
-        final history = await _dbHelper.getSpeechToTextHistory();
+        history = await _dbHelper.getSpeechToTextHistory();
         setState(() {
           _historyEntries = history;
         });
         break;
-      case "sign_trancriber":
-        final history = await _dbHelper.getSignTranscriberHistory();
+      case "sign_transcriber":
+        history = await _dbHelper.getSignTranscriberHistory();
         setState(() {
           _historyEntries = history;
         });
         break;
       case "auto_caption":
-        final history = await _dbHelper.getAutoCaptionHistory();
+        history = await _dbHelper.getAutoCaptionHistory();
         setState(() {
           _historyEntries = history;
         });
         break;
       default:
+    }
+  }
+
+  Future<void> _deleteAllHistory() async {
+    switch (widget.database) {
+      case "stt":
+        await _dbHelper.clearSpeechToTextHistory();
+        break;
+      case "sign_transcriber":
+        await _dbHelper.clearSignTranscriberHistory();
+        break;
+      case "auto_caption":
+        await _dbHelper.clearAutoCaptionHistory();
+        break;
+      default:
+        print("Unknown database type");
+    }
+  }
+
+  Future<void> _deleteSpecificHistory(int entryId) async {
+    switch (widget.database) {
+      case "stt":
+        await _dbHelper.deleteSpeechToTextHistory(entryId);
+        break;
+      case "sign_transcriber":
+        await _dbHelper.deleteSignTranscriberHistory(entryId);
+        break;
+      case "auto_caption":
+        await _dbHelper.deleteAutoCaptionHistory(entryId);
+        break;
+      default:
+        print("Unknown database type");
     }
   }
 
@@ -180,7 +213,7 @@ class HistoryPageState extends State<HistoryPage> {
               final confirmed =
                   await _showConfirmationDialog(context, "Delete all history?");
               if (confirmed) {
-                await _dbHelper.clearSpeechToTextHistory();
+                await _deleteAllHistory();
                 _loadHistory();
                 _toggleFab();
               }
@@ -195,7 +228,7 @@ class HistoryPageState extends State<HistoryPage> {
             onPressed: () async {
               final entryId = await _showDeleteSpecificDialog(context);
               if (entryId != null) {
-                await _dbHelper.deleteSpeechToTextHistory(entryId);
+                await _deleteSpecificHistory(entryId);
                 _loadHistory();
                 _toggleFab();
               }
@@ -241,8 +274,6 @@ class HistoryPageState extends State<HistoryPage> {
   }
 
   Future<int?> _showDeleteSpecificDialog(BuildContext context) async {
-    final history = await _dbHelper.getSpeechToTextHistory();
-
     return await showDialog<int>(
       context: context,
       builder: (context) {
