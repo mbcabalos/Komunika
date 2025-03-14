@@ -82,13 +82,14 @@ class SocketService {
     }
   }
 
-  Future<void> sendFrame(Uint8List frame) async {
-    if (isSocketInitialized) {
-      socket?.emit('frame', frame);
-    } else {
-      print("❌ Socket is not connected yet!");
-    }
+  void sendFrame(Uint8List frame) {
+  if (socket != null && isSocketInitialized) {
+    print("✅ Sending frame...");
+    socket!.emit('frame', frame);
+  } else {
+    print("❌ Socket not connected!");
   }
+}
 
   void closeSocket() {
     if (socket != null && isSocketInitialized) {

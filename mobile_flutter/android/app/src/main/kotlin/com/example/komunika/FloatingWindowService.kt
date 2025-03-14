@@ -15,6 +15,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
+import android.widget.ScrollView
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -26,6 +27,7 @@ class FloatingWindowService : Service() {
     private lateinit var floatingView: View
     private lateinit var layoutParams: WindowManager.LayoutParams
     private lateinit var textView: TextView
+    private lateinit var scrollView: ScrollView
 
     private val textUpdateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -92,6 +94,7 @@ class FloatingWindowService : Service() {
         Log.d("FloatingWindowService", "View added to WindowManager")
 
         // Initialize the TextView for transcribed text
+        scrollView = floatingView.findViewById(R.id.scroll_view)
         textView = floatingView.findViewById(R.id.text_view)
 
         val filter = IntentFilter("com.example.komunika.UPDATE_TEXT")
@@ -193,7 +196,10 @@ class FloatingWindowService : Service() {
     }
 
     private fun updateText(text: String) {
-        textView.text = text
+        textView.append("\n$text")  // Append new text
+        scrollView.post {
+            scrollView.fullScroll(View.FOCUS_DOWN)  // Scroll to the bottom
+        }
     }
 
     override fun onDestroy() {
