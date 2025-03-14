@@ -12,11 +12,12 @@ hands = mp_hands.Hands()
 
 # Initialize Hand Detector and Classifier
 detector = HandDetector(maxHands=1)
-classifier = Classifier("models/sign_model.h5", "models/labels.txt")
+classifier = Classifier("models/A-D_model.h5", "models/A-D_labels.txt")
 
 # Constants
 IMG_SIZE = 300
-LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+# LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+LABELS = ['idle','A', 'B', 'C', 'D']
 
 
 def register_sign_transcriber(socketio):
