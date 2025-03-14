@@ -141,48 +141,56 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
   Widget _buildCameraView(CameraController cameraController) {
     return Column(
       children: [
-        Expanded(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                height: 400,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: widget.themeProvider.themeData.cardColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()
-                      ..rotateZ(math.pi / 2)
-                      ..rotateY(cameraController.description.lensDirection ==
-                              CameraLensDirection.front
-                          ? math.pi
-                          : 0),
-                    child: AspectRatio(
-                      aspectRatio: 9 / 16,
-                      child: CameraPreview(cameraController),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 10,
-                right: 10,
-                child: IconButton(
-                  icon: const Icon(Icons.switch_camera, color: Colors.white),
-                  onPressed: () {
-                    widget.signTranscriberBloc.add(SwitchCameraEvent());
-                  },
-                ),
+        // Circular Camera Preview
+        Container(
+          margin: EdgeInsets.only(
+              top: ResponsiveUtils.getResponsiveSize(context, 40)),
+          width: ResponsiveUtils.getResponsiveSize(context, 300),
+          height: ResponsiveUtils.getResponsiveSize(context, 300),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: widget.themeProvider.themeData.primaryColor,
+              width: 4,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                spreadRadius: 2,
               ),
             ],
           ),
+          child: ClipOval(
+            child: Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..rotateZ(math.pi / 2)
+                ..rotateY(cameraController.description.lensDirection ==
+                        CameraLensDirection.front
+                    ? math.pi
+                    : 0),
+              child: AspectRatio(
+                aspectRatio: 9 / 16,
+                child: CameraPreview(cameraController),
+              ),
+            ),
+          ),
         ),
-        const SizedBox(height: 10),
+        // Switch Camera Button
+        Container(
+          margin: EdgeInsets.only(
+              top: ResponsiveUtils.getResponsiveSize(context, 16),
+              left: ResponsiveUtils.getResponsiveSize(context, 200)),
+          child: FloatingActionButton(
+            backgroundColor: widget.themeProvider.themeData.primaryColor,
+            onPressed: () {
+              widget.signTranscriberBloc.add(SwitchCameraEvent());
+            },
+            child: const Icon(Icons.switch_camera, color: Colors.white),
+          ),
+        ),
+        // Translated Text Display
         BlocBuilder<SignTranscriberBloc, SignTranscriberState>(
           buildWhen: (previous, current) {
             if (previous is SignTranscriberLoadedState &&
@@ -196,10 +204,17 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
               _textController.text += state.translationText;
               _textController.selection = TextSelection.fromPosition(
                   TextPosition(offset: _textController.text.length));
-              return _buildTextDisplay();
+              return Container(
+                margin: const EdgeInsets.only(top: 20),
+                child: _buildTextDisplay(),
+              );
             }
-            return const Center(
-                child: Text("Translated text will appear here..."));
+            return Container(
+              margin: const EdgeInsets.only(top: 20),
+              child: const Center(
+                child: Text("Translated text will appear here..."),
+              ),
+            );
           },
         ),
       ],
@@ -208,26 +223,65 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
 
   Widget _buildTextDisplay() {
     return Container(
-      height: 130,
       width: double.infinity,
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
         color: widget.themeProvider.themeData.cardColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
       ),
-      child: Center(
-        child: TextField(
-          controller: _textController,
-          readOnly: true,
-          style: TextStyle(
-            fontSize: 14,
-            color: widget.themeProvider.themeData.textTheme.bodyMedium?.color,
+      child: Stack(
+        children: [
+          TextField(
+            controller: _textController,
+            readOnly: true,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: ResponsiveUtils.getResponsiveFontSize(context, 18),
+              fontWeight: FontWeight.w500,
+              color: widget.themeProvider.themeData.textTheme.bodyMedium?.color,
+            ),
+            maxLines: 5,
+            minLines: 3,
+            expands: false, 
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              hintText: "Translated text will appear here...",
+              hintStyle: TextStyle(
+                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+                fontWeight: FontWeight.w400,
+                color: Colors.grey,
+              ),
+            ),
           ),
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            hintText: "Translated text will appear here...",
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              width: 30,
+              height: 30, 
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(15), 
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.clear,
+                    size: 16, color: Colors.grey), 
+                onPressed: () {
+                  // Clear the text field
+                  _textController.clear();
+                },
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

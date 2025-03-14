@@ -147,10 +147,6 @@ class HistoryPageState extends State<HistoryPage> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      trailing: Text(
-                        time,
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
                     ),
                   );
                 },

@@ -142,129 +142,135 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
   }
 
   Widget _buildContent(ThemeProvider themeProvider) {
-    final double phoneHeight =
-        MediaQuery.of(context).size.height * 0.6; // Increased height
-    final double phoneWidth = MediaQuery.of(context).size.width * 0.9;
+    final double phoneHeight = MediaQuery.of(context).size.height * 0.6;
     return RefreshIndicator.adaptive(
       onRefresh: _initialize,
       child: Padding(
         padding: EdgeInsets.all(
           ResponsiveUtils.getResponsiveSize(context, 16),
         ),
-        child: ListView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Text Field with Clear Button
+            SizedBox(
+              height: phoneHeight,
+              child: BlocBuilder<SpeechToTextBloc, SpeechToTextState>(
+                builder: (context, state) {
+                  if (state is TranscriptionUpdatedState) {
+                    _textController.text += state.text;
+                    _textController.selection = TextSelection.fromPosition(
+                        TextPosition(offset: _textController.text.length));
+                  }
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: themeProvider.themeData.cardColor,
+                      borderRadius: BorderRadius.circular(
+                        ResponsiveUtils.getResponsiveSize(context, 12),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        TextField(
+                          readOnly: true,
+                          controller: _textController,
+                          style: TextStyle(
+                            color: themeProvider
+                                .themeData.textTheme.bodyMedium?.color,
+                            fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                context, 20),
+                          ),
+                          decoration: InputDecoration(
+                            hintText: context.translate("stt_hint"),
+                            border: InputBorder.none,
+                            fillColor: Colors.transparent,
+                            filled: true,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: ResponsiveUtils.getResponsiveSize(
+                                  context, 12),
+                              vertical: ResponsiveUtils.getResponsiveSize(
+                                  context, 16),
+                            ),
+                          ),
+                          textAlignVertical: TextAlignVertical.center,
+                          maxLines: null,
+                          keyboardType: TextInputType.multiline,
+                        ),
+                        // Clear Button (Positioned at the bottom-right)
+                        Positioned(
+                          bottom: 8,
+                          right: 8,
+                          child: Container(
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.clear,
+                                  size: 16, color: Colors.grey),
+                              onPressed: () {
+                                // Clear the text field
+                                dbHelper.saveSpeechToTextHistory(
+                                    _textController.text);
+                                _textController.clear();
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(
+              height: ResponsiveUtils.getResponsiveSize(context, 40),
+            ),
+            // Microphone and Text
             Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSize(context, 20),
-                ),
-                SizedBox(
-                  width: phoneWidth,
-                  height: phoneHeight,
-                  child: BlocBuilder<SpeechToTextBloc, SpeechToTextState>(
-                    builder: (context, state) {
-                      if (state is TranscriptionUpdatedState) {
-                        _textController.text += state.text;
-                        _textController.selection = TextSelection.fromPosition(
-                            TextPosition(offset: _textController.text.length));
-                      }
-                      return Card(
-                        elevation: 1,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            ResponsiveUtils.getResponsiveSize(context, 12),
-                          ),
-                        ),
-                        color: themeProvider.themeData.cardColor,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: TextField(
-                            readOnly: true,
-                            controller: _textController,
-                            style: TextStyle(
-                              color: themeProvider
-                                  .themeData.textTheme.bodyMedium?.color,
-                              fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                  context, 20),
-                            ),
-                            decoration: InputDecoration(
-                              hintText: context.translate("stt_hint"),
-                              border: InputBorder.none,
-                              fillColor: Colors.transparent,
-                              filled: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: ResponsiveUtils.getResponsiveSize(
-                                    context, 12),
-                                vertical: ResponsiveUtils.getResponsiveSize(
-                                    context, 16),
-                              ),
-                            ),
-                            textAlignVertical: TextAlignVertical.center,
-                            maxLines: null,
-                            keyboardType: TextInputType.multiline,
-                          ),
-                        ),
-                      );
-                    },
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: GestureDetector(
+                    onTap: _toggleTapRecording,
+                    onLongPress: _startRecording,
+                    onLongPressUp: _stopRecording,
+                    child: Container(
+                      width: ResponsiveUtils.getResponsiveSize(context, 80),
+                      height: ResponsiveUtils.getResponsiveSize(context, 80),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: themeProvider.themeData.primaryColor,
+                      ),
+                      child: Icon(
+                        _isRecording ? Icons.graphic_eq_rounded : Icons.mic,
+                        color: Colors.white,
+                        size: ResponsiveUtils.getResponsiveSize(context, 60),
+                      ),
+                    ),
                   ),
                 ),
                 SizedBox(
-                  height: ResponsiveUtils.getResponsiveSize(context, 50),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        print("clicked");
-                        dbHelper.saveSpeechToTextHistory(_textController.text);
-                        _textController.clear();
-                      },
-                      child: Container(
-                        width: ResponsiveUtils.getResponsiveSize(context, 35),
-                        height: ResponsiveUtils.getResponsiveSize(context, 35),
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: ColorsPalette.red,
-                        ),
-                        child: Icon(
-                          Icons.cleaning_services_outlined,
-                          color: themeProvider
-                              .themeData.textTheme.bodySmall?.color,
-                          size: ResponsiveUtils.getResponsiveSize(context, 20),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: ResponsiveUtils.getResponsiveSize(context, 20),
-                    ),
-                    GestureDetector(
-                      onTap: _toggleTapRecording,
-                      onLongPress: _startRecording,
-                      onLongPressUp: _stopRecording,
-                      child: Container(
-                        width: ResponsiveUtils.getResponsiveSize(context, 80),
-                        height: ResponsiveUtils.getResponsiveSize(context, 80),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: themeProvider.themeData.primaryColor,
-                        ),
-                        child: Icon(
-                          _isRecording ? Icons.graphic_eq_rounded : Icons.mic,
-                          color: Colors.white,
-                          size: ResponsiveUtils.getResponsiveSize(context, 60),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: ResponsiveUtils.getResponsiveSize(context, 50),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSize(context, 10),
+                  height: ResponsiveUtils.getResponsiveSize(context, 16),
                 ),
                 Text(
                   context.translate("stt_hold_microphone"),
