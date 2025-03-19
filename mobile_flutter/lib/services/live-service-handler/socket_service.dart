@@ -59,6 +59,15 @@ class SocketService {
     });
   }
 
+  Future<void> reconnect() async {
+    if (socket != null) {
+      print("🔄 Attempting WebSocket Reconnect...");
+      socket!.disconnect();
+      await Future.delayed(Duration(seconds: 2)); 
+      socket!.connect();
+    }
+  }
+
   Future<void> sendAudio(Uint8List audioChunk) async {
     if (isSocketInitialized) {
       socket?.emit('audio_stream', audioChunk);

@@ -36,12 +36,27 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
       }
     });
 
+    socketService.socket?.on("transcription_preview", (data) {
+      if (data != null && data["live_text"] != null) {
+        _transcriptionController.add(data["live_text"]);
+        add(LivePreviewTranscriptionEvent(data["live_text"]));
+      }
+    });
+
     on<NewTranscriptionEvent>((event, emit) {
       final currentText = state is TranscriptionUpdatedState
           ? (state as TranscriptionUpdatedState).text
           : '';
       final updatedText = "${event.text}\n";
       emit(TranscriptionUpdatedState(updatedText));
+    });
+
+    on<LivePreviewTranscriptionEvent>((event, emit) {
+      final currentText = state is LivePreviewTranscriptionState
+          ? (state as LivePreviewTranscriptionState).text
+          : '';
+      final updatedText = "${event.text}\n";
+      emit(LivePreviewTranscriptionState(updatedText));
     });
   }
 
@@ -73,7 +88,6 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   // Start recording with stream controller setup
   Future<void> startRecordingEvent(
       StartRecordingEvent event, Emitter<SpeechToTextState> emit) async {
-    emit(TranscriptionUpdatedState(""));
     if (recording) return;
     recording = true;
     Directory tempDir = await getTemporaryDirectory();
@@ -85,27 +99,52 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
       codec: Codec.pcm16WAV,
       sampleRate: 16000,
     );
-
     print("🎙️ Recording started...");
   }
 
   Future<void> startTapRecordingEvent(
       StartTapRecordingEvent event, Emitter<SpeechToTextState> emit) async {
-    emit(TranscriptionUpdatedState(""));
     _startNewStream();
     await _recorder.openRecorder();
     await _recorder.startRecorder(
-      toStream: _audioStreamController?.sink,
+      toStream: _audioStreamController!.sink, // ✅ Ensure non-null
       codec: Codec.pcm16,
       sampleRate: 16000,
       numChannels: 1,
     );
-    _audioStreamController?.stream.listen(
+
+    _audioStreamController!.stream.listen(
       (Uint8List buffer) {
-        socketService.sendAudio(buffer);
+        _handleAudioChunk(buffer);
+      },
+      onError: (error) {
+        print("Error with the audio stream: $error");
+      },
+      onDone: () {
+        print("Audio stream finished.");
       },
     );
+
     recording = true;
+  }
+
+  void _handleAudioChunk(Uint8List buffer) async {
+    try {
+      // Directly send audio data to backend without excessive queuing
+      if (socketService.isSocketInitialized) {
+        socketService.sendAudio(buffer);
+      } else {
+        print("WebSocket not connected, attempting reconnect...");
+        await socketService.reconnect();
+        if (socketService.isSocketInitialized) {
+          socketService.sendAudio(buffer);
+        } else {
+          print("Failed to reconnect WebSocket");
+        }
+      }
+    } catch (e) {
+      print("Error in handling audio chunk: $e");
+    }
   }
 
   // Stop recording and send audio to the backend
@@ -142,7 +181,7 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   // Manage stream controller lifecycle
   void _startNewStream() {
     _audioStreamController?.close(); // Close any existing stream
-    _audioStreamController = StreamController<Uint8List>(); // Create a new one
+    _audioStreamController = StreamController<Uint8List>.broadcast();
   }
 
   @override

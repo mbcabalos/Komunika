@@ -21,6 +21,7 @@ class SpeechToTextPage extends StatefulWidget {
 
 class SpeechToTextPageState extends State<SpeechToTextPage> {
   final TextEditingController _textController = TextEditingController();
+  String _lastTranscription = "";
   final dbHelper = DatabaseHelper();
   bool _isRecording = false;
 
@@ -158,10 +159,14 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
               height: phoneHeight,
               child: BlocBuilder<SpeechToTextBloc, SpeechToTextState>(
                 builder: (context, state) {
-                  if (state is TranscriptionUpdatedState) {
-                    _textController.text += state.text;
+                  if (state is LivePreviewTranscriptionState) {
+                    _textController.text = _lastTranscription + state.text;
                     _textController.selection = TextSelection.fromPosition(
                         TextPosition(offset: _textController.text.length));
+                  }
+                  if (state is TranscriptionUpdatedState) {
+                    _textController.text = _lastTranscription + state.text;
+                    _lastTranscription = _textController.text;
                   }
                   return Container(
                     decoration: BoxDecoration(
@@ -204,7 +209,6 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                           maxLines: null,
                           keyboardType: TextInputType.multiline,
                         ),
-                        // Clear Button (Positioned at the bottom-right)
                         Positioned(
                           bottom: 8,
                           right: 8,

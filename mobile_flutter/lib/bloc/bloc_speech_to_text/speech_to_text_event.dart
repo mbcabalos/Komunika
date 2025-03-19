@@ -28,3 +28,11 @@ class NewTranscriptionEvent extends SpeechToTextEvent {
 
   List<Object> get props => [text];
 }
+
+class LivePreviewTranscriptionEvent extends SpeechToTextEvent {
+  final String text;
+
+  LivePreviewTranscriptionEvent(this.text);
+
+  List<Object> get props => [text];
+}

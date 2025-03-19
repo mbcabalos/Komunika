@@ -22,6 +22,15 @@ class TranscriptionUpdatedState extends SpeechToTextState {
   List<Object> get props => [text];
 }
 
+class LivePreviewTranscriptionState extends SpeechToTextState {
+  final String text;
+
+  LivePreviewTranscriptionState(this.text);
+
+  @override
+  List<Object> get props => [text];
+}
+
 class SpeechToTextErrorState extends SpeechToTextState {
   final String message;
 
