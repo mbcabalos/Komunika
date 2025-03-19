@@ -116,7 +116,7 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
       backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
       appBar: AppBarWidget(
         title: context.translate('auto_caption_title'),
-        titleSize: 20,
+        titleSize: 16,
         themeProvider: widget.themeProvider,
         isBackButton: true,
         isSettingButton: false,

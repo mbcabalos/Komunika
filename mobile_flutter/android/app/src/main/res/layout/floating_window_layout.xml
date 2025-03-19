@@ -11,7 +11,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
-        android:background="#80000000">
+        android:background="#80000000"
+        android:padding="10dp"
+        android:scrollbars="none"
+        android:elevation="4dp"
+        android:clipToOutline="true"
+        >
 
         <!-- TextView wrapped in ScrollView -->
         <TextView

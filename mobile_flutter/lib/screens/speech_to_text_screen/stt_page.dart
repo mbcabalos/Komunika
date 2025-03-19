@@ -72,7 +72,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
             child: Text(
               context.translate("stt_title"),
               style: TextStyle(
-                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
               ),
             ),
           ),
