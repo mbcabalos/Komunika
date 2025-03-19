@@ -97,10 +97,9 @@ class MainActivity : FlutterActivity() {
         if (requestCode == REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data)
             Log.d("AudioCapture", "MediaProjection initialized successfully")
-            // startForegroundService()
             startAudioStreaming()
             Handler(Looper.getMainLooper()).postDelayed({
-            startFloatingWindow()}, 1000) // 2 seconds delay
+            startFloatingWindow()}, 1000)
             
         } else {
             Log.e("AudioCapture", "Failed to initialize MediaProjection")

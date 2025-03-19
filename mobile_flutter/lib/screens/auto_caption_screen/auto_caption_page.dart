@@ -11,9 +11,7 @@ import 'package:komunika/widgets/global_widgets/app_bar.dart';
 
 class AutoCaptionScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
-  final AutoCaptionBloc autoCaptionBloc;
-  const AutoCaptionScreen(
-      {super.key, required this.themeProvider, required this.autoCaptionBloc});
+  const AutoCaptionScreen({super.key, required this.themeProvider});
 
   @override
   State<AutoCaptionScreen> createState() => _AutoCaptionScreenState();
@@ -24,14 +22,17 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
   Color _captionTextColor = Colors.black;
   Color _captionBackgroundColor = Colors.white;
   final String _caption = "Caption here...";
-  bool _isEnabled = false; // Track the enable/disable state
+  bool _isEnabled = false;
 
   @override
-  void initState() {
-    super.initState();
-    widget.autoCaptionBloc.add(AutoCaptionLoadingEvent());
-    widget.autoCaptionBloc.add(RequestPermissionEvent());
-    _loadCaptionPreferences(); // Load preferences when the screen initializes
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadCaptionPreferences();
+    final autoCaptionBloc = BlocProvider.of<AutoCaptionBloc>(context);
+    if (!autoCaptionBloc.isInitialized) {
+      autoCaptionBloc.add(AutoCaptionLoadingEvent());
+      autoCaptionBloc.add(RequestPermissionEvent());
+    }
   }
 
   Future<void> _updateCaptionSize(double size) async {
@@ -55,9 +56,8 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
   }
 
   Future<void> _updateEnableState(bool isEnabled) async {
-    setState(() => _isEnabled = isEnabled);
-    await PreferencesUtils.storeCaptionEnableState(isEnabled);
-    widget.autoCaptionBloc.add(ToggleAutoCaptionEvent(isEnabled));
+    BlocProvider.of<AutoCaptionBloc>(context)
+        .add(ToggleAutoCaptionEvent(isEnabled));
   }
 
   String _getColorName(Color color) {
@@ -75,7 +75,7 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
       "size": _captionSize,
       "textColor": await PreferencesUtils.getCaptionTextColor(),
       "backgroundColor": await PreferencesUtils.getCaptionBackgroundColor(),
-      "isEnabled": _isEnabled, // Send enable state to the platform
+      "isEnabled": _isEnabled,
     });
   }
 
@@ -84,17 +84,12 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
     String textColorName = await PreferencesUtils.getCaptionTextColor();
     String backgroundColorName =
         await PreferencesUtils.getCaptionBackgroundColor();
-    bool isEnabled = await PreferencesUtils.getCaptionEnableState();
 
     setState(() {
+      _captionSize = _captionSize;
       _captionTextColor = _getColorFromName(textColorName);
       _captionBackgroundColor = _getColorFromName(backgroundColorName);
-      _isEnabled = isEnabled;
     });
-
-
-    widget.autoCaptionBloc.add(ToggleAutoCaptionEvent(isEnabled));
-
     _sendCaptionPreferences();
   }
 
@@ -117,37 +112,34 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: widget.autoCaptionBloc,
-      child: Scaffold(
-        backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
-        appBar: AppBarWidget(
-          title: context.translate('auto_caption_title'),
-          titleSize: 20,
-          themeProvider: widget.themeProvider,
-          isBackButton: true,
-          isSettingButton: false,
-          isHistoryButton: true,
-          database: 'auto_caption',
-        ),
-        body: BlocConsumer<AutoCaptionBloc, AutoCaptionState>(
-          listener: (context, state) {
-            if (state is AutoCaptionErrorState) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
-            }
-          },
-          builder: (context, state) {
-            if (state is AutoCaptionLoadingState) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is AutoCaptionLoadedSuccessState) {
-              return _buildContent(state);
-            } else {
-              return const Center(child: Text('Failed to load settings.'));
-            }
-          },
-        ),
+    return Scaffold(
+      backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
+      appBar: AppBarWidget(
+        title: context.translate('auto_caption_title'),
+        titleSize: 20,
+        themeProvider: widget.themeProvider,
+        isBackButton: true,
+        isSettingButton: false,
+        isHistoryButton: true,
+        database: 'auto_caption',
+      ),
+      body: BlocConsumer<AutoCaptionBloc, AutoCaptionState>(
+        listener: (context, state) {
+          if (state is AutoCaptionErrorState) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state is AutoCaptionLoadingState) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state is AutoCaptionLoadedSuccessState) {
+            return _buildContent(state);
+          } else {
+            return const Center(child: Text('Failed to load settings.'));
+          }
+        },
       ),
     );
   }
@@ -189,19 +181,26 @@ class _AutoCaptionScreenState extends State<AutoCaptionScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: SwitchListTile(
-                title: Text(
-                  "Enable Auto Caption",
-                  style: TextStyle(
-                    fontSize:
-                        ResponsiveUtils.getResponsiveFontSize(context, 18),
-                    fontFamily: Fonts.main,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                value: _isEnabled,
-                onChanged: (value) {
-                  _updateEnableState(value);
+              child: BlocBuilder<AutoCaptionBloc, AutoCaptionState>(
+                builder: (context, state) {
+                  if (state is AutoCaptionLoadedSuccessState) {
+                    _isEnabled = state.isEnabled;
+                  }
+                  return SwitchListTile(
+                    title: Text(
+                      "Enable Auto Caption",
+                      style: TextStyle(
+                        fontSize:
+                            ResponsiveUtils.getResponsiveFontSize(context, 18),
+                        fontFamily: Fonts.main,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    value: _isEnabled,
+                    onChanged: (value) {
+                      _updateEnableState(value);
+                    },
+                  );
                 },
               ),
             ),

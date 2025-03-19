@@ -2,8 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#80000000"
-    android:padding="10dp">
+        android:background="#80000000"    android:padding="10dp">
+        
 
     <!-- ScrollView to enable scrolling -->
     <ScrollView
@@ -28,8 +28,8 @@
     <!-- Resize handle (bottom-right corner) -->
     <View
         android:id="@+id/resize_handle"
-        android:layout_width="10dp"
-        android:layout_height="10dp"
+        android:layout_width="12dp"
+        android:layout_height="12dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         android:background="@android:color/darker_gray" />
