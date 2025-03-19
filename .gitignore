@@ -8,4 +8,5 @@ backend_python/311venv/
 mobile_flutter\lib\services\endpoint.dart
 backend_python/311venvB/
 backend_python/311venvMain/
+*.pyc
 
