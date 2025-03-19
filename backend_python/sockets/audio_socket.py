@@ -1,9 +1,11 @@
 import io
 import wave
 from flask import json
+import numpy as np
 import speech_recognition as sr
 from flask_socketio import SocketIO
 from vosk import Model, KaldiRecognizer
+
 import time
 
 socketio = SocketIO()
@@ -22,6 +24,19 @@ except Exception as e:
 
 recognizer = sr.Recognizer()
 audio_buffer = bytearray()  # ✅ Collect chunks in a buffer
+
+def denoise_audio(raw_audio, sample_rate=16000):
+
+    # Convert raw audio bytes to a numpy array
+    audio_np = np.frombuffer(raw_audio, dtype=np.int16)
+
+    # Apply noise reduction using noisereduce library
+    cleaned_audio_np = nr.reduce_noise(y=audio_np, sr=sample_rate)
+
+    # Convert cleaned audio numpy array back to bytes
+    cleaned_audio = cleaned_audio_np.tobytes()
+
+    return cleaned_audio
 
 def register_transcription_events(socketio):
     @socketio.on("audio_stream")
@@ -78,7 +93,8 @@ def register_transcription_events(socketio):
                 print(f"❌ Error processing audio: {e}")
                 socketio.emit("server_error", {"message": str(e)})
 
-    @socketio.on("audio_upload")  # 🔹 Listen for uploaded files, not live streaming
+
+    @socketio.on("audio_upload")  
     def handle_audio_upload(audio_data):
         try:
             print("📥 Received audio file for transcription...")

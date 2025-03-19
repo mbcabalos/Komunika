@@ -4,7 +4,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from controllers.text_to_speech import tts_blueprint
-from sockets.stt_socket import register_transcription_events
+from sockets.audio_socket import register_transcription_events
 from sockets.sign_transcribe_socket import register_sign_transcriber
 
 

@@ -58,7 +58,6 @@ class _HomePageState extends State<HomePage> {
     autoCaptionBloc = AutoCaptionBloc();
     homeBloc.add(HomeLoadingEvent());
     homeBloc.add(FetchAudioEvent());
-    //PreferencesUtils.storeWalkthrough(false); //use to test walthrough
     _showWalkthrough();
   }
 
@@ -293,7 +292,6 @@ class _HomePageState extends State<HomePage> {
                             MaterialPageRoute(
                               builder: (context) => AutoCaptionScreen(
                                 themeProvider: themeProvider,
-                                autoCaptionBloc: autoCaptionBloc,
                               ),
                             ),
                           );

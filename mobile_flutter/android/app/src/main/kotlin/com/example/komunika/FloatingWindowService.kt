@@ -47,6 +47,14 @@ class FloatingWindowService : Service() {
             android.graphics.Color.blue(backgroundColor)
         )
         floatingView.setBackgroundColor(transparentBackground)
+
+        val scrollViewBackground = android.graphics.Color.argb(180, 
+            android.graphics.Color.red(backgroundColor),
+            android.graphics.Color.green(backgroundColor),
+            android.graphics.Color.blue(backgroundColor)
+        )
+        scrollView.setBackgroundColor(scrollViewBackground)
+
         windowManager.updateViewLayout(floatingView, layoutParams)
     }
 

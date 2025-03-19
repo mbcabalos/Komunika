@@ -9,6 +9,7 @@ part 'auto_caption_event.dart';
 part 'auto_caption_state.dart';
 
 class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
+  bool isInitialized = false;
   static const platform = MethodChannel('com.example.komunika/recorder');
 
   final socketService = SocketService();
@@ -16,6 +17,7 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
   final StreamController<Uint8List> _audioStreamController =
       StreamController<Uint8List>.broadcast();
   String capturedText = "";
+
   AutoCaptionBloc() : super(AutoCaptionLoadingState()) {
     on<AutoCaptionLoadingEvent>(autoCaptionLoadingEvent);
     on<RequestPermissionEvent>(requestPermissionEvent);
@@ -36,6 +38,10 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
     });
 
     platform.setMethodCallHandler((call) async {
+      if (call.method == 'toggleAutoCaption') {
+        bool state = call.arguments ?? false;
+        add(ToggleAutoCaptionEvent(state));
+      }
       if (call.method == 'onAudioData') {
         final List<int> audioData = List<int>.from(call.arguments);
         _audioStreamController.add(Uint8List.fromList(audioData));
@@ -47,6 +53,7 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
 
   FutureOr<void> autoCaptionLoadingEvent(
       AutoCaptionLoadingEvent event, Emitter<AutoCaptionState> emit) async {
+    isInitialized = true;
     emit(AutoCaptionLoadedSuccessState(isEnabled: false));
   }
 
@@ -72,7 +79,6 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
     platform.setMethodCallHandler((MethodCall call) async {
       if (call.method == 'toggleAutoCaption') {
         bool isEnabled = call.arguments ?? false;
-        // Trigger the auto-caption toggle event
         if (isEnabled) {
           add(StartAutoCaptionEvent());
         } else {
@@ -94,7 +100,7 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
         add(StopAutoCaptionEvent());
       }
     } catch (e) {
-      emit(AutoCaptionErrorState(message: '${e}'));
+      emit(AutoCaptionErrorState(message: '$e'));
     }
   }
 
@@ -120,14 +126,10 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
     StopAutoCaptionEvent event,
     Emitter<AutoCaptionState> emit,
   ) async {
-    print("called");
-
     try {
       dbHelper.saveAutoCaptionHistory(capturedText);
       await platform.invokeMethod('stopForegroundService');
       emit(AutoCaptionLoadedSuccessState(isEnabled: false));
-
-      print("called");
     } on PlatformException catch (e) {
       emit(AutoCaptionErrorState(
           message: 'Failed to stop recording: ${e.message}'));
