@@ -48,7 +48,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
           title: context.translate("tts_title"),
-          titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+          titleSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
           themeProvider: widget.themeProvider,
           isBackButton: true,
           isSettingButton: false,
@@ -59,7 +59,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
           listener: (context, state) {
             if (state is TextToSpeechErrorState) {
               showCustomSnackBar(
-                  context, "Errr, Please try again", ColorsPalette.red);
+                  context, "Eror, Please try again", ColorsPalette.red);
             }
             if (state is AudioPlaybackCompletedState) {
               setState(() {
@@ -123,7 +123,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                             ResponsiveUtils.getResponsiveFontSize(context, 20),
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Title',
+                        hintText: context.translate("tts_hint1"),
                         border: InputBorder.none,
                         fillColor: Colors.transparent,
                         filled: true,
@@ -166,7 +166,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                                 context, 20),
                           ),
                           decoration: InputDecoration(
-                            hintText: context.translate("tts_hint"),
+                            hintText: context.translate("tts_hint2"),
                             border: InputBorder.none,
                             fillColor: Colors.transparent,
                             filled: true,

@@ -16,9 +16,11 @@
   "stt_hold_microphone": "Tap/Hold to Start",
 
   "tts_title": "Text to Speech",
-  "tts_hint": "Type Something...",
+  "tts_hint1": "Title",
+  "tts_hint2": "Type Something...",
 
   "sign_transcribe_title": "Sign Transcribe",
+  "sign_transcribe_hint": "Translated text will appear here...",
 
   "auto_caption_title": "Auto Caption",
 

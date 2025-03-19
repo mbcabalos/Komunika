@@ -2,8 +2,8 @@
   "home_title": "Komunika",
   "home_header": "Pagbuwag ng Hadlang, \nPagkonekta ng Puso.",
   "home_tips": "“Siguraduhin na walang nakaharang sa mikropono ng iyong phone para sa pinakamahusay na pagganap.”",
-  "home_speech_to_text": "Pagsasalita sa Teksto",
-  "home_text_to_speech": "Teksto sa Pagsasalita",
+  "home_speech_to_text": "Boses sa Teksto",
+  "home_text_to_speech": "Teksto sa Boses",
   "home_sign_transcribe": "Transcribe ng Senyas",
   "home_screen_captions": "Caption ng Screen",
   "home_quick_speech": "Quick Speech",
@@ -18,9 +18,11 @@
   "stt_hold_microphone": "Hawakan/Pindutin upang Magsimula",
 
   "tts_title": "Teksto sa Boses",
-  "tts_hint": "Mag-type ng Anuman...",
+  "tts_hint1": "Pamagat",
+  "tts_hint2": "Mag-type ng Anuman...",
 
   "sign_transcribe_title": "Transcribe ng Senyas",
+  "sign_transcribe_hint": "Lalabas dito ang isinaling teksto...",
 
   "auto_caption_title": "Caption ng Screen",
 

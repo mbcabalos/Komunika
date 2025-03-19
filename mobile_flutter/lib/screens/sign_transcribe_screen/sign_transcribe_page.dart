@@ -76,7 +76,7 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
             child: Text(
               context.translate("sign_transcribe_title"),
               style: TextStyle(
-                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
               ),
             ),
           ),
@@ -215,7 +215,9 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
           },
           builder: (context, state) {
             if (state is SignTranscriberLoadedState) {
-              if (state.translationText.toLowerCase() != "no hand detected") {
+              if (state.translationText.toLowerCase() != "no hand detected" &&
+                  state.translationText.toLowerCase() !=
+                      "error processing frame") {
                 _textController.text += state.translationText;
 
                 _textController.selection = TextSelection.fromPosition(
@@ -272,7 +274,7 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
             expands: false,
             decoration: InputDecoration(
               border: InputBorder.none,
-              hintText: "Translated text will appear here...",
+              hintText: context.translate("sign_transcribe_hint"),
               hintStyle: TextStyle(
                 fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
                 fontWeight: FontWeight.w400,
