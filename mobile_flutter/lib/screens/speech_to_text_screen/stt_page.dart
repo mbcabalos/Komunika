@@ -160,6 +160,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
               child: BlocBuilder<SpeechToTextBloc, SpeechToTextState>(
                 builder: (context, state) {
                   if (state is LivePreviewTranscriptionState) {
+                    _textController.clear();
                     _textController.text = _lastTranscription + state.text;
                     _textController.selection = TextSelection.fromPosition(
                         TextPosition(offset: _textController.text.length));

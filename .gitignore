@@ -4,6 +4,7 @@ backend_python/models/vosk-model-tl-ph-generic-0.6/
 
 backend_python/.venv/
 backend_python/models/
+backend_python/sockets/__pycache__/
 backend_python/311venv/
 mobile_flutter\lib\services\endpoint.dart
 backend_python/311venvB/
