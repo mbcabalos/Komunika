@@ -154,7 +154,6 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Text Field with Clear Button
             SizedBox(
               height: phoneHeight,
               child: BlocBuilder<SpeechToTextBloc, SpeechToTextState>(
@@ -168,6 +167,7 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                   if (state is TranscriptionUpdatedState) {
                     _textController.text = _lastTranscription + state.text;
                     _lastTranscription = _textController.text;
+                    widget.speechToTextBloc.add(ClearTextEvent());
                   }
                   return Container(
                     decoration: BoxDecoration(
