@@ -285,24 +285,49 @@ class _SignTranscriberPageState extends State<SignTranscriberPage>
           Positioned(
             bottom: 0,
             right: 0,
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.clear, size: 16, color: Colors.grey),
-                onPressed: () {
-                  // Clear the text field
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildIconButton(Icons.space_bar, () {
+                  _textController.text += ' ';
+                  _textController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: _textController.text.length),
+                  );
+                }),
+                const SizedBox(width: 8),
+                _buildIconButton(Icons.backspace, () {
+                  if (_textController.text.isNotEmpty) {
+                    _textController.text = _textController.text
+                        .substring(0, _textController.text.length - 1);
+                    _textController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _textController.text.length),
+                    );
+                  }
+                }),
+                const SizedBox(width: 8),
+                _buildIconButton(Icons.clear, () {
                   dbHelper.saveSignTranscriberHistory(_textController.text);
                   _textController.clear();
-                },
-              ),
+                }),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildIconButton(IconData icon, VoidCallback onPressed) {
+    return Container(
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: IconButton(
+        icon: Icon(icon, size: 15, color: Colors.grey),
+        onPressed: onPressed,
       ),
     );
   }
