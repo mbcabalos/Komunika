@@ -44,19 +44,17 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     });
 
     on<NewTranscriptionEvent>((event, emit) {
-      final currentText = state is TranscriptionUpdatedState
-          ? (state as TranscriptionUpdatedState).text
-          : '';
       final updatedText = "${event.text}\n";
       emit(TranscriptionUpdatedState(updatedText));
     });
 
     on<LivePreviewTranscriptionEvent>((event, emit) {
-      final currentText = state is LivePreviewTranscriptionState
-          ? (state as LivePreviewTranscriptionState).text
-          : '';
       final updatedText = "${event.text}\n";
       emit(LivePreviewTranscriptionState(updatedText));
+    });
+
+    on<ClearTextEvent>((event, emit) {
+      emit(TranscriptionUpdatedState(""));
     });
   }
 
@@ -75,7 +73,6 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
         }
       }
 
-      // Request permissions
       await requestPermission(Permission.microphone);
     } catch (e) {
       emit(SpeechToTextErrorState(message: "$e"));
@@ -85,7 +82,6 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   FutureOr<void> createSpeechToTextLoadingEvent(
       CreateSpeechToTextEvent event, Emitter<SpeechToTextState> emit) async {}
 
-  // Start recording with stream controller setup
   Future<void> startRecordingEvent(
       StartRecordingEvent event, Emitter<SpeechToTextState> emit) async {
     if (recording) return;
@@ -107,7 +103,7 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     _startNewStream();
     await _recorder.openRecorder();
     await _recorder.startRecorder(
-      toStream: _audioStreamController!.sink, // ✅ Ensure non-null
+      toStream: _audioStreamController!.sink,
       codec: Codec.pcm16,
       sampleRate: 16000,
       numChannels: 1,
@@ -130,7 +126,6 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
 
   void _handleAudioChunk(Uint8List buffer) async {
     try {
-      // Directly send audio data to backend without excessive queuing
       if (socketService.isSocketInitialized) {
         socketService.sendAudio(buffer);
       } else {
@@ -147,10 +142,8 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     }
   }
 
-  // Stop recording and send audio to the backend
   Future<void> stopRecordingEvent(
       StopRecordingEvent event, Emitter<SpeechToTextState> emit) async {
-    emit(TranscriptionUpdatedState(""));
     if (!recording) return;
     recording = false;
     await _recorder.stopRecorder();
@@ -162,32 +155,28 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
 
   Future<void> stopTapRecordingEvent(
       StopTapRecordingEvent event, Emitter<SpeechToTextState> emit) async {
-    emit(TranscriptionUpdatedState(""));
     await _recorder.stopRecorder();
     await Future.delayed(const Duration(seconds: 7));
     _audioStreamController?.close();
     recording = false;
   }
 
-  // Send recorded audio to the backend
   void sendAudioToBackend(File audioFile) async {
     print("📤 Sending audio to backend...");
     List<int> audioBytes = await audioFile.readAsBytes();
     socketService.sendAudioFile(Uint8List.fromList(audioBytes));
     await audioFile.delete();
-    print("Socket called");
   }
 
-  // Manage stream controller lifecycle
   void _startNewStream() {
-    _audioStreamController?.close(); // Close any existing stream
+    _audioStreamController?.close();
     _audioStreamController = StreamController<Uint8List>.broadcast();
   }
 
   @override
   Future<void> close() {
     _recorder.closeRecorder();
-    _audioStreamController?.close(); // Close the stream controller
+    _audioStreamController?.close();
     return super.close();
   }
 }
