@@ -116,7 +116,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
             }
             if (state is AudioPlaybackCompletedState) {
               setState(() {
-                currentlyPlaying = false; // Reset when audio finishes
+                currentlyPlaying = false;
               });
             }
           },
