@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferencesUtils {
@@ -82,5 +81,22 @@ class PreferencesUtils {
   static Future<String> getThemeAndWalkthrough() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('theme').toString();
+  }
+
+  static Future<Map<String, String>> getTTSSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? language = prefs.getString("TTS_language");
+    final String? voice = prefs.getString("TTS_voice");
+
+    return {
+      "language": language ?? "en-US",
+      "voice": voice ?? "fil-ph-x-fie-local",
+    };
+  }
+
+  static Future<void> storeTTSSettings(String language, String voice) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString("TTS_language", language);
+    await prefs.setString("TTS_voice", voice);
   }
 }

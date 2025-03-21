@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_event.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
@@ -7,9 +8,9 @@ import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/responsive.dart';
+import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/utils/snack_bar.dart';
 import 'package:komunika/utils/themes.dart';
-import 'package:komunika/widgets/global_widgets/app_bar.dart';
 
 class TextToSpeechScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
@@ -27,6 +28,12 @@ class TextToSpeechScreen extends StatefulWidget {
 class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   final TextEditingController _textController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
+  final FlutterTts flutterTts = FlutterTts();
+  Map<String, String> ttsSettings = {};
+  bool _isUSLanguage = true;
+  bool _isMaleVoice = true;
+  String selectedLangauge = '';
+  String selectedVoice = '';
   bool currentlyPlaying = false;
   bool save = false;
 
@@ -38,6 +45,8 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
 
   Future<void> _initialize() async {
     widget.ttsBloc.add(TextToSpeechLoadingEvent());
+    // Load saved TTS settings
+    ttsSettings = await PreferencesUtils.getTTSSettings();
   }
 
   @override
@@ -46,14 +55,32 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
       value: widget.ttsBloc,
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
-        appBar: AppBarWidget(
-          title: context.translate("tts_title"),
-          titleSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
-          themeProvider: widget.themeProvider,
-          isBackButton: true,
-          isSettingButton: false,
-          isHistoryButton: false,
-          database: '',
+        appBar: AppBar(
+          title: Padding(
+            padding: const EdgeInsets.only(top: 7.0),
+            child: Text(
+              context.translate("tts_title"),
+              style: TextStyle(
+                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+              ),
+            ),
+          ),
+          leading: Padding(
+            padding: EdgeInsets.only(
+              top: ResponsiveUtils.getResponsiveSize(context, 7),
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: ResponsiveUtils.getResponsiveSize(context, 10),
+              ),
+              onPressed: () {
+                _textController.clear();
+                Navigator.pop(context);
+              },
+            ),
+          ),
+          actions: [],
         ),
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
           listener: (context, state) {
@@ -137,8 +164,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     ),
                   ),
                   SizedBox(
-                    height: ResponsiveUtils.getResponsiveSize(context, 10),
-                  ),
+                      height: ResponsiveUtils.getResponsiveSize(context, 10)),
                   // Main TextField with Shadow and Clear Button
                   Container(
                     decoration: BoxDecoration(
@@ -185,21 +211,36 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                         Positioned(
                           bottom: 8,
                           right: 8,
-                          child: Container(
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: IconButton(
-                              icon: const Icon(Icons.clear,
-                                  size: 16, color: Colors.grey),
-                              onPressed: () {
-                                // Clear the text field
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(width: 8),
+                              _buildIconButton(
+                                  _isMaleVoice
+                                      ? Icons.male_rounded
+                                      : Icons.female_rounded,
+                                  _isMaleVoice
+                                      ? ColorsPalette.blue
+                                      : ColorsPalette.red, () async {
+                                setState(() {
+                                  _isMaleVoice = !_isMaleVoice;
+                                });
+                                selectedVoice = _isMaleVoice
+                                    ? "fil-ph-x-fie-local"
+                                    : "fil-ph-x-fic-local";
+                                await flutterTts.setLanguage('fil-PH');
+                                await flutterTts.setVoice({
+                                  "name": selectedVoice,
+                                  "locale": "fil-PH"
+                                });
+                                print("Selected Voice: $selectedVoice");
+                              }),
+                              const SizedBox(width: 8),
+                              _buildIconButton(Icons.clear, ColorsPalette.grey,
+                                  () {
                                 _textController.clear();
-                              },
-                            ),
+                              }),
+                            ],
                           ),
                         ),
                       ],
@@ -274,11 +315,15 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                               setState(() {
                                 currentlyPlaying = true;
                               });
-                              widget.ttsBloc.add(CreateTextToSpeechEvent(
-                                text: text,
-                                title: title,
-                                save: false,
-                              ));
+                              // widget.ttsBloc.add(CreateTextToSpeechEvent(
+                              //   text: text,
+                              //   title: title,
+                              //   save: false,
+                              // ));
+                              widget.ttsBloc.add(FlutterTTSEvent(
+                                  text: text,
+                                  language: ttsSettings['language'].toString(),
+                                  voice: ttsSettings['voice'].toString()));
                             } else {
                               showCustomSnackBar(
                                 context,
@@ -363,6 +408,21 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildIconButton(IconData icon, Color color, VoidCallback onPressed) {
+    return Container(
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: IconButton(
+        icon: Icon(icon, size: 15, color: Colors.grey),
+        onPressed: onPressed,
       ),
     );
   }

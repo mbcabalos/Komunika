@@ -11,6 +11,15 @@ class CreateTextToSpeechEvent extends TextToSpeechEvent {
       {required this.text, required this.title, required this.save});
 }
 
+class FlutterTTSEvent extends TextToSpeechEvent {
+  final String text;
+  final String language;
+  final String voice;
+
+  FlutterTTSEvent(
+      {required this.text, required this.language, required this.voice});
+}
+
 class FetchAudioEvent extends TextToSpeechEvent {}
 
 class PlayAudioEvent extends TextToSpeechEvent {
