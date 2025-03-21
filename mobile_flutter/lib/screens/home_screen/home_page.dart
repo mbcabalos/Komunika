@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_auto_caption/auto_caption_bloc.dart';
@@ -47,6 +49,8 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> quickSpeechItems = [];
   String? currentlyPlaying;
   String theme = "";
+  int homeTips = 0;
+  final random = Random();
 
   @override
   void initState() {
@@ -58,6 +62,7 @@ class _HomePageState extends State<HomePage> {
     autoCaptionBloc = AutoCaptionBloc();
     homeBloc.add(HomeLoadingEvent());
     homeBloc.add(FetchAudioEvent());
+    homeTips = random.nextInt(14) + 1;
     _showWalkthrough();
   }
 
@@ -80,6 +85,7 @@ class _HomePageState extends State<HomePage> {
     print("Refreshing the screen..");
     homeBloc.add(HomeLoadingEvent());
     homeBloc.add(FetchAudioEvent());
+    homeTips = random.nextInt(max(1, 14));
   }
 
   @override
@@ -175,7 +181,7 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(
                     height: ResponsiveUtils.getResponsiveSize(context, 20)),
                 HomeTipsCard(
-                  content: context.translate("home_tips"),
+                  content: context.translate("home_tips$homeTips"),
                   contentSize:
                       ResponsiveUtils.getResponsiveFontSize(context, 15),
                   themeProvider: themeProvider,
@@ -262,8 +268,8 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async {
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => SignTranscriberPage(
@@ -272,6 +278,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                           );
+                          _refreshScreen();
                         },
                         child: HomeCatalogsCard(
                           imagePath: 'assets/icons/hello.png',
@@ -286,8 +293,8 @@ class _HomePageState extends State<HomePage> {
                           width:
                               ResponsiveUtils.getResponsiveSize(context, 20)),
                       GestureDetector(
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async {
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => AutoCaptionScreen(
@@ -295,6 +302,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                           );
+                          _refreshScreen();
                         },
                         child: HomeCatalogsCard(
                           imagePath: 'assets/icons/transcription.png',
