@@ -4,7 +4,11 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
+<<<<<<< Updated upstream
   flutter_tts
+=======
+  flutter_webrtc
+>>>>>>> Stashed changes
   permission_handler_windows
   url_launcher_windows
 )
