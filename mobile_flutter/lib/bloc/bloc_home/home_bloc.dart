@@ -9,6 +9,7 @@ part 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final DatabaseHelper _databaseHelper;
+  final AudioPlayer _player = AudioPlayer();
   HomeBloc(this._databaseHelper) : super(HomeLoadingState()) {
     on<HomeLoadingEvent>(homeLoadingEvent);
     on<FetchAudioEvent>(fetchAudioEvent);
@@ -49,17 +50,24 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final directory = await getExternalStorageDirectory();
       final downloadDir = Directory('${directory?.parent.path}/files/audio');
       final filePath = '${downloadDir.path}/$path.mp3';
-      final player = AudioPlayer();
-      await player.setFilePath(filePath);
-      await player.play(); 
-      // ✅ Correctly await the stream using `await for`
-      await for (final playerState in player.playerStateStream) {
+
+      // Set the audio file and play it
+      await _player.setFilePath(filePath);
+      await _player.play();
+
+      // Listen for playback completion
+      final completer = Completer<void>();
+      final subscription = _player.playerStateStream.listen((playerState) {
         if (playerState.processingState == ProcessingState.completed) {
-          emit(AudioPlaybackCompletedState());
-          break; // Stop listening after emitting the state
+          completer.complete(); 
         }
-      }
+      });
+
+      await completer.future;
+      emit(AudioPlaybackCompletedState());
       await _fetchAndEmitAudioItems(emit);
+
+      subscription.cancel();
     } catch (e) {
       emit(HomeErrorState(message: "$e"));
     }

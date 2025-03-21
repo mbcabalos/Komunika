@@ -30,7 +30,6 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   final TextEditingController _titleController = TextEditingController();
   final FlutterTts flutterTts = FlutterTts();
   Map<String, String> ttsSettings = {};
-  bool _isUSLanguage = true;
   bool _isMaleVoice = true;
   String selectedLangauge = '';
   String selectedVoice = '';
@@ -80,7 +79,34 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
               },
             ),
           ),
-          actions: [],
+          actions: [
+            Padding(
+              padding: EdgeInsets.only(
+                top: ResponsiveUtils.getResponsiveSize(context, 7),
+                right: ResponsiveUtils.getResponsiveSize(context, 8),
+              ),
+              child: IconButton(
+                icon: Icon(
+                  _isMaleVoice ? Icons.male_rounded : Icons.female_rounded,
+                  color: _isMaleVoice ? ColorsPalette.blue : ColorsPalette.red,
+                  size: ResponsiveUtils.getResponsiveSize(context, 25),
+                ),
+                onPressed: () async {
+                  setState(() {
+                    _isMaleVoice = !_isMaleVoice;
+                  });
+
+                  selectedVoice = _isMaleVoice
+                      ? "fil-ph-x-fie-local"
+                      : "fil-ph-x-fic-local";
+                  await flutterTts.setLanguage('fil-PH');
+                  await flutterTts
+                      .setVoice({"name": selectedVoice, "locale": "fil-PH"});
+                  print("Selected Voice: $selectedVoice");
+                },
+              ),
+            ),
+          ],
         ),
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
           listener: (context, state) {
@@ -214,27 +240,6 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const SizedBox(width: 8),
-                              _buildIconButton(
-                                  _isMaleVoice
-                                      ? Icons.male_rounded
-                                      : Icons.female_rounded,
-                                  _isMaleVoice
-                                      ? ColorsPalette.blue
-                                      : ColorsPalette.red, () async {
-                                setState(() {
-                                  _isMaleVoice = !_isMaleVoice;
-                                });
-                                selectedVoice = _isMaleVoice
-                                    ? "fil-ph-x-fie-local"
-                                    : "fil-ph-x-fic-local";
-                                await flutterTts.setLanguage('fil-PH');
-                                await flutterTts.setVoice({
-                                  "name": selectedVoice,
-                                  "locale": "fil-PH"
-                                });
-                                print("Selected Voice: $selectedVoice");
-                              }),
                               const SizedBox(width: 8),
                               _buildIconButton(Icons.clear, ColorsPalette.grey,
                                   () {

@@ -6,7 +6,7 @@ import 'package:camera/camera.dart';
 import 'package:equatable/equatable.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:komunika/bloc/externals/image_processing.dart';
+import 'package:komunika/utils/image_processing.dart';
 
 part 'sign_transcriber_event.dart';
 part 'sign_transcriber_state.dart';
