@@ -30,7 +30,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   final TextEditingController _titleController = TextEditingController();
   final FlutterTts flutterTts = FlutterTts();
   Map<String, String> ttsSettings = {};
-  bool _isMaleVoice = true;
+  bool _isMaleVoice = false;
   String selectedLangauge = '';
   String selectedVoice = '';
   bool currentlyPlaying = false;
