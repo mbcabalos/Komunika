@@ -32,13 +32,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       HomeLoadingEvent event, Emitter<HomeState> emit) async {
     PermissionStatus status = await Permission.storage.status;
 
-    if (!status.isGranted) {
-      PermissionStatus newStatus = await Permission.storage.request();
-      if (!newStatus.isGranted) {
-        emit(HomeErrorState(message: "Storage permission denied"));
-        return; 
-      }
-    }
+    // if (!status.isGranted) {
+    //   PermissionStatus newStatus = await Permission.storage.request();
+    //   if (!newStatus.isGranted) {
+    //     emit(HomeErrorState(message: "Storage permission denied"));
+    //     return; 
+    //   }
+    // }
 
     // Proceed with your logic to fetch and emit audio items
     await _fetchAndEmitAudioItems(emit);
