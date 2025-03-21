@@ -4,6 +4,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from controllers.text_to_speech import tts_blueprint
+from controllers.test import create_touch_routes
 from sockets.audio_socket import register_transcription_events
 from sockets.sign_transcribe_socket import register_sign_transcriber
 
@@ -17,6 +18,7 @@ def create_app():
 
     # Import and register blueprints
     app.register_blueprint(tts_blueprint)
+    create_touch_routes(app)
     # Sockets
     register_transcription_events(socketio)
     register_sign_transcriber(socketio)

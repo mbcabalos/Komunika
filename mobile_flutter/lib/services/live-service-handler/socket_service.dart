@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
-
 import 'package:komunika/services/endpoint.dart';
-import 'dart:typed_data';
 import 'package:image/image.dart' as img; // The image package
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 

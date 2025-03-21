@@ -9,7 +9,7 @@ import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_walkthrough/walkthrough_bloc.dart';
 import 'package:komunika/screens/auto_caption_screen/auto_caption_page.dart';
-import 'package:komunika/screens/sign_transcribe_screen/sign_transcribe_page.dart';
+import 'package:komunika/screens/sign_transcribe_screen/gesture.dart';
 import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
@@ -62,7 +62,11 @@ class _HomePageState extends State<HomePage> {
     autoCaptionBloc = AutoCaptionBloc();
     homeBloc.add(HomeLoadingEvent());
     homeBloc.add(FetchAudioEvent());
+    homeBloc.add(PlayAudioEvent(audioName: "Start"));
     homeTips = random.nextInt(14) + 1;
+    if (homeTips < 1 || homeTips > 14) {
+      homeTips = 1;
+    }
     _showWalkthrough();
   }
 
@@ -85,7 +89,8 @@ class _HomePageState extends State<HomePage> {
     print("Refreshing the screen..");
     homeBloc.add(HomeLoadingEvent());
     homeBloc.add(FetchAudioEvent());
-    homeTips = random.nextInt(max(1, 14));
+    homeTips = random.nextInt(14) + 1;
+    print(homeTips);
   }
 
   @override
@@ -134,11 +139,11 @@ class _HomePageState extends State<HomePage> {
               },
               builder: (context, state) {
                 if (state is HomeLoadingState) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator(color: ColorsPalette.white,));
                 } else if (state is HomeSuccessLoadedState) {
                   return _buildContent(themeProvider, state);
                 } else {
-                  return Center(child: Text(context.translate("home_error")));
+                  return const Center(child: CircularProgressIndicator());
                 }
               },
             ),
@@ -271,11 +276,14 @@ class _HomePageState extends State<HomePage> {
                         onTap: () async {
                           await Navigator.push(
                             context,
+                            // MaterialPageRoute(
+                            //   builder: (context) => SignTranscriberPage(
+                            //     themeProvider: themeProvider,
+                            //     signTranscriberBloc: signTranscriberBloc,
+                            //   ),
+                            // ),
                             MaterialPageRoute(
-                              builder: (context) => SignTranscriberPage(
-                                themeProvider: themeProvider,
-                                signTranscriberBloc: signTranscriberBloc,
-                              ),
+                              builder: (context) => GestureTranslator(themeProvider: themeProvider,),
                             ),
                           );
                           _refreshScreen();
@@ -455,33 +463,33 @@ class _HomePageState extends State<HomePage> {
                                           state.audioItems[index]['audioName'];
                                       final isPlaying =
                                           currentlyPlaying == audioPath;
+
                                       return GestureDetector(
                                         onTap: currentlyPlaying != null
                                             ? null
                                             : () {
-                                                setState(() {
-                                                  currentlyPlaying = isPlaying
-                                                      ? null
-                                                      : audioPath;
-                                                });
-                                                homeBloc.add(PlayAudioEvent(
-                                                    audioName: audioPath));
+                                                if (!isPlaying) {
+                                                  homeBloc.add(PlayAudioEvent(
+                                                      audioName: audioPath));
+                                                  setState(() {
+                                                    currentlyPlaying =
+                                                        audioPath;
+                                                  });
+                                                }
                                               },
                                         child: HomeQuickSpeechCard(
                                           audioName: audioPath,
                                           onTap: currentlyPlaying != null
                                               ? null
                                               : () {
-                                                  setState(
-                                                    () {
+                                                  if (!isPlaying) {
+                                                    homeBloc.add(PlayAudioEvent(
+                                                        audioName: audioPath));
+                                                    setState(() {
                                                       currentlyPlaying =
-                                                          isPlaying
-                                                              ? null
-                                                              : audioPath;
-                                                    },
-                                                  );
-                                                  homeBloc.add(PlayAudioEvent(
-                                                      audioName: audioPath));
+                                                          audioPath;
+                                                    });
+                                                  }
                                                 },
                                           onLongPress: null,
                                           themeProvider: themeProvider,

@@ -153,7 +153,7 @@ class HistoryPageState extends State<HistoryPage> {
                 itemCount: entries.length,
                 itemBuilder: (context, entryIndex) {
                   final entry = entries[entryIndex];
-                  final time = DateFormat('h:mm a')
+                  DateFormat('h:mm a')
                       .format(DateTime.parse(entry['timestamp']));
 
                   return Card(

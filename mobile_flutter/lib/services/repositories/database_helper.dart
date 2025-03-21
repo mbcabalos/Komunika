@@ -86,6 +86,7 @@ class DatabaseHelper {
         'assets/audio/Good evening.mp3',
         'assets/audio/Agree.mp3',
         'assets/audio/Disagree.mp3',
+        'assets/audio/Start.mp3',
         'assets/audio/Sorry.mp3',
         'assets/audio/Thank you.mp3',
         'assets/audio/Ask the time.mp3',
