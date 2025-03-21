@@ -29,10 +29,17 @@ def register_sign_transcriber(socketio):
     @socketio.on("frame")
     def handle_frame(data):
         try:
+            # Assuming `data` is the raw frame data as a Uint8Array or base64-encoded string
             print(f"Received data size: {len(data)} bytes")
 
             # Convert the incoming data (Uint8) into a frame (image)
-            np_arr = np.frombuffer(data, np.uint8)
+            # Check if data is base64, and decode it if necessary
+            if isinstance(data, str):
+                # If it's base64-encoded, decode it
+                np_arr = np.frombuffer(base64.b64decode(data), np.uint8)
+            else:
+                np_arr = np.frombuffer(data, np.uint8)
+
             frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
             if frame is None:
@@ -40,8 +47,7 @@ def register_sign_transcriber(socketio):
                 return
             
             frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-
-            print(f"✅ Frame successfully decoded: {frame.shape}")  # Print frame shape
+            print(f"✅ Frame successfully decoded: {frame.shape}")
 
             # Process the frame for gesture recognition
             data_aux = []
@@ -81,18 +87,18 @@ def register_sign_transcriber(socketio):
                 translation = labels[int(prediction[0])]
                 print(f"🖐️ Detected Sign: {translation}")
 
-            # # Display the frame with the detected gesture
-            # cv2.putText(frame, translation, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+            # Display the frame with the detected gesture
+            cv2.putText(frame, translation, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
-            # # Show the frame with the prediction
-            # cv2.imshow('Received Frame - Gesture Recognition', frame)
+            # Show the frame with the prediction
+            cv2.imshow('Received Frame - Gesture Recognition', frame)
 
-            # # Emit translation update to the client
+            # Emit translation update to the client
             emit('translationupdate', {'translation': translation})
 
-            # # Close the window when the user presses 'q'
-            # if cv2.waitKey(1) & 0xFF == ord('q'):
-            #     cv2.destroyAllWindows()
+            # Close the window when the user presses 'q'
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                cv2.destroyAllWindows()
 
         except Exception as e:
             print(f"❌ Error processing frame: {str(e)}")

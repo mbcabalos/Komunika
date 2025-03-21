@@ -47,14 +47,6 @@ class FloatingWindowService : Service() {
             android.graphics.Color.blue(backgroundColor)
         )
         floatingView.setBackgroundColor(transparentBackground)
-
-        val scrollViewBackground = android.graphics.Color.argb(180, 
-            android.graphics.Color.red(backgroundColor),
-            android.graphics.Color.green(backgroundColor),
-            android.graphics.Color.blue(backgroundColor)
-        )
-        scrollView.setBackgroundColor(scrollViewBackground)
-
         windowManager.updateViewLayout(floatingView, layoutParams)
     }
 
@@ -88,7 +80,7 @@ class FloatingWindowService : Service() {
         Log.d("FloatingWindowService", "LayoutParams configured")
 
         // Set initial size of the window (rectangle)
-        layoutParams.width = 600 // Initial width in pixels
+        layoutParams.width = 700 // Initial width in pixels
         layoutParams.height = 400 // Initial height in pixels
 
         // Set initial position to the center of the screen
@@ -172,7 +164,7 @@ class FloatingWindowService : Service() {
             }
         })
     }
-
+    
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val transcribedText = intent?.getStringExtra("transcribedText")
         if (transcribedText != null) {

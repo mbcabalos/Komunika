@@ -1,12 +1,13 @@
 import 'dart:async';
+import 'dart:isolate';
 import 'dart:typed_data';
 import 'package:bloc/bloc.dart';
 import 'package:camera/camera.dart';
-import 'package:image/image.dart';
 import 'package:equatable/equatable.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:image/image.dart' as imglib;
+import 'package:komunika/bloc/externals/image_processing.dart';
+
 part 'sign_transcriber_event.dart';
 part 'sign_transcriber_state.dart';
 
@@ -19,8 +20,10 @@ class SignTranscriberBloc
   CameraController? cameraController;
   List<CameraDescription> cameras = [];
   int currentCameraIndex = 0;
-  Timer? _captureTimer;
-  DateTime? lastFrameSent;
+  int frameCount = 0;
+  DateTime lastFrameTime = DateTime.now();
+  static const int targetFPS = 15;
+  static const int targetFrameDurationMs = 1000;
 
   SignTranscriberBloc() : super(SignTranscriberInitial()) {
     on<SignTranscriberLoadingEvent>(signTranscriberLoadingEvent);
@@ -48,7 +51,6 @@ class SignTranscriberBloc
         if (currentState.translationText == event.text) return;
 
         print("✅ Updating translation text: ${event.text}");
-
         emit(currentState.copyWith(translationText: event.text));
       }
     });
@@ -71,7 +73,7 @@ class SignTranscriberBloc
       }
 
       final camera = cameras[currentCameraIndex];
-      cameraController = CameraController(camera, ResolutionPreset.high);
+      cameraController = CameraController(camera, ResolutionPreset.veryHigh);
       await cameraController!.initialize();
 
       emit(SignTranscriberLoadedState(cameraController: cameraController!));
@@ -82,69 +84,27 @@ class SignTranscriberBloc
     }
   }
 
-  FutureOr<void> requestPermissionEvent(
+  Future<void> requestPermissionEvent(
       RequestPermissionEvent event, Emitter<SignTranscriberState> emit) async {
     try {
-      Future<void> requestPermission(Permission permission) async {
-        var status = await permission.request();
-        if (status.isDenied || status.isPermanentlyDenied) {
-          await permission.request();
-        }
+      PermissionStatus status = await Permission.camera.request();
+      if (status.isDenied || status.isPermanentlyDenied) {
+        await Permission.camera.request();
       }
-
-      // Request permissions
-      await requestPermission(Permission.camera);
     } catch (e) {
       emit(SignTranscriberErrorState(message: "$e"));
     }
   }
 
-  Future<void> _startImageStream() async {
-    if (cameraController == null || !cameraController!.value.isInitialized) {
-      return;
-    }
-
-    int frameCount = 0;
-
-    cameraController!.startImageStream((CameraImage image) async {
-      frameCount++;
-
-      if (frameCount % 30 == 0) {
-        final frame = await _convertCameraImageToBytes(image);
-        if (frame != null) {
-          socketService.sendFrame(frame);
-        }
-      }
-    });
-  }
-
   Future<void> switchCameraEvent(
-    SwitchCameraEvent event,
-    Emitter<SignTranscriberState> emit,
-  ) async {
+      SwitchCameraEvent event, Emitter<SignTranscriberState> emit) async {
     _stopImageStream();
+
     if (state is SignTranscriberLoadedState) {
       final currentState = state as SignTranscriberLoadedState;
-
-      final cameras = await availableCameras();
-      final currentCamera = currentState.cameraController.description;
-
-      CameraDescription newCamera;
-      if (currentCamera.lensDirection == CameraLensDirection.back) {
-        newCamera = cameras.firstWhere(
-          (camera) => camera.lensDirection == CameraLensDirection.front,
-        );
-      } else {
-        newCamera = cameras.firstWhere(
-          (camera) => camera.lensDirection == CameraLensDirection.back,
-        );
-      }
-
-      final newController = CameraController(
-        newCamera,
-        ResolutionPreset.high,
-      );
-
+      final newCamera =
+          await _getNewCamera(currentState.cameraController.description);
+      final newController = CameraController(newCamera, ResolutionPreset.low);
       await newController.initialize();
 
       emit(SignTranscriberLoadedState(cameraController: newController));
@@ -152,80 +112,108 @@ class SignTranscriberBloc
     }
   }
 
+  Future<CameraDescription> _getNewCamera(
+      CameraDescription currentCamera) async {
+    final cameras = await availableCameras();
+    if (currentCamera.lensDirection == CameraLensDirection.back) {
+      return cameras.firstWhere(
+          (camera) => camera.lensDirection == CameraLensDirection.front);
+    } else {
+      return cameras.firstWhere(
+          (camera) => camera.lensDirection == CameraLensDirection.back);
+    }
+  }
+
+  void _startImageStream() async {
+    if (cameraController == null || !cameraController!.value.isInitialized) {
+      return;
+    }
+
+    cameraController!.startImageStream((CameraImage image) async {
+      final DateTime now = DateTime.now();
+      final int frameDuration = now.difference(lastFrameTime).inMilliseconds;
+
+      if (frameDuration >= targetFrameDurationMs) {
+        final frame = await _convertCameraImageToBytes(image);
+        if (frame != null) {
+          frameCount++;
+          print("Sending frame...");
+          socketService.sendFrame(frame);
+        } else {
+          print("No frame generated.");
+        }
+
+        // Update lastFrameTime to current time after processing the frame
+        lastFrameTime = now;
+      } else {
+        print("Skipping frame (rate-limited).");
+      }
+    });
+  }
+
   Future<Uint8List?> _convertCameraImageToBytes(CameraImage image) async {
     try {
-      final imglib.Image img = _convertYUV420toImageFast(image);
-
-      final imglib.Image smallImg =
-          imglib.copyResize(img, height: 520, width: 520);
-
-      final Uint8List jpeg =
-          Uint8List.fromList(imglib.encodeJpg(smallImg, quality: 100));
-
-      return jpeg;
+      print("Starting image conversion...");
+      final frame = await processImageInIsolate(image);
+      if (frame == null) {
+        print("Frame conversion failed.");
+        return null;
+      }
+      print("Frame conversion successful.");
+      return frame;
     } catch (e) {
-      print("Failed to convert CameraImage to bytes: $e");
+      print("Error during image conversion: $e");
       return null;
     }
   }
 
-  imglib.Image _convertYUV420toImageFast(CameraImage image) {
-    final width = image.width;
-    final height = image.height;
-    final yPlane = image.planes[0];
-    final uPlane = image.planes[1];
-    final vPlane = image.planes[2];
+  Future<Uint8List?> processImageInIsolate(CameraImage image) async {
+    try {
+      final yPlane = image.planes[0].bytes;
+      final uPlane = image.planes[1].bytes;
+      final vPlane = image.planes[2].bytes;
 
-    final img = imglib.Image(width: width, height: height);
+      final receivePort = ReceivePort();
+      final isolate =
+          await Isolate.spawn(imageProcessingIsolate, receivePort.sendPort);
+      final sendPort = await receivePort.first;
+      final result = ReceivePort();
+      sendPort.send({
+        'yPlane': yPlane,
+        'uPlane': uPlane,
+        'vPlane': vPlane,
+        'width': image.width,
+        'height': image.height,
+        'result': result.sendPort,
+      });
 
-    for (int y = 0; y < height; y++) {
-      for (int x = 0; x < width; x++) {
-        final yIndex = y * yPlane.bytesPerRow + x;
-        final uvIndex = (y ~/ 2) * uPlane.bytesPerRow + (x ~/ 2);
-
-        final yValue = yPlane.bytes[yIndex];
-        final uValue = uPlane.bytes[uvIndex];
-        final vValue = vPlane.bytes[uvIndex];
-
-        final r = (yValue + 1.402 * (vValue - 128)).clamp(0, 255).toInt();
-        final g =
-            (yValue - 0.344136 * (uValue - 128) - 0.714136 * (vValue - 128))
-                .clamp(0, 255)
-                .toInt();
-        final b = (yValue + 1.772 * (uValue - 128)).clamp(0, 255).toInt();
-
-        img.setPixel(x, y, imglib.ColorInt8.rgb(r, g, b));
-      }
+      final response = await result.first;
+      isolate.kill(priority: Isolate.immediate);
+      return response['frame'];
+    } catch (e) {
+      print("Error in processImageInIsolate: $e");
+      return null;
     }
-
-    return imglib.copyRotate(img,
-        angle: 180); // 180 degree rotation for horizontal flip
   }
 
   void stopTranslationEvent(
       StopTranslationEvent event, Emitter<SignTranscriberState> emit) {
-    _captureTimer?.cancel();
     _stopImageStream();
 
-    if (cameraController != null) {
-      cameraController!.dispose();
-      cameraController = null;
-    }
+    cameraController?.dispose();
+    cameraController = null;
 
     emit(SignTranscriberInitial());
   }
 
   Future<void> _stopImageStream() async {
-    if (cameraController != null) {
-      await cameraController!.stopImageStream();
-    }
+    await cameraController?.stopImageStream();
   }
 
   @override
   Future<void> close() async {
     await cameraController?.dispose();
     _stopImageStream();
-    _captureTimer?.cancel();
     super.close();
   }
 }

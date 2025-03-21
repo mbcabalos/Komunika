@@ -4,14 +4,13 @@
     android:layout_height="match_parent"
         android:background="#80000000"    android:padding="10dp">
         
-
     <!-- ScrollView to enable scrolling -->
     <ScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
-        android:background="#80000000"
+        android:background="@android:color/transparent"
         android:padding="10dp"
         android:scrollbars="none"
         android:elevation="4dp"
@@ -33,10 +32,13 @@
     <!-- Resize handle (bottom-right corner) -->
     <View
         android:id="@+id/resize_handle"
-        android:layout_width="12dp"
-        android:layout_height="12dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:background="@android:color/darker_gray" />
+        android:background="@android:color/darker_gray"/>
 
 </RelativeLayout>
