@@ -76,7 +76,6 @@ class DatabaseHelper {
         await targetDirectory.create(recursive: true);
       }
 
-      // Define the list of audio file paths in assets
       List<String> assetFiles = [
         'assets/audio/Goodbye.mp3',
         'assets/audio/Greet.mp3',

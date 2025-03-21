@@ -130,16 +130,20 @@ class _HomePageState extends State<HomePage> {
                       context, "Please try again", ColorsPalette.red);
                 }
                 if (state is AudioPlaybackCompletedState) {
-                  setState(
-                    () {
-                      currentlyPlaying = null;
-                    },
-                  );
+                  currentlyPlaying = null;
+                  // setState(
+                  //   () {
+                  //     currentlyPlaying = null;
+                  //   },
+                  // );
                 }
               },
               builder: (context, state) {
                 if (state is HomeLoadingState) {
-                  return const Center(child: CircularProgressIndicator(color: ColorsPalette.white,));
+                  return const Center(
+                      child: CircularProgressIndicator(
+                    color: ColorsPalette.white,
+                  ));
                 } else if (state is HomeSuccessLoadedState) {
                   return _buildContent(themeProvider, state);
                 } else {
@@ -283,7 +287,9 @@ class _HomePageState extends State<HomePage> {
                             //   ),
                             // ),
                             MaterialPageRoute(
-                              builder: (context) => GestureTranslator(themeProvider: themeProvider,),
+                              builder: (context) => GestureTranslator(
+                                themeProvider: themeProvider,
+                              ),
                             ),
                           );
                           _refreshScreen();
