@@ -7,15 +7,18 @@ import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
   final GlobalRepositoryImpl _globalService;
   final DatabaseHelper _databaseHelper;
+  final FlutterTts flutterTts = FlutterTts();
 
   TextToSpeechBloc(this._globalService, this._databaseHelper)
       : super(TextToSpeechLoadingState()) {
     on<TextToSpeechLoadingEvent>(textToSpeechLoadingEvent);
     on<CreateTextToSpeechEvent>(createTextToSpeechEvent);
+    on<FlutterTTSEvent>(flutterTTSEvent);
     on<PlayAudioEvent>(playAudioEvent);
     on<AddToFavoriteEvent>(addToFavoriteEvent);
     on<RemoveFromFavoriteEvent>(removeFromFavoriteEvent);
@@ -47,6 +50,19 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
       emit(AudioPlaybackCompletedState());
     } catch (e) {
       emit(TextToSpeechErrorState(message: '$e'));
+    }
+  }
+
+  Future<void> flutterTTSEvent(
+      FlutterTTSEvent event, Emitter<TextToSpeechState> emit) async {
+    try {
+      await flutterTts.setPitch(1.0);
+      await flutterTts.setSpeechRate(0.5);
+      await flutterTts.speak(event.text);
+      await _fetchAndEmitAudioItems(emit);
+      emit(AudioPlaybackCompletedState());
+    } catch (e) {
+      emit(TextToSpeechErrorState(message: "$e"));
     }
   }
 
