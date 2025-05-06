@@ -13,14 +13,19 @@ part 'speech_to_text_state.dart';
 
 class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
+  final FlutterSoundPlayer _player = FlutterSoundPlayer();
+
   StreamController<Uint8List>? _audioStreamController;
   final StreamController<String> _transcriptionController =
       StreamController<String>();
   final SocketService socketService;
+
   bool recording = false;
   File? _recordedFile;
 
   SpeechToTextBloc(this.socketService) : super(SpeechToTextLoadingState()) {
+    _player.openPlayer();
+
     on<SpeechToTextLoadingEvent>(speechToTextLoadingEvent);
     on<RequestPermissionEvent>(requestPermissionEvent);
     on<CreateSpeechToTextEvent>(createSpeechToTextLoadingEvent);
@@ -102,8 +107,15 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
       StartTapRecordingEvent event, Emitter<SpeechToTextState> emit) async {
     _startNewStream();
     await _recorder.openRecorder();
+
     await _recorder.startRecorder(
       toStream: _audioStreamController!.sink,
+      codec: Codec.pcm16,
+      sampleRate: 16000,
+      numChannels: 1,
+    );
+
+    await _player.startPlayerFromStream(
       codec: Codec.pcm16,
       sampleRate: 16000,
       numChannels: 1,
@@ -112,6 +124,7 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
     _audioStreamController!.stream.listen(
       (Uint8List buffer) {
         _handleAudioChunk(buffer);
+        _player.foodSink?.add(FoodData(buffer));
       },
       onError: (error) {
         print("Error with the audio stream: $error");
@@ -156,7 +169,8 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   Future<void> stopTapRecordingEvent(
       StopTapRecordingEvent event, Emitter<SpeechToTextState> emit) async {
     await _recorder.stopRecorder();
-    await Future.delayed(const Duration(seconds: 7));
+    await _player.stopPlayer();
+    await Future.delayed(const Duration(seconds: 1));
     _audioStreamController?.close();
     recording = false;
   }
@@ -174,9 +188,10 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   }
 
   @override
-  Future<void> close() {
-    _recorder.closeRecorder();
-    _audioStreamController?.close();
+  Future<void> close() async {
+    await _recorder.closeRecorder();
+    await _player.closePlayer();
+    await _audioStreamController?.close();
     return super.close();
   }
 }

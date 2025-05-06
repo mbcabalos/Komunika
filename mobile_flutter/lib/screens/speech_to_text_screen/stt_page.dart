@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
-import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
@@ -210,28 +209,29 @@ class SpeechToTextPageState extends State<SpeechToTextPage> {
                           maxLines: null,
                           keyboardType: TextInputType.multiline,
                         ),
-                        Positioned(
-                          bottom: 8,
-                          right: 8,
-                          child: Container(
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: IconButton(
-                              icon: const Icon(Icons.clear,
-                                  size: 16, color: Colors.grey),
-                              onPressed: () {
-                                // Clear the text field
-                                dbHelper.saveSpeechToTextHistory(
-                                    _textController.text);
-                                _textController.clear();
-                              },
-                            ),
-                          ),
-                        ),
+                        // Positioned(
+                        //   bottom: 8,
+                        //   right: 8,
+                        //   child: Container(
+                        //     width: 30,
+                        //     height: 30,
+                        //     decoration: BoxDecoration(
+                        //       color: Colors.grey.withOpacity(0.2),
+                        //       borderRadius: BorderRadius.circular(15),
+                        //     ),
+                        //     child: IconButton(
+                        //       icon: const Icon(Icons.clear,
+                        //           size: 16, color: Colors.grey),
+                        //       onPressed: () {
+                        //         // Clear the text field
+                        //         dbHelper.saveSpeechToTextHistory(
+                        //             _textController.text);
+                        //         _textController.clear();
+                        //         widget.speechToTextBloc.add(ClearTextEvent());
+                        //       },
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   );
