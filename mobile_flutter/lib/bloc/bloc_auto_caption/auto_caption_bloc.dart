@@ -33,7 +33,7 @@ class AutoCaptionBloc extends Bloc<AutoCaptionEvent, AutoCaptionState> {
       if (data != null && data["text"] != null) {
         final text = data["text"] as String;
         capturedText += "$text "; // Append text to retain history
-        emitTextToFloatingWindow(capturedText);
+        emitTextToFloatingWindow(text);
       }
     });
 
