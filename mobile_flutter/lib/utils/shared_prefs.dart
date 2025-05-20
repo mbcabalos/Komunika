@@ -83,6 +83,12 @@ class PreferencesUtils {
     return prefs.getString('theme').toString();
   }
 
+  static Future<void> storeTTSSettings(String language, String voice) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString("TTS_language", language);
+    await prefs.setString("TTS_voice", voice);
+  }
+
   static Future<Map<String, String>> getTTSSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final String? language = prefs.getString("TTS_language");
@@ -94,9 +100,13 @@ class PreferencesUtils {
     };
   }
 
-  static Future<void> storeTTSSettings(String language, String voice) async {
+  static Future<void> storeAmplifierVolume(double volume) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString("TTS_language", language);
-    await prefs.setString("TTS_voice", voice);
+    await prefs.setDouble('isAmplifierVolume', volume);
+  }
+
+  static Future<double> getAmplifierVolume() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble('isAmplifierVolume') ?? 1.0;
   }
 }
