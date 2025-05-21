@@ -271,64 +271,64 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  SizedBox(
-                      height: ResponsiveUtils.getResponsiveSize(context, 20)),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      GestureDetector(
-                        onTap: () async {
-                          await Navigator.push(
-                            context,
-                            // MaterialPageRoute(
-                            //   builder: (context) => SignTranscriberPage(
-                            //     themeProvider: themeProvider,
-                            //     signTranscriberBloc: signTranscriberBloc,
-                            //   ),
-                            // ),
-                            MaterialPageRoute(
-                              builder: (context) => GestureTranslator(
-                                themeProvider: themeProvider,
-                              ),
-                            ),
-                          );
-                          _refreshScreen();
-                        },
-                        child: HomeCatalogsCard(
-                          imagePath: 'assets/icons/hello.png',
-                          isImagePath: true,
-                          content: context.translate("home_sign_transcribe"),
-                          contentSize: ResponsiveUtils.getResponsiveFontSize(
-                              context, 14),
-                          themeProvider: themeProvider,
-                        ),
-                      ),
-                      SizedBox(
-                          width:
-                              ResponsiveUtils.getResponsiveSize(context, 20)),
-                      GestureDetector(
-                        onTap: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AutoCaptionScreen(
-                                themeProvider: themeProvider,
-                              ),
-                            ),
-                          );
-                          _refreshScreen();
-                        },
-                        child: HomeCatalogsCard(
-                          imagePath: 'assets/icons/transcription.png',
-                          isImagePath: true,
-                          content: context.translate("home_screen_captions"),
-                          contentSize: ResponsiveUtils.getResponsiveFontSize(
-                              context, 14),
-                          themeProvider: themeProvider,
-                        ),
-                      ),
-                    ],
-                  ),
+                  // SizedBox(
+                  //     height: ResponsiveUtils.getResponsiveSize(context, 20)),
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.start,
+                  //   children: [
+                  //     GestureDetector(
+                  //       onTap: () async {
+                  //         await Navigator.push(
+                  //           context,
+                  //           // MaterialPageRoute(
+                  //           //   builder: (context) => SignTranscriberPage(
+                  //           //     themeProvider: themeProvider,
+                  //           //     signTranscriberBloc: signTranscriberBloc,
+                  //           //   ),
+                  //           // ),
+                  //           MaterialPageRoute(
+                  //             builder: (context) => GestureTranslator(
+                  //               themeProvider: themeProvider,
+                  //             ),
+                  //           ),
+                  //         );
+                  //         _refreshScreen();
+                  //       },
+                  //       child: HomeCatalogsCard(
+                  //         imagePath: 'assets/icons/hello.png',
+                  //         isImagePath: true,
+                  //         content: context.translate("home_sign_transcribe"),
+                  //         contentSize: ResponsiveUtils.getResponsiveFontSize(
+                  //             context, 14),
+                  //         themeProvider: themeProvider,
+                  //       ),
+                  //     ),
+                  //     SizedBox(
+                  //         width:
+                  //             ResponsiveUtils.getResponsiveSize(context, 20)),
+                  //     GestureDetector(
+                  //       onTap: () async {
+                  //         await Navigator.push(
+                  //           context,
+                  //           MaterialPageRoute(
+                  //             builder: (context) => AutoCaptionScreen(
+                  //               themeProvider: themeProvider,
+                  //             ),
+                  //           ),
+                  //         );
+                  //         _refreshScreen();
+                  //       },
+                  //       child: HomeCatalogsCard(
+                  //         imagePath: 'assets/icons/transcription.png',
+                  //         isImagePath: true,
+                  //         content: context.translate("home_screen_captions"),
+                  //         contentSize: ResponsiveUtils.getResponsiveFontSize(
+                  //             context, 14),
+                  //         themeProvider: themeProvider,
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
                   SizedBox(
                       height: ResponsiveUtils.getResponsiveSize(context, 30)),
                   Material(
