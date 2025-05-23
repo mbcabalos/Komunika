@@ -6,7 +6,6 @@ import 'package:komunika/utils/shared_prefs.dart';
 class WalkthroughBloc extends Bloc<WalkthroughEvent, WalkthroughState> {
   WalkthroughBloc() : super(WalkthroughInitialState());
 
-  @override
   Stream<WalkthroughState> mapEventToState(WalkthroughEvent event) async* {
     if (event is LoadWalkthroughEvent) {
       yield* _mapLoadWalkthroughToState();

@@ -4,7 +4,6 @@ import 'package:bloc/bloc.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 part 'home_event.dart';
 part 'home_state.dart';
 
@@ -30,7 +29,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   FutureOr<void> homeLoadingEvent(
       HomeLoadingEvent event, Emitter<HomeState> emit) async {
-    PermissionStatus status = await Permission.storage.status;
 
     // if (!status.isGranted) {
     //   PermissionStatus newStatus = await Permission.storage.request();

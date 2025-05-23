@@ -8,8 +8,6 @@ import 'package:komunika/bloc/bloc_sign_transcriber/sign_transcriber_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_walkthrough/walkthrough_bloc.dart';
-import 'package:komunika/screens/auto_caption_screen/auto_caption_page.dart';
-import 'package:komunika/screens/sign_transcribe_screen/gesture.dart';
 import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';

@@ -28,43 +28,61 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  # Flutter SDK & Localization
   flutter:
     sdk: flutter
-  flutter_localizations:
+  flutter_localizations: # Flutter built-in localization support
     sdk: flutter
-  easy_localization: ^3.0.7
-  intl:
-  http:
-  just_audio:
-  path_provider:
-  path:
+  easy_localization: ^3.0.7 # Simplifies localization setup and usage
+  intl: # Internationalization and date/number formatting
+
+  # State Management
+  flutter_bloc: ^9.0.0 # Flutter widgets for Bloc pattern
+  bloc: ^9.0.0 # Core Bloc library
+  provider: ^6.1.2 # Alternative simple state management
+  equatable: # Helps with value comparisons for state management
+
+  # UI/UX
+  lottie: ^2.2.0 # JSON-based animations
+  flutter_svg: # SVG image rendering
+  cached_network_image: ^3.4.1 # Caching for network images
+  photo_view: ^0.15.0 # Zoomable image viewer
+  showcaseview: ^4.0.0 # In-app guided tour overlays
+
+  # Audio & Media
+  just_audio: # Audio playback
+  flutter_tts: ^4.2.2 # Text-to-speech functionality
+  volume_controller: ^3.1.0 # Programmatic volume control
+  flutter_sound: ^9.23.1 # Audio recording & playback
+  tflite_flutter: ^0.10.1 # Run TensorFlow Lite models
+  image: ^4.0.15 # Image processing
+
+  # File Handling & Storage
+  path_provider: # Access to filesystem directories
+  path: # Utilities for file paths
+  sqflite: ^2.0.0+4 # SQLite local database
+  shared_preferences: ^2.5.1 # Simple local key-value storage
+
+  # Camera & Image Processing
+  camera: ^0.11.1 # Camera access
+  image_picker: ^1.1.2 # Pick images/videos from gallery or camera
+  image_cropper: ^9.1.0 # Crop selected images
+  google_mlkit_text_recognition: ^0.15.0 # OCR (Optical Character Recognition)
+
+  # Networking
+  http: # HTTP requests
+  web_socket_channel: ^2.3.0 # WebSocket support
+  socket_io_client: ^3.0.2 # Socket.IO client for real-time communication
+  url_launcher: ^6.3.1 # Open URLs, emails, and more from the app
+
+  # System & Permissions
+  permission_handler: # Request and check device permissions
+  flutter_isolate: ^2.0.2 # Run Dart code in a separate isolate
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  flutter_bloc: ^9.0.0
-  sqflite: ^2.0.0+4
-  web_socket_channel: ^2.3.0
-  lottie: ^2.2.0
-  volume_controller: ^3.1.0
-  showcaseview: ^4.0.0
-  provider: ^6.1.2
-  url_launcher: ^6.3.1
-  shared_preferences: ^2.5.1
-  socket_io_client: ^3.0.2
-  flutter_sound: ^9.23.1
-  equatable:
-  permission_handler:
-  flutter_svg:
-  bloc: ^9.0.0
-  camera: ^0.11.1
-  image_picker: ^1.1.2
-  tflite_flutter: ^0.10.1
-  image: ^4.0.15
-  flutter_isolate: ^2.0.2
-  flutter_tts: ^4.2.2
   
-
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
