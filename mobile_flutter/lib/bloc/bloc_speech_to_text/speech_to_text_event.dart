@@ -43,6 +43,5 @@ class SetAmplificationEvent extends SpeechToTextEvent {
   final double gain;
   SetAmplificationEvent(this.gain);
   
-  @override
   List<Object?> get props => [gain];
 }

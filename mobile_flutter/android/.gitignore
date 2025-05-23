@@ -11,3 +11,8 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Ignore CMake/NDK build artifacts
+android/.cxx/
+android/.externalNativeBuild/
+
