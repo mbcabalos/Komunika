@@ -1,11 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_event.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
@@ -16,7 +12,6 @@ import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/utils/snack_bar.dart';
 import 'package:komunika/utils/themes.dart';
-import 'package:photo_view/photo_view.dart';
 
 class TextToSpeechScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
@@ -44,7 +39,6 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   bool save = false;
   List<XFile> _selectedImages = [];
   int _currentProcessingIndex = 0;
-  bool _isBatchProcessing = false;
 
   @override
   void initState() {
@@ -57,310 +51,6 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     ttsSettings = await PreferencesUtils.getTTSSettings();
   }
 
-  Future<void> _showImageSourceDialog() async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.translate("tts_select_source")),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(Icons.camera_alt),
-              title: Text(context.translate("tts_camera")),
-              onTap: () {
-                Navigator.pop(context);
-                _captureImage(ImageSource.camera);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.photo_library),
-              title: Text(context.translate("tts_gallery")),
-              onTap: () {
-                Navigator.pop(context);
-                _pickMultipleImages();
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _captureImage(ImageSource source) async {
-    try {
-      final XFile? image = await _imagePicker.pickImage(
-        source: source,
-        preferredCameraDevice: CameraDevice.rear,
-        imageQuality: 70,
-      );
-
-      if (image != null) {
-        await _cropAndPreviewImage(image);
-      }
-    } catch (e) {
-      showCustomSnackBar(context, "Error: ${e.toString()}", ColorsPalette.red);
-    }
-  }
-
-  Future<void> _pickMultipleImages() async {
-    try {
-      final List<XFile> images = await _imagePicker.pickMultiImage(
-        imageQuality: 70,
-      );
-
-      if (images.isNotEmpty) {
-        setState(() {
-          _selectedImages = images;
-        });
-        _showBatchProcessingDialog();
-      }
-    } catch (e) {
-      showCustomSnackBar(context, "Error: ${e.toString()}", ColorsPalette.red);
-    }
-  }
-
-  Future<void> _cropAndPreviewImage(XFile image) async {
-    try {
-      final CroppedFile? croppedFile = await ImageCropper().cropImage(
-        sourcePath: image.path,
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: context.translate("tts_image_processing_title"),
-            toolbarColor: widget.themeProvider.themeData.primaryColor,
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.original,
-            lockAspectRatio: false,
-            aspectRatioPresets: [
-              CropAspectRatioPreset.original,
-              CropAspectRatioPreset.square,
-              CropAspectRatioPreset.ratio3x2,
-              CropAspectRatioPreset.ratio4x3,
-              CropAspectRatioPreset.ratio16x9,
-            ],
-          ),
-          IOSUiSettings(
-            title: context.translate("tts_image_processing_title"),
-            aspectRatioPresets: [
-              CropAspectRatioPreset.original,
-              CropAspectRatioPreset.square,
-              CropAspectRatioPreset.ratio3x2,
-              CropAspectRatioPreset.ratio4x3,
-              CropAspectRatioPreset.ratio16x9,
-            ],
-          ),
-        ],
-      );
-
-      if (croppedFile != null) {
-        await _showImagePreviewDialog(croppedFile.path);
-      }
-    } catch (e) {
-      showCustomSnackBar(
-          context, "Error cropping image: ${e.toString()}", ColorsPalette.red);
-    }
-  }
-
-  Future<void> _showImagePreviewDialog(String imagePath) async {
-    bool proceedWithOCR = false;
-
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.translate("tts_image_preview")),
-        content: SizedBox(
-          height: 300,
-          width: double.maxFinite,
-          child: PhotoView(
-            imageProvider: FileImage(File(imagePath)),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.translate("tts_cancel")),
-          ),
-          TextButton(
-            onPressed: () {
-              proceedWithOCR = true;
-              Navigator.pop(context);
-            },
-            child: Text(context.translate("tts_process")),
-          ),
-        ],
-      ),
-    );
-
-    if (proceedWithOCR) {
-      await _extractTextFromImage(imagePath);
-    }
-  }
-
-  Future<void> _extractTextFromImage(String imagePath) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(context.translate("tts_processing_image")),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text(context.translate("tts_extracting_text")),
-          ],
-        ),
-      ),
-    );
-
-    try {
-      final inputImage = InputImage.fromFilePath(imagePath);
-      final textRecognizer = TextRecognizer();
-      final RecognizedText recognizedText =
-          await textRecognizer.processImage(inputImage);
-
-      String extractedText = recognizedText.text;
-      textRecognizer.close();
-
-      if (mounted) Navigator.of(context).pop();
-
-      if (extractedText.isNotEmpty) {
-        setState(() {
-          _textController.text = _textController.text.isNotEmpty
-              ? '${_textController.text}\n\n$extractedText'
-              : extractedText;
-        });
-      } else {
-        showCustomSnackBar(
-            context, "No text found in image", ColorsPalette.red);
-      }
-    } catch (e) {
-      if (mounted) Navigator.of(context).pop();
-      showCustomSnackBar(context, "Error processing image: ${e.toString()}",
-          ColorsPalette.red);
-    }
-  }
-
-  Future<void> _showBatchProcessingDialog() async {
-    bool confirmBatch = false;
-
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.translate("tts_batch_process_title")),
-        content: Text(
-          context
-              .translate("tts_batch_process_message")
-              .replaceAll("{count}", _selectedImages.length.toString()),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.translate("tts_cancel")),
-          ),
-          TextButton(
-            onPressed: () {
-              confirmBatch = true;
-              Navigator.pop(context);
-            },
-            child: Text(context.translate("tts_proceed")),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmBatch && mounted) {
-      setState(() {
-        _isBatchProcessing = true;
-        _currentProcessingIndex = 0;
-      });
-      await _processBatchImages();
-    }
-  }
-
-  Future<void> _processBatchImages() async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: Text(context.translate("tts_processing_batch")),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                LinearProgressIndicator(
-                  value: _currentProcessingIndex / _selectedImages.length,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  context
-                      .translate("tts_processing_image_count")
-                      .replaceAll(
-                          "{current}", (_currentProcessingIndex + 1).toString())
-                      .replaceAll("{total}", _selectedImages.length.toString()),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-
-    String combinedText = _textController.text;
-
-    for (int i = 0; i < _selectedImages.length; i++) {
-      if (!mounted) break;
-
-      setState(() {
-        _currentProcessingIndex = i;
-      });
-
-      try {
-        final croppedFile = await ImageCropper().cropImage(
-          sourcePath: _selectedImages[i].path,
-          uiSettings: [
-            AndroidUiSettings(
-              toolbarTitle: context
-                  .translate("tts_image_processing_title")
-                  .replaceAll("{current}", (i + 1).toString())
-                  .replaceAll("{total}", _selectedImages.length.toString()),
-              toolbarColor: widget.themeProvider.themeData.primaryColor,
-              toolbarWidgetColor: Colors.white,
-              initAspectRatio: CropAspectRatioPreset.original,
-              lockAspectRatio: false,
-            ),
-          ],
-        );
-
-        if (croppedFile != null) {
-          final inputImage = InputImage.fromFilePath(croppedFile.path);
-          final textRecognizer = TextRecognizer();
-          final RecognizedText recognizedText =
-              await textRecognizer.processImage(inputImage);
-          textRecognizer.close();
-
-          if (recognizedText.text.isNotEmpty) {
-            combinedText = combinedText.isEmpty
-                ? recognizedText.text
-                : '$combinedText\n\n${recognizedText.text}';
-          }
-        }
-      } catch (e) {
-        debugPrint("Error processing image ${i + 1}: $e");
-      }
-    }
-
-    if (mounted) {
-      Navigator.of(context).pop();
-      setState(() {
-        _textController.text = combinedText;
-        _isBatchProcessing = false;
-        _selectedImages.clear();
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
@@ -370,11 +60,11 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
         floatingActionButton: FloatingActionButton(
           onPressed: _showImageSourceDialog,
           backgroundColor: widget.themeProvider.themeData.primaryColor,
+          tooltip: context.translate("tts_image_processing_title"),
           child: Icon(
             Icons.camera_alt_rounded,
             color: widget.themeProvider.themeData.textTheme.bodySmall?.color,
           ),
-          tooltip: context.translate("tts_image_processing_title"),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         appBar: AppBar(
@@ -433,6 +123,16 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
         ),
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
           listener: (context, state) {
+            if (state is ImageCroppedState) {
+              _extractTextFromImage(state.croppedImagePath);
+            }
+            if (state is TextExtractionSuccessState) {
+              setState(() {
+                _textController.text = _textController.text.isNotEmpty
+                    ? '${_textController.text}\n\n${state.extractedText}'
+                    : state.extractedText;
+              });
+            }
             if (state is TextToSpeechErrorState) {
               showCustomSnackBar(
                   context, "Error, Please try again", ColorsPalette.red);
@@ -489,44 +189,6 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                         ),
                       ],
                     ),
-                    child: TextField(
-                      controller: _titleController,
-                      style: TextStyle(
-                        color:
-                            themeProvider.themeData.textTheme.bodyMedium?.color,
-                        fontSize:
-                            ResponsiveUtils.getResponsiveFontSize(context, 20),
-                      ),
-                      decoration: InputDecoration(
-                        hintText: context.translate("tts_hint1"),
-                        border: InputBorder.none,
-                        fillColor: Colors.transparent,
-                        filled: true,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal:
-                              ResponsiveUtils.getResponsiveSize(context, 12),
-                          vertical:
-                              ResponsiveUtils.getResponsiveSize(context, 16),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                      height: ResponsiveUtils.getResponsiveSize(context, 10)),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: themeProvider.themeData.cardColor,
-                      borderRadius: BorderRadius.circular(
-                        ResponsiveUtils.getResponsiveSize(context, 12),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
                     child: Stack(
                       children: [
                         TextField(
@@ -540,6 +202,11 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                           ),
                           decoration: InputDecoration(
                             hintText: context.translate("tts_hint2"),
+                            hintStyle: TextStyle(
+                              color: Colors.grey,
+                              fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                  context, 16),
+                            ),
                             border: InputBorder.none,
                             fillColor: Colors.transparent,
                             filled: true,
@@ -551,8 +218,110 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                             ),
                           ),
                           textAlignVertical: TextAlignVertical.center,
-                          maxLines: 15,
+                          maxLines: 17,
                           keyboardType: TextInputType.multiline,
+                        ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(width: 8),
+                              Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: ColorsPalette.grey.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: IconButton(
+                                  icon: const Icon(Icons.expand_outlined,
+                                      size: 15, color: Colors.grey),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (context) {
+                                        return Dialog(
+                                          insetPadding: EdgeInsets.zero,
+                                          backgroundColor: widget
+                                              .themeProvider
+                                              .themeData
+                                              .scaffoldBackgroundColor,
+                                          child: Column(
+                                            children: [
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 12),
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: IconButton(
+                                                  icon: const Icon(
+                                                      Icons.expand_less,
+                                                      color: Colors.grey),
+                                                  onPressed: () =>
+                                                      Navigator.pop(context),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 8),
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color: widget
+                                                          .themeProvider
+                                                          .themeData
+                                                          .cardColor,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                    ),
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 12),
+                                                    child: TextField(
+                                                      controller:
+                                                          _textController,
+                                                      expands: true,
+                                                      maxLines: null,
+                                                      minLines: null,
+                                                      keyboardType:
+                                                          TextInputType
+                                                              .multiline,
+                                                      style: widget
+                                                          .themeProvider
+                                                          .themeData
+                                                          .textTheme
+                                                          .bodyLarge,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                        border:
+                                                            InputBorder.none,
+                                                        hintText:
+                                                            "Type your text here...",
+                                                        hintStyle: TextStyle(
+                                                            color: Colors.grey),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         Positioned(
                           bottom: 8,
@@ -561,10 +330,21 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const SizedBox(width: 8),
-                              _buildIconButton(Icons.clear, ColorsPalette.grey,
-                                  () {
-                                _textController.clear();
-                              }),
+                              Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: ColorsPalette.grey.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: IconButton(
+                                  icon: const Icon(Icons.clear,
+                                      size: 15, color: Colors.grey),
+                                  onPressed: () {
+                                    _textController.clear();
+                                  },
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -688,17 +468,122 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   ),
                   child: GestureDetector(
                     onTap: () async {
-                      final title = _titleController.text.trim();
                       final text = _textController.text.trim();
                       if (text.isNotEmpty) {
-                        widget.ttsBloc.add(
-                          CreateTextToSpeechEvent(
-                              text: text, title: title, save: true),
+                        final enteredTitle = await showDialog<String>(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              backgroundColor:
+                                  themeProvider.themeData.primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              title: Text(
+                                "Enter Title",
+                                style: TextStyle(
+                                  color: themeProvider
+                                      .themeData.textTheme.bodySmall?.color,
+                                  fontSize:
+                                      ResponsiveUtils.getResponsiveFontSize(
+                                          context, 20),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              content: Container(
+                                decoration: BoxDecoration(
+                                  color:
+                                      widget.themeProvider.themeData.cardColor,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                child: TextField(
+                                  controller: _titleController,
+                                  style: widget.themeProvider.themeData
+                                      .textTheme.bodyLarge,
+                                  decoration: InputDecoration(
+                                    hintText: "Enter title here",
+                                    hintStyle: TextStyle(
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    border: InputBorder.none,
+                                  ),
+                                ),
+                              ),
+                              actions: [
+                                FilledButton(
+                                  onPressed: () {
+                                    _titleController.clear();
+                                    save = false;
+                                    Navigator.pop(context);
+                                  },
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: ColorsPalette.red,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 8),
+                                  ),
+                                  child: Text(
+                                    context.translate("tts_cancel"),
+                                    style: TextStyle(
+                                      color: widget.themeProvider.themeData
+                                          .textTheme.bodySmall?.color,
+                                      fontSize:
+                                          ResponsiveUtils.getResponsiveFontSize(
+                                              context, 14),
+                                    ),
+                                  ),
+                                ),
+                                FilledButton(
+                                  onPressed: () {
+                                    _titleController.clear();
+                                    save = true;
+                                    Navigator.pop(
+                                        context, _titleController.text.trim());
+                                  },
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: ColorsPalette.green,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 8),
+                                  ),
+                                  child: Text(
+                                    context.translate("tts_proceed"),
+                                    style: TextStyle(
+                                      color: widget.themeProvider.themeData
+                                          .textTheme.bodySmall?.color,
+                                      fontSize:
+                                          ResponsiveUtils.getResponsiveFontSize(
+                                              context, 14),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         );
-                        _titleController.clear();
-                        _textController.clear();
-                        showCustomSnackBar(
-                            context, "Saved!", ColorsPalette.green);
+                        if (save != false) {
+                          if (enteredTitle != null && enteredTitle.isNotEmpty) {
+                            widget.ttsBloc.add(
+                              CreateTextToSpeechEvent(
+                                text: text,
+                                title: enteredTitle,
+                                save: true,
+                              ),
+                            );
+                            _textController.clear();
+                            showCustomSnackBar(
+                                context, "Saved!", ColorsPalette.green);
+                          } else {
+                            showCustomSnackBar(context,
+                                "Error, Please try again!", ColorsPalette.red);
+                          }
+                        } else {}
                       } else {
                         showCustomSnackBar(
                             context, "Text field is empty!", ColorsPalette.red);
@@ -728,18 +613,317 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     );
   }
 
-  Widget _buildIconButton(IconData icon, Color color, VoidCallback onPressed) {
-    return Container(
-      width: 30,
-      height: 30,
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: IconButton(
-        icon: Icon(icon, size: 15, color: Colors.grey),
-        onPressed: onPressed,
+  Future<void> _showImageSourceDialog() async {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: widget.themeProvider.themeData.primaryColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.translate("tts_select_source"),
+                style: TextStyle(
+                  color:
+                      widget.themeProvider.themeData.textTheme.bodySmall?.color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ListTile(
+                leading: Icon(
+                  Icons.camera_alt_rounded,
+                  color: widget.themeProvider.themeData.primaryColor,
+                ),
+                title: Text(
+                  context.translate("tts_camera"),
+                  style: widget.themeProvider.themeData.textTheme.bodyMedium,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                tileColor: widget.themeProvider.themeData.cardColor,
+                onTap: () {
+                  Navigator.pop(context);
+                  widget.ttsBloc.add(
+                    CaptureImageEvent(source: ImageSource.camera),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: Icon(
+                  Icons.photo_library_rounded,
+                  color: widget.themeProvider.themeData.primaryColor,
+                ),
+                title: Text(
+                  context.translate("tts_gallery"),
+                  style: widget.themeProvider.themeData.textTheme.bodyLarge,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                tileColor: widget.themeProvider.themeData.cardColor,
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickMultipleImages();
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
       ),
     );
+  }
+
+  Future<void> _pickMultipleImages() async {
+    try {
+      final List<XFile> images = await _imagePicker.pickMultiImage(
+        imageQuality: 70,
+      );
+
+      if (images.isNotEmpty) {
+        setState(() {
+          _selectedImages = images;
+        });
+        _showBatchProcessingDialog();
+      }
+    } catch (e) {
+      showCustomSnackBar(context, "Error: ${e.toString()}", ColorsPalette.red);
+    }
+  }
+
+  Future<void> _extractTextFromImage(String imagePath) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.translate("tts_processing_image"),
+                style: TextStyle(
+                  color: widget
+                      .themeProvider.themeData.textTheme.bodyMedium?.color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                context.translate("tts_extracting_text"),
+                style: TextStyle(
+                  color: widget
+                      .themeProvider.themeData.textTheme.bodyMedium?.color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      widget.ttsBloc.add(
+        ExtractTextFromImageEvent(imagePath: imagePath),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (mounted) Navigator.of(context).pop();
+      showCustomSnackBar(
+        context,
+        "Error processing image: ${e.toString()}",
+        ColorsPalette.red,
+      );
+    }
+  }
+
+  Future<void> _showBatchProcessingDialog() async {
+    bool confirmBatch = false;
+
+    await showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: widget.themeProvider.themeData.primaryColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.translate("tts_batch_process_title"),
+                style: TextStyle(
+                  color:
+                      widget.themeProvider.themeData.textTheme.bodySmall?.color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                context
+                    .translate("tts_batch_process_message")
+                    .replaceAll("{count}", _selectedImages.length.toString()),
+                style: TextStyle(
+                  color:
+                      widget.themeProvider.themeData.textTheme.bodySmall?.color,
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 14),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: ColorsPalette.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 8),
+                    ),
+                    child: Text(
+                      context.translate("tts_cancel"),
+                      style: TextStyle(
+                        color: widget
+                            .themeProvider.themeData.textTheme.bodySmall?.color,
+                        fontSize:
+                            ResponsiveUtils.getResponsiveFontSize(context, 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: () {
+                      confirmBatch = true;
+                      Navigator.pop(context);
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: ColorsPalette.green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 8),
+                    ),
+                    child: Text(
+                      context.translate("tts_proceed"),
+                      style: TextStyle(
+                        color: widget
+                            .themeProvider.themeData.textTheme.bodySmall?.color,
+                        fontSize:
+                            ResponsiveUtils.getResponsiveFontSize(context, 14),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirmBatch && mounted) {
+      setState(() {
+        _currentProcessingIndex = 0;
+      });
+      await _processBatchImages();
+    }
+  }
+
+  Future<void> _processBatchImages() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    context.translate("tts_processing_batch"),
+                    style: TextStyle(
+                      color: widget
+                          .themeProvider.themeData.textTheme.bodyMedium?.color,
+                      fontWeight: FontWeight.bold,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 20),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  LinearProgressIndicator(
+                    value: _currentProcessingIndex / _selectedImages.length,
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    context
+                        .translate("tts_processing_image_count")
+                        .replaceAll("{current}",
+                            (_currentProcessingIndex + 1).toString())
+                        .replaceAll(
+                            "{total}", _selectedImages.length.toString()),
+                    style: TextStyle(
+                      color: widget
+                          .themeProvider.themeData.textTheme.bodyMedium?.color,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    String combinedText = _textController.text;
+
+    widget.ttsBloc.add(
+      BatchExtractTextEvent(
+          imagePaths: _selectedImages.map((e) => e.path).toList()),
+    );
+
+    if (mounted) {
+      Navigator.of(context).pop();
+      setState(() {
+        _textController.text = combinedText;
+        _selectedImages.clear();
+      });
+    }
   }
 }
