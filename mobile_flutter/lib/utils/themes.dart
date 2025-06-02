@@ -82,7 +82,7 @@ class ThemeProvider extends ChangeNotifier {
           bodyLarge: TextStyle(color: DarkModeColors.textPrimary),
           bodyMedium: TextStyle(color: DarkModeColors.textPrimary),
           bodySmall: TextStyle(color: DarkModeColors.textPrimary)),
-      iconTheme: const IconThemeData(color: DarkModeColors.textPrimary),
+      iconTheme: const IconThemeData(color: DarkModeColors.textPrimary),    
     );
   }
 }
