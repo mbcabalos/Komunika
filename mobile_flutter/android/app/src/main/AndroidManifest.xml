@@ -19,7 +19,7 @@
 
 
     <application
-        android:label="komunika"
+        android:label="Komunika"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:debuggable="false">
