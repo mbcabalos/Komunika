@@ -8,9 +8,7 @@ import 'package:komunika/bloc/bloc_sign_transcriber/sign_transcriber_bloc.dart';
 import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_walkthrough/walkthrough_bloc.dart';
-import 'package:komunika/screens/speech_to_text_screen/home_page.dart';
-import 'package:komunika/screens/speech_to_text_screen/stt_page.dart';
-import 'package:komunika/widgets/sound_enhancer_widgets/sound_amplifier_card.dart';
+import 'package:komunika/screens/speech_to_text_screen/sound_enhancer.dart';
 import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
@@ -227,7 +225,7 @@ class _HomePageState extends State<HomePage> {
                           await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => HomePage2(
+                              builder: (context) => SoundEnhancerScreen(
                                 themeProvider: themeProvider,
                                 speechToTextBloc: speechToTextBloc,
                               ),
