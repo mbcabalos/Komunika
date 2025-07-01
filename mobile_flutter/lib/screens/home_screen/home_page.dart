@@ -2,13 +2,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:komunika/bloc/bloc_auto_caption/auto_caption_bloc.dart';
 import 'package:komunika/bloc/bloc_home/home_bloc.dart';
-import 'package:komunika/bloc/bloc_sign_transcriber/sign_transcriber_bloc.dart';
-import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
+import 'package:komunika/bloc/bloc_sound_enhancer/sound_enhancer_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_walkthrough/walkthrough_bloc.dart';
-import 'package:komunika/screens/speech_to_text_screen/sound_enhancer.dart';
+import 'package:komunika/screens/sound_enhancer_screen/sound_enhancer_screen.dart';
 import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
@@ -37,10 +35,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late HomeBloc homeBloc;
-  late SpeechToTextBloc speechToTextBloc;
+  late SoundEnhancerBloc soundEnhancerBloc;
   late TextToSpeechBloc textToSpeechBloc;
-  late SignTranscriberBloc signTranscriberBloc;
-  late AutoCaptionBloc autoCaptionBloc;
   final socketService = SocketService();
   final globalService = GlobalRepositoryImpl();
   final databaseHelper = DatabaseHelper();
@@ -54,10 +50,8 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     homeBloc = HomeBloc(databaseHelper);
-    speechToTextBloc = SpeechToTextBloc(socketService);
+    soundEnhancerBloc = SoundEnhancerBloc(socketService);
     textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
-    signTranscriberBloc = SignTranscriberBloc();
-    autoCaptionBloc = AutoCaptionBloc();
     homeBloc.add(HomeLoadingEvent());
     homeBloc.add(FetchAudioEvent());
     homeBloc.add(PlayAudioEvent(audioName: "Start"));
@@ -98,14 +92,11 @@ class _HomePageState extends State<HomePage> {
         BlocProvider<HomeBloc>(
           create: (context) => homeBloc,
         ),
-        BlocProvider<SpeechToTextBloc>(
-          create: (context) => speechToTextBloc,
+        BlocProvider<SoundEnhancerBloc>(
+          create: (context) => soundEnhancerBloc,
         ),
         BlocProvider<TextToSpeechBloc>(
           create: (context) => textToSpeechBloc,
-        ),
-        BlocProvider<SignTranscriberBloc>(
-          create: (context) => signTranscriberBloc,
         ),
       ],
       child: Consumer<ThemeProvider>(
@@ -227,7 +218,7 @@ class _HomePageState extends State<HomePage> {
                             MaterialPageRoute(
                               builder: (context) => SoundEnhancerScreen(
                                 themeProvider: themeProvider,
-                                speechToTextBloc: speechToTextBloc,
+                                soundEnhancerBloc: soundEnhancerBloc,
                               ),
                             ),
                           );
@@ -236,7 +227,7 @@ class _HomePageState extends State<HomePage> {
                         child: HomeCatalogsCard(
                           imagePath: 'assets/icons/word-of-mouth.png',
                           isImagePath: true,
-                          content: context.translate("home_speech_to_text"),
+                          content: context.translate("home_sound_enhancer"),
                           contentSize: ResponsiveUtils.getResponsiveFontSize(
                               context, 14),
                           themeProvider: themeProvider,

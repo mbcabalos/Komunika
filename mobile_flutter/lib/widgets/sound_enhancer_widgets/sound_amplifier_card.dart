@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
+import 'package:komunika/bloc/bloc_sound_enhancer/sound_enhancer_bloc.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 
 class SoundAmplifierScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
-  final SpeechToTextBloc speechToTextBloc;
+  final SoundEnhancerBloc soundEnhancerBloc;
   final int micMode;
   final ValueChanged<int> onMicModeChanged;
   final bool isTranscriptionEnabled;
@@ -17,7 +17,7 @@ class SoundAmplifierScreen extends StatefulWidget {
     required this.themeProvider,
     required this.micMode,
     required this.onMicModeChanged,
-    required this.speechToTextBloc,
+    required this.soundEnhancerBloc,
     required this.isTranscriptionEnabled,
     required this.onTranscriptionToggle,
   });
@@ -27,20 +27,20 @@ class SoundAmplifierScreen extends StatefulWidget {
 }
 
 class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
-  double _volumeLevel = 1.0;
+  double _amplifierVolumeLevel = 1.0;
 
   @override
   void initState() {
     super.initState();
-    _loadVolume();
+    _loadAmplifierVolume();
   }
 
-  Future<void> _loadVolume() async {
+  Future<void> _loadAmplifierVolume() async {
     try {
       final volume = await PreferencesUtils.getAmplifierVolume();
       if (mounted) {
         setState(() {
-          _volumeLevel = volume;
+          _amplifierVolumeLevel = volume;
         });
       }
     } catch (e) {
@@ -48,7 +48,7 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
     }
   }
 
-  Future<void> _storeVolume(double volume) async {
+  Future<void> _storeAmplifierVolume(double volume) async {
     try {
       await PreferencesUtils.storeAmplifierVolume(volume);
       debugPrint('Volume stored: $volume');
@@ -82,7 +82,6 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                       isSelected: [
                         widget.micMode == 0,
                         widget.micMode == 1,
-                        widget.micMode == 2,
                       ],
                       color: widget.themeProvider.themeData.primaryColor,
                       selectedColor: widget
@@ -100,21 +99,15 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                         ),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text("Phone Mic"),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text("Headset Mic"),
+                          child: Text("Microphone (Phone / Headset)"),
                         ),
                       ],
                       onPressed: (index) {
                         widget.onMicModeChanged(index);
                         if (index == 0) {
-                          widget.speechToTextBloc.add(StopRecordingEvent());
+                          widget.soundEnhancerBloc.add(StopRecordingEvent());
                         } else if (index == 1) {
-                          widget.speechToTextBloc.add(StartTapRecordingEvent());
-                        } else if (index == 2) {
-                          widget.speechToTextBloc.add(StartTapRecordingEvent());
+                          widget.soundEnhancerBloc.add(StartRecordingEvent());
                         }
                       },
                     ),
@@ -131,7 +124,14 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                   buildSwitchRow(
                     "Transcription",
                     widget.isTranscriptionEnabled,
-                    onChanged: widget.onTranscriptionToggle,
+                    onChanged: (bool enabled) {
+                      widget.onTranscriptionToggle(enabled);
+                      if (enabled) {
+                        widget.soundEnhancerBloc.add(StartTranscriptionEvent());
+                      } else {
+                        widget.soundEnhancerBloc.add(StopTranscriptionEvent());
+                      }
+                    },
                   ),
                   const SizedBox(height: 12),
 
@@ -244,17 +244,17 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                   ),
                 ),
                 child: Slider(
-                  value: _volumeLevel.clamp(0.0, 3.0),
+                  value: _amplifierVolumeLevel.clamp(0.0, 3.0),
                   min: 0,
                   max: 3,
                   divisions: 6,
-                  label: '${_volumeLevel.toStringAsFixed(1)}x',
+                  label: '${_amplifierVolumeLevel.toStringAsFixed(1)}x',
                   onChanged: (double value) {
                     setState(() {
-                      _volumeLevel = value;
+                      _amplifierVolumeLevel = value;
                     });
-                    _storeVolume(value);
-                    widget.speechToTextBloc.add(
+                    _storeAmplifierVolume(value);
+                    widget.soundEnhancerBloc.add(
                       SetAmplificationEvent(value),
                     );
                   },

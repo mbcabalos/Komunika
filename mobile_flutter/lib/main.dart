@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:komunika/bloc/bloc_auto_caption/auto_caption_bloc.dart';
-import 'package:komunika/screens/auto_caption_screen/auto_caption_page.dart';
 import 'package:komunika/screens/home_screen/home_page.dart';
 import 'package:komunika/screens/splash_screen/splash_screen.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
@@ -25,14 +22,9 @@ Future<void> main() async {
       storedLanguage == 'Filipino' ? Locale('fil', 'PH') : Locale('en', 'US');
 
   runApp(
-    MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (_) => AutoCaptionBloc()),
-      ],
-      child: ChangeNotifierProvider(
-        create: (_) => ThemeProvider(),
-        child: MyApp(initialLocale: initialLocale),
-      ),
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: MyApp(initialLocale: initialLocale),
     ),
   );
 }
@@ -127,7 +119,6 @@ class _MyAppState extends State<MyApp> {
         routes: {
           '/': (context) => const SplashScreen(),
           '/home': (context) => const HomePage(),
-          '/autoCaptionScreen': (context) => AutoCaptionScreen(themeProvider: themeProvider)
         },
       ),
     );

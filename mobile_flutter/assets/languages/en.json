@@ -15,18 +15,15 @@
   "home_tips12": "🛠️ Adjust font size in caption – Modify settings to improve readability.",
   "home_tips13": "⏩ Save common phrases – Store frequently used expressions for faster communication.",
   "home_tips14": "💬 Use emojis & shortcuts – This helps in making communication more expressive and efficient.",
-  "home_speech_to_text": "Speech To Text",
+  "home_sound_enhancer": "Sound Enhancer",
   "home_text_to_speech": "Text to Speech",
-  "home_sign_transcribe": "Sign Transcribe",
-  "home_screen_captions": "Screen Captions",
   "home_quick_speech": "Quick Speech",
   "home_no_quick_speech": "No quick speech items available",
 
   "history_title": "History",
 
-  "stt_title": "Speech to Text",
-  "stt_hint": "Message...",
-  "stt_hold_microphone": "Tap/Hold to Start",
+  "sound_enhancer_title": "Speech to Text",
+  "sound_enhancer_hint": "Message...",
 
   "tts_title": "Text to Speech",
   "tts_hint1": "Title",
@@ -45,11 +42,6 @@
   "tts_cancel": "Cancel",
   "tts_proceed": "Proceed",
   "tts_process": "Process Text",
-
-  "sign_transcribe_title": "Sign Transcribe",
-  "sign_transcribe_hint": "Translated text will appear here...",
-
-  "auto_caption_title": "Auto Caption",
 
   "settings_title": "Settings",
   "settings_appearance": "Appearance",
