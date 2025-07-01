@@ -10,12 +10,14 @@ class SpeechToTextCard extends StatefulWidget {
   final ThemeProvider themeProvider;
   final SpeechToTextBloc sttBloc;
   final TextEditingController textController;
+  final bool isTranscriptionEnabled;
 
   const SpeechToTextCard({
     super.key,
     required this.themeProvider,
     required this.sttBloc,
     required this.textController,
+    required this.isTranscriptionEnabled,
   });
 
   @override
@@ -24,14 +26,16 @@ class SpeechToTextCard extends StatefulWidget {
 
 class _SpeechToTextCardState extends State<SpeechToTextCard> {
   final dbHelper = DatabaseHelper();
-  bool _isCollapsed = false;
+  bool _isCollapsed = true; // Start collapsed by default
   String _lastTranscription = "";
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: widget.themeProvider.themeData.cardColor,
+      color: widget.isTranscriptionEnabled
+          ? widget.themeProvider.themeData.cardColor
+          : Colors.grey.withOpacity(1), // Grey background when disabled
       margin: EdgeInsets.symmetric(
         horizontal: ResponsiveUtils.getResponsiveSize(context, 8),
       ),
@@ -40,12 +44,37 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
           ResponsiveUtils.getResponsiveSize(context, 12),
         ),
       ),
-      child: AnimatedCrossFade(
-        firstChild: _buildCollapsedCard(),
-        secondChild: _buildExpandedCard(),
-        crossFadeState:
-            _isCollapsed ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-        duration: const Duration(milliseconds: 200),
+      child: widget.isTranscriptionEnabled
+          ? AnimatedCrossFade(
+              firstChild: _buildCollapsedCard(),
+              secondChild: _buildExpandedCard(),
+              crossFadeState: _isCollapsed
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              duration: const Duration(milliseconds: 200),
+            )
+          : _buildDisabledCard(),
+    );
+  }
+
+  Widget _buildDisabledCard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Transcription (Disabled)",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+            ),
+          ),
+          Icon(
+            Icons.expand_more,
+            color: Colors.grey[400], 
+          ),
+        ],
       ),
     );
   }
@@ -121,8 +150,8 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
                       style: TextStyle(
                         color: widget.themeProvider.themeData.textTheme
                             .bodyMedium?.color,
-                        fontSize: ResponsiveUtils.getResponsiveFontSize(
-                            context, 16),
+                        fontSize:
+                            ResponsiveUtils.getResponsiveFontSize(context, 16),
                       ),
                       decoration: InputDecoration(
                         hintText: context.translate("stt_hint"),
@@ -142,7 +171,6 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
                     );
                   },
                 ),
-                // Clear button
                 Positioned(
                   bottom: 8,
                   right: 8,
