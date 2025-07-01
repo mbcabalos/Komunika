@@ -7,34 +7,34 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/utils/shared_prefs.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-part 'speech_to_text_event.dart';
-part 'speech_to_text_state.dart';
+part 'sound_enhancer_event.dart';
+part 'sound_enhancer_state.dart';
 
-class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
+class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   final FlutterSoundPlayer _player = FlutterSoundPlayer();
-  
+
   StreamController<Uint8List>? _audioStreamController;
-  final StreamController<String> _transcriptionController = StreamController<String>();
+  final StreamController<String> _transcriptionController =
+      StreamController<String>();
   final SocketService socketService;
 
   bool recording = false;
-  File? _recordedFile;
-  double _currentGain = 1.0; // Current amplification level
+  bool _transcribing = false;
+  double _currentGain = 1.0;
 
-  SpeechToTextBloc(this.socketService) : super(SpeechToTextLoadingState()) {
+  SoundEnhancerBloc(this.socketService) : super(SoundEnhancerLoadingState()) {
     _player.openPlayer();
 
     // Event handlers
-    on<SpeechToTextLoadingEvent>(_onLoadingEvent);
+    on<SoundEnhancerLoadingEvent>(_onLoadingEvent);
     on<RequestPermissionEvent>(_onRequestPermission);
     on<StartRecordingEvent>(_onStartRecording);
     on<StopRecordingEvent>(_onStopRecording);
-    on<StartTapRecordingEvent>(_onStartTapRecording);
-    on<StopTapRecordingEvent>(_onStopTapRecording);
+    on<StartTranscriptionEvent>(_onStartTranscription);
+    on<StopTranscriptionEvent>(_onStopTranscription);
     on<SetAmplificationEvent>(_onSetAmplification);
     on<NewTranscriptionEvent>(_onNewTranscription);
     on<LivePreviewTranscriptionEvent>(_onLivePreview);
@@ -65,21 +65,20 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   Uint8List _amplifyPCM(Uint8List input, double gain) {
     final output = BytesBuilder();
     final byteData = ByteData.sublistView(input);
-    
+
     for (int i = 0; i < byteData.lengthInBytes; i += 2) {
       int sample = byteData.getInt16(i, Endian.little);
       sample = (sample * gain).clamp(-32768, 32767).toInt();
       output.addByte(sample & 0xFF);
       output.addByte((sample >> 8) & 0xFF);
     }
-    
+
     return output.toBytes();
   }
 
   Uint8List _processAudioChunk(Uint8List chunk) {
-    // Apply current gain
     var processed = _amplifyPCM(chunk, _currentGain);
-    
+
     // Optional: Add other processing here (noise reduction, etc.)
     return processed;
   }
@@ -87,69 +86,46 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   // --- Event Handlers ---
 
   Future<void> _onLoadingEvent(
-      SpeechToTextLoadingEvent event, Emitter<SpeechToTextState> emit) async {
-    emit(SpeechToTextLoadedSuccessState());
+      SoundEnhancerLoadingEvent event, Emitter<SoundEnhancerState> emit) async {
+    emit(SoundEnhancerLoadedSuccessState());
   }
 
   Future<void> _onRequestPermission(
-      RequestPermissionEvent event, Emitter<SpeechToTextState> emit) async {
+      RequestPermissionEvent event, Emitter<SoundEnhancerState> emit) async {
     try {
       var status = await Permission.microphone.request();
       if (status.isDenied || status.isPermanentlyDenied) {
-        emit(SpeechToTextErrorState(message: "Microphone permission denied"));
+        emit(SoundEnhancerErrorState(message: "Microphone permission denied"));
       }
     } catch (e) {
-      emit(SpeechToTextErrorState(message: "Permission error: $e"));
+      emit(SoundEnhancerErrorState(message: "Permission error: $e"));
     }
   }
 
   Future<void> _onStartRecording(
-      StartRecordingEvent event, Emitter<SpeechToTextState> emit) async {
+      StartRecordingEvent event, Emitter<SoundEnhancerState> emit) async {
     if (recording) return;
-    
-    try {
-      Directory tempDir = await getTemporaryDirectory();
-      String filePath = '${tempDir.path}/recorded_audio.wav';
-      _recordedFile = File(filePath);
-      
-      await _recorder.openRecorder();
-      await _recorder.startRecorder(
-        toFile: filePath,
-        codec: Codec.pcm16WAV,
-        sampleRate: 16000,
-      );
-      
-      recording = true;
-      developer.log("Recording started");
-    } catch (e) {
-      emit(SpeechToTextErrorState(message: "Recording failed: $e"));
-    }
-  }
 
-  Future<void> _onStartTapRecording(
-      StartTapRecordingEvent event, Emitter<SpeechToTextState> emit) async {
-    if (recording) return;
-    
     try {
       // Initialize with saved gain
       _currentGain = await PreferencesUtils.getAmplifierVolume();
-      
+
       _startNewStream();
       await _recorder.openRecorder();
-      
+
       await _recorder.startRecorder(
         toStream: _audioStreamController!.sink,
         codec: Codec.pcm16,
         sampleRate: 16000,
         numChannels: 1,
       );
-      
+
       await _player.startPlayerFromStream(
         codec: Codec.pcm16,
         sampleRate: 16000,
         numChannels: 1,
       );
-      
+
       _audioStreamController!.stream.listen(
         (Uint8List buffer) {
           final processed = _processAudioChunk(buffer);
@@ -158,32 +134,16 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
         },
         onError: (e) => developer.log("Audio stream error: $e"),
       );
-      
+
       recording = true;
       developer.log("Tap recording started with gain: $_currentGain");
     } catch (e) {
-      emit(SpeechToTextErrorState(message: "Tap recording failed: $e"));
+      emit(SoundEnhancerErrorState(message: "Tap recording failed: $e"));
     }
   }
 
   Future<void> _onStopRecording(
-      StopRecordingEvent event, Emitter<SpeechToTextState> emit) async {
-    if (!recording) return;
-    
-    try {
-      await _recorder.stopRecorder();
-      if (_recordedFile != null) {
-        await sendAudioToBackend(_recordedFile!);
-      }
-      recording = false;
-      developer.log("Recording stopped");
-    } catch (e) {
-      emit(SpeechToTextErrorState(message: "Stop recording failed: $e"));
-    }
-  }
-
-  Future<void> _onStopTapRecording(
-      StopTapRecordingEvent event, Emitter<SpeechToTextState> emit) async {
+      StopRecordingEvent event, Emitter<SoundEnhancerState> emit) async {
     try {
       await _recorder.stopRecorder();
       await _player.stopPlayer();
@@ -191,19 +151,29 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
       recording = false;
       developer.log("Tap recording stopped");
     } catch (e) {
-      emit(SpeechToTextErrorState(message: "Stop tap recording failed: $e"));
+      emit(SoundEnhancerErrorState(message: "Stop recording failed: $e"));
     }
   }
 
+  FutureOr<void> _onStartTranscription(
+      StartTranscriptionEvent event, Emitter<SoundEnhancerState> emit) async {
+    _transcribing = true;
+  }
+
+  FutureOr<void> _onStopTranscription(
+      StopTranscriptionEvent event, Emitter<SoundEnhancerState> emit) async {
+    _transcribing = false;
+  }
+
   Future<void> _onSetAmplification(
-      SetAmplificationEvent event, Emitter<SpeechToTextState> emit) async {
+      SetAmplificationEvent event, Emitter<SoundEnhancerState> emit) async {
     try {
       // Clamp between 0.5 and 3.0 for reasonable amplification
       _currentGain = event.gain.clamp(0.5, 3.0);
       await PreferencesUtils.storeAmplifierVolume(_currentGain);
       developer.log("Amplification set to: $_currentGain");
     } catch (e) {
-      emit(SpeechToTextErrorState(message: "Failed to set amplification: $e"));
+      emit(SoundEnhancerErrorState(message: "Failed to set amplification: $e"));
     }
   }
 
@@ -211,15 +181,18 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
 
   void _handleAudioChunk(Uint8List buffer) async {
     try {
-      if (socketService.isSocketInitialized) {
-        socketService.sendAudio(buffer);
-      } else {
-        developer.log("WebSocket not connected, attempting reconnect...");
-        await socketService.reconnect();
+      if (_transcribing) {
         if (socketService.isSocketInitialized) {
           socketService.sendAudio(buffer);
+        } else {
+          developer.log("WebSocket not connected, attempting reconnect...");
+          await socketService.reconnect();
+          if (socketService.isSocketInitialized) {
+            socketService.sendAudio(buffer);
+          }
         }
       }
+      // If not transcribing, do nothing!
     } catch (e) {
       developer.log("Error handling audio chunk: $e");
     }
@@ -251,16 +224,18 @@ class SpeechToTextBloc extends Bloc<SpeechToTextEvent, SpeechToTextState> {
   }
 
   // --- Transcription Handlers ---
-  
-  void _onNewTranscription(NewTranscriptionEvent event, Emitter<SpeechToTextState> emit) {
+
+  void _onNewTranscription(
+      NewTranscriptionEvent event, Emitter<SoundEnhancerState> emit) {
     emit(TranscriptionUpdatedState("${event.text}\n"));
   }
 
-  void _onLivePreview(LivePreviewTranscriptionEvent event, Emitter<SpeechToTextState> emit) {
+  void _onLivePreview(
+      LivePreviewTranscriptionEvent event, Emitter<SoundEnhancerState> emit) {
     emit(LivePreviewTranscriptionState(event.text));
   }
 
-  void _onClearText(ClearTextEvent event, Emitter<SpeechToTextState> emit) {
+  void _onClearText(ClearTextEvent event, Emitter<SoundEnhancerState> emit) {
     emit(TranscriptionUpdatedState(""));
   }
 }

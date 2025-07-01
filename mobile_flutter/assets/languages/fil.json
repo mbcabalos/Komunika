@@ -15,10 +15,8 @@
   "home_tips12": "🛠️ I-adjust ang laki ng font sa caption – Baguhin ang mga setting upang mapadali ang pagbasa.",
   "home_tips13": "⏩ I-save ang madalas gamitin na mga parirala – Mag-imbak ng mga pahayag para sa mas mabilis na komunikasyon.",
   "home_tips14": "💬 Gumamit ng emojis at shortcut – Nakakatulong ito upang gawing mas epektibo at makulay ang pakikipag-usap.",
-  "home_speech_to_text": "Boses sa Teksto",
+  "home_sound_enhancer": "Pampalinaw ng Tunog",
   "home_text_to_speech": "Teksto sa Boses",
-  "home_sign_transcribe": "Transcribe ng Senyas",
-  "home_screen_captions": "Caption ng Screen",
   "home_quick_speech": "Quick Speech",
   "home_no_quick_speech": "Walang available",
   "home_speech_to_text_description": "I-tap dito upang subukan ang pagsasalita sa teksto na kakayahan",
@@ -26,9 +24,8 @@
 
   "history_title": "Kasaysayan",
 
-  "stt_title": "Boses sa Teksto",
-  "stt_hint": "Mensahe...",
-  "stt_hold_microphone": "Hawakan/Pindutin upang Magsimula",
+  "sound_enhancer_title": "Pampalinaw ng Tunog",
+  "sound_enhancer_hint": "Mensahe...",
 
   "tts_title": "Teksto sa Boses",
   "tts_hint1": "Pamagat",
@@ -47,11 +44,6 @@
   "tts_cancel": "Kanselahin",
   "tts_proceed": "Magpatuloy",
   "tts_process": "Proseso ng Teksto",
-
-  "sign_transcribe_title": "Transcribe ng Senyas",
-  "sign_transcribe_hint": "Lalabas dito ang isinaling teksto...",
-
-  "auto_caption_title": "Caption ng Screen",
 
   "settings_title": "Settings",
   "settings_appearance": "Hitsura",

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:komunika/bloc/bloc_speech_to_text/speech_to_text_bloc.dart';
+import 'package:komunika/bloc/bloc_sound_enhancer/sound_enhancer_bloc.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_visualization_card.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_amplifier_card.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
@@ -11,9 +11,9 @@ import 'package:komunika/widgets/sound_enhancer_widgets/speech_to_text_card.dart
 
 class SoundEnhancerScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
-  final SpeechToTextBloc speechToTextBloc;
+  final SoundEnhancerBloc soundEnhancerBloc;
   const SoundEnhancerScreen(
-      {super.key, required this.themeProvider, required this.speechToTextBloc});
+      {super.key, required this.themeProvider, required this.soundEnhancerBloc});
 
   @override
   State<SoundEnhancerScreen> createState() => SoundEnhancerScreenState();
@@ -24,7 +24,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
 
   final dbHelper = DatabaseHelper();
   int _micMode = 0; // 0: Off, 1: Phone Mic, 2: Headset Mic
-  bool _isTranscriptionEnabled = true;
+  bool _isTranscriptionEnabled = false;
 
   @override
   void initState() {
@@ -34,14 +34,14 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
   }
 
   Future<void> _initialize() async {
-    widget.speechToTextBloc.add(SpeechToTextLoadingEvent());
-    widget.speechToTextBloc.add(RequestPermissionEvent());
+    widget.soundEnhancerBloc.add(SoundEnhancerLoadingEvent());
+    widget.soundEnhancerBloc.add(RequestPermissionEvent());
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
-      value: widget.speechToTextBloc,
+      value: widget.soundEnhancerBloc,
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBar(
@@ -68,7 +68,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
                   dbHelper.saveSpeechToTextHistory(_textController.text);
                 }
                 _textController.clear();
-                widget.speechToTextBloc.add(StopTapRecordingEvent());
+                widget.soundEnhancerBloc.add(StopRecordingEvent());
                 Navigator.pop(context);
               },
             ),
@@ -95,20 +95,20 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
             ),
           ],
         ),
-        body: BlocConsumer<SpeechToTextBloc, SpeechToTextState>(
+        body: BlocConsumer<SoundEnhancerBloc, SoundEnhancerState>(
           listener: (context, state) {
-            if (state is SpeechToTextErrorState) {
+            if (state is SoundEnhancerErrorState) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.message)),
               );
             }
           },
           builder: (context, state) {
-            if (state is SpeechToTextLoadingState) {
+            if (state is SoundEnhancerLoadingState) {
               return const Center(child: CircularProgressIndicator());
-            } else if (state is SpeechToTextLoadedSuccessState) {
+            } else if (state is SoundEnhancerLoadedSuccessState) {
               return _buildContent(widget.themeProvider);
-            } else if (state is SpeechToTextErrorState) {
+            } else if (state is SoundEnhancerErrorState) {
               return const Text('Error processing text to speech!');
             } else {
               return _buildContent(widget.themeProvider);
@@ -139,7 +139,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
               SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 16)),
               SoundAmplifierScreen(
                 themeProvider: themeProvider,
-                speechToTextBloc: widget.speechToTextBloc,
+                soundEnhancerBloc: widget.soundEnhancerBloc,
                 micMode: _micMode,
                 onMicModeChanged: (int newMode) {
                   setState(() {
@@ -159,7 +159,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
               if (_micMode != 0)
                 SpeechToTextCard(
                   themeProvider: themeProvider,
-                  sttBloc: widget.speechToTextBloc,
+                  soundEnhancerBloc: widget.soundEnhancerBloc,
                   textController: _textController,
                   isTranscriptionEnabled: _isTranscriptionEnabled,
                 ),
