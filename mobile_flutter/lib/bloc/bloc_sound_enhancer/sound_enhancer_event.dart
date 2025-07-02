@@ -43,3 +43,7 @@ class SetAmplificationEvent extends SoundEnhancerEvent {
 
   List<Object?> get props => [gain];
 }
+
+class StartNoiseSupressor extends SoundEnhancerEvent {}
+
+class StopNoiseSupressor extends SoundEnhancerEvent {}

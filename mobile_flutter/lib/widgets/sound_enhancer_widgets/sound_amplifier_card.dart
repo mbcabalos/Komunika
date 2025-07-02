@@ -28,6 +28,7 @@ class SoundAmplifierScreen extends StatefulWidget {
 
 class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
   double _amplifierVolumeLevel = 1.0;
+  bool isNoiseSupressorActive = false;
 
   @override
   void initState() {
@@ -117,7 +118,20 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                 const SizedBox(height: 16),
                 if (widget.micMode != 0) ...[
                   // Noise Reduction Toggle
-                  buildSwitchRow("Noise Reduction", false),
+                  buildSwitchRow(
+                    "Noise Reduction",
+                    isNoiseSupressorActive,
+                    onChanged: (bool enabled) {
+                      setState(() {
+                        isNoiseSupressorActive = enabled;
+                      });
+                      if (enabled) {
+                        widget.soundEnhancerBloc.add(StartNoiseSupressor());
+                      } else {
+                        widget.soundEnhancerBloc.add(StopNoiseSupressor());
+                      }
+                    },
+                  ),
                   const SizedBox(height: 12),
 
                   // Transcription Toggle

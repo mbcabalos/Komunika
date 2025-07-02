@@ -3,11 +3,13 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:developer' as developer;
 import 'package:equatable/equatable.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:komunika/services/live-service-handler/native_audio_recorder.dart';
 
 part 'sound_enhancer_event.dart';
 part 'sound_enhancer_state.dart';
@@ -15,7 +17,6 @@ part 'sound_enhancer_state.dart';
 class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   final FlutterSoundPlayer _player = FlutterSoundPlayer();
-
   StreamController<Uint8List>? _audioStreamController;
   final StreamController<String> _transcriptionController =
       StreamController<String>();
@@ -26,8 +27,6 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   double _currentGain = 1.0;
 
   SoundEnhancerBloc(this.socketService) : super(SoundEnhancerLoadingState()) {
-    _player.openPlayer();
-
     // Event handlers
     on<SoundEnhancerLoadingEvent>(_onLoadingEvent);
     on<RequestPermissionEvent>(_onRequestPermission);
@@ -39,6 +38,8 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     on<NewTranscriptionEvent>(_onNewTranscription);
     on<LivePreviewTranscriptionEvent>(_onLivePreview);
     on<ClearTextEvent>(_onClearText);
+    on<StartNoiseSupressor>(_onStartNoiseSupressor);
+    on<StopNoiseSupressor>(_onStoptNoiseSupressor);
 
     // Socket listeners
     _setupSocketListeners();
@@ -84,7 +85,6 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   }
 
   // --- Event Handlers ---
-
   Future<void> _onLoadingEvent(
       SoundEnhancerLoadingEvent event, Emitter<SoundEnhancerState> emit) async {
     emit(SoundEnhancerLoadedSuccessState());
@@ -107,53 +107,109 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     if (recording) return;
 
     try {
-      // Initialize with saved gain
       _currentGain = await PreferencesUtils.getAmplifierVolume();
-
-      _startNewStream();
-      await _recorder.openRecorder();
-
-      await _recorder.startRecorder(
-        toStream: _audioStreamController!.sink,
-        codec: Codec.pcm16,
-        sampleRate: 16000,
-        numChannels: 1,
-      );
-
+      await _player.openPlayer();
+      await NativeAudioRecorder.start();
       await _player.startPlayerFromStream(
         codec: Codec.pcm16,
         sampleRate: 16000,
         numChannels: 1,
       );
-
-      _audioStreamController!.stream.listen(
+      NativeAudioRecorder.audioStream.listen(
         (Uint8List buffer) {
-          final processed = _processAudioChunk(buffer);
-          _handleAudioChunk(buffer);
-          _player.foodSink?.add(FoodData(processed));
+          final amplified = _processAudioChunk(buffer);
+          print("Audio chunk received, length: ${amplified.length}");
+          _handleAudioChunk(amplified);
+          _player.foodSink?.add(FoodData(amplified));
         },
-        onError: (e) => developer.log("Audio stream error: $e"),
+        onError: (e) {
+          developer.log("Native audio stream error: $e");
+          emit(SoundEnhancerErrorState(message: "Native stream error: $e"));
+        },
       );
 
       recording = true;
-      developer.log("Tap recording started with gain: $_currentGain");
+      developer.log("Native recording started with gain: $_currentGain");
     } catch (e) {
-      emit(SoundEnhancerErrorState(message: "Tap recording failed: $e"));
+      emit(SoundEnhancerErrorState(message: "Native recording failed: $e"));
     }
   }
+
+  Future<void> _onStartNoiseSupressor(
+      StartNoiseSupressor event, Emitter<SoundEnhancerState> emit) async {
+    print("NoiseSupressor start");
+    NativeAudioRecorder.startNoiseSupressor();
+  }
+
+  Future<void> _onStoptNoiseSupressor(
+      StopNoiseSupressor event, Emitter<SoundEnhancerState> emit) async {
+    NativeAudioRecorder.stopNoiseSupressor();
+  }
+
+  // Future<void> _onStartRecording(
+  //     StartRecordingEvent event, Emitter<SoundEnhancerState> emit) async {
+  //   if (recording) return;
+
+  //   try {
+  //     // Initialize with saved gain
+  //     _currentGain = await PreferencesUtils.getAmplifierVolume();
+
+  //     _startNewStream();
+  //     await _recorder.openRecorder();
+
+  //     await _recorder.startRecorder(
+  //       toStream: _audioStreamController!.sink,
+  //       codec: Codec.pcm16,
+  //       sampleRate: 16000,
+  //       numChannels: 1,
+  //     );
+
+  //     await _player.startPlayerFromStream(
+  //       codec: Codec.pcm16,
+  //       sampleRate: 16000,
+  //       numChannels: 1,
+  //     );
+
+  //     _audioStreamController!.stream.listen(
+  //       (Uint8List buffer) {
+  //         final processed = _processAudioChunk(buffer);
+  //         _handleAudioChunk(buffer);
+  //         _player.foodSink?.add(FoodData(processed));
+  //       },
+  //       onError: (e) => developer.log("Audio stream error: $e"),
+  //     );
+
+  //     recording = true;
+  //     developer.log("Tap recording started with gain: $_currentGain");
+  //   } catch (e) {
+  //     emit(SoundEnhancerErrorState(message: "Tap recording failed: $e"));
+  //   }
+  // }
 
   Future<void> _onStopRecording(
       StopRecordingEvent event, Emitter<SoundEnhancerState> emit) async {
     try {
-      await _recorder.stopRecorder();
+      await NativeAudioRecorder.stop();
       await _player.stopPlayer();
       await _audioStreamController?.close();
       recording = false;
-      developer.log("Tap recording stopped");
     } catch (e) {
-      emit(SoundEnhancerErrorState(message: "Stop recording failed: $e"));
+      emit(SoundEnhancerErrorState(message: "Stopping failed: $e"));
     }
   }
+
+  // Future<void> _onStopRecording(
+  //     StopRecordingEvent event, Emitter<SoundEnhancerState> emit) async {
+  //   try {
+  //     await _recorder.stopRecorder();
+  //     await _player.stopPlayer();
+  //     await _audioStreamController?.close();
+  //     recording = false;
+  //     developer.log("Tap recording stopped");
+  //   } catch (e) {
+  //     emit(SoundEnhancerErrorState(message: "Stop recording failed: $e"));
+  //   }
+  // }
 
   FutureOr<void> _onStartTranscription(
       StartTranscriptionEvent event, Emitter<SoundEnhancerState> emit) async {

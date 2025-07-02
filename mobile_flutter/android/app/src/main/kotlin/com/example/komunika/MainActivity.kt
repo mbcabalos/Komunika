@@ -17,6 +17,10 @@ import android.os.Handler
 import android.os.Looper
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.util.Log
+import android.media.audiofx.NoiseSuppressor
+import android.os.Bundle
+import android.media.*
+import io.flutter.plugin.common.EventChannel
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.example.komunika/recorder"
@@ -24,13 +28,31 @@ class MainActivity : FlutterActivity() {
     private var mediaProjection: MediaProjection? = null
     private var audioRecord: AudioRecord? = null
     private var isRecording = false
+    private val METHOD_CHANNEL = "native_audio"
+    private val EVENT_CHANNEL = "native_audio_stream"
+    private var audioThread: Thread? = null
+    private var eventSink: EventChannel.EventSink? = null
     private lateinit var platform: MethodChannel
+    private var enableNoiseSuppressor = false
+    private var noiseSuppressor: NoiseSuppressor? = null
+
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         platform = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
 
-        // MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL).setStreamHandler(
+        object : EventChannel.StreamHandler {
+            override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                eventSink = events
+            }
+
+                override fun onCancel(arguments: Any?) {
+                    eventSink = null
+                }
+            }
+        )
+
         platform.setMethodCallHandler { call, result ->
             when (call.method) {
                 "startForegroundService" -> {
@@ -42,12 +64,12 @@ class MainActivity : FlutterActivity() {
                     result.success("Foreground service stopped")
                 }
                 "startRecording" -> {
-                    startRecording()
-                    result.success("Recording started")
+                    startNativeRecording()
+                    result.success(null)
                 }
                 "stopRecording" -> {
-                    stopRecording()
-                    result.success("Recording stopped")
+                    stopNativeRecording()
+                    result.success(null)
                 }
                 "updateText" -> {
                     val updatedText = call.argument<String>("updatedText")
@@ -67,30 +89,114 @@ class MainActivity : FlutterActivity() {
                     editor.apply()
                     
                     result.success(null)
+                }"enableNoiseSuppressor" -> {
+                    val success = enableNoiseSuppressor()
+                    if (success) {
+                        result.success(null)
+                    } else {
+                        result.error("UNAVAILABLE", "NoiseSuppressor not available", null)
+                    }
+                }"disableNoiseSuppressor" -> {
+                    noiseSuppressor?.release()
+                    noiseSuppressor = null
+                    result.success(null)
                 }
+
                 else -> result.notImplemented()
             }
         }
     }
 
-    private fun startRecording() {
-        val serviceIntent = Intent(this, ForegroundService::class.java)
-        ContextCompat.startForegroundService(this, serviceIntent) 
-    
-        mediaProjectionManager = getSystemService(MediaProjectionManager::class.java)
-        val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
-        startActivityForResult(captureIntent, REQUEST_CODE)
-    }
-    
+private fun startNativeRecording() {
+    if (isRecording) return
 
-    private fun stopRecording() {
+    val sampleRate = 16000
+    val channelConfig = AudioFormat.CHANNEL_IN_MONO
+    val audioFormat = AudioFormat.ENCODING_PCM_16BIT
+    val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
+
+    audioRecord = AudioRecord(
+        MediaRecorder.AudioSource.MIC,
+        sampleRate,
+        channelConfig,
+        audioFormat,
+        bufferSize
+    )
+
+    val buffer = ByteArray(bufferSize)
+    isRecording = true
+    audioRecord?.startRecording()
+
+    val mainHandler = Handler(Looper.getMainLooper())
+
+    audioThread = Thread {
+        try {
+            while (isRecording) {
+                val read = audioRecord?.read(buffer, 0, buffer.size, AudioRecord.READ_BLOCKING) ?: -1
+                if (read > 0) {
+                    val chunk = buffer.copyOf(read)
+                    // Post the audio chunk to the UI thread
+                    mainHandler.post {
+                        eventSink?.success(chunk)
+                    }
+                } else if (read < 0) {
+                    Log.e("AudioRecord", "Read error: $read")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("AudioRecord", "Exception during recording", e)
+        }
+    }
+
+    audioThread?.start()
+}
+
+    
+    private fun stopNativeRecording() {
         isRecording = false
+        audioThread?.join()
+        audioThread = null
         audioRecord?.stop()
         audioRecord?.release()
         audioRecord = null
-        mediaProjection?.stop()
-        mediaProjection = null
     }
+    
+    private fun enableNoiseSuppressor(): Boolean {
+        val sessionId = audioRecord?.audioSessionId ?: return false
+
+        if (!NoiseSuppressor.isAvailable()) {
+            Log.e("NoiseSuppressor", "NoiseSuppressor not available on this device.")
+            return false
+        }
+
+        if (noiseSuppressor == null) {
+            noiseSuppressor = NoiseSuppressor.create(sessionId)
+        }
+
+        return if (noiseSuppressor != null) {
+            noiseSuppressor?.enabled = true
+            Log.i("NoiseSuppressor", "NoiseSuppressor is enabled.")
+            true
+        } else {
+            Log.e("NoiseSuppressor", "Failed to create NoiseSuppressor.")
+            false
+        }
+    }
+
+    private fun disableNoiseSuppressor(): Boolean {
+    return try {
+        noiseSuppressor?.enabled = false
+        noiseSuppressor?.release()
+        noiseSuppressor = null
+        Log.i("NoiseSuppressor", "Disabled and released")
+        true
+    } catch (e: Exception) {
+        Log.e("NoiseSuppressor", "Failed to disable: ${e.message}")
+        false
+    }
+}
+
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -183,8 +289,7 @@ class MainActivity : FlutterActivity() {
     private fun stopForegroundService() {
         val serviceIntent = Intent(this, ForegroundService::class.java)
         val intent = Intent(this, FloatingWindowService::class.java)
-        stopRecording()
-        stopService(intent)
+        stopNativeRecording()
         stopService(serviceIntent)
         Log.d("AudioCapture", "Foreground service stopped")
 

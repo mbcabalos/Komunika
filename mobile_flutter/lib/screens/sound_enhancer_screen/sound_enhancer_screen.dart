@@ -13,7 +13,9 @@ class SoundEnhancerScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
   final SoundEnhancerBloc soundEnhancerBloc;
   const SoundEnhancerScreen(
-      {super.key, required this.themeProvider, required this.soundEnhancerBloc});
+      {super.key,
+      required this.themeProvider,
+      required this.soundEnhancerBloc});
 
   @override
   State<SoundEnhancerScreen> createState() => SoundEnhancerScreenState();
