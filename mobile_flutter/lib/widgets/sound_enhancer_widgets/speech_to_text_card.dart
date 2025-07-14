@@ -11,6 +11,8 @@ class SpeechToTextCard extends StatefulWidget {
   final SoundEnhancerBloc soundEnhancerBloc;
   final TextEditingController textController;
   final bool isTranscriptionEnabled;
+  final int micMode;
+  final Function(bool) onTranscriptionToggle;
 
   const SpeechToTextCard({
     super.key,
@@ -18,6 +20,8 @@ class SpeechToTextCard extends StatefulWidget {
     required this.soundEnhancerBloc,
     required this.textController,
     required this.isTranscriptionEnabled,
+    required this.micMode,
+    required this.onTranscriptionToggle,
   });
 
   @override
@@ -31,7 +35,8 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.isTranscriptionEnabled) {
+    // Only show the card if micMode == 1
+    if (widget.micMode != 1) {
       return const SizedBox.shrink();
     }
     return Card(
@@ -45,12 +50,33 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
           ResponsiveUtils.getResponsiveSize(context, 12),
         ),
       ),
-      child: AnimatedCrossFade(
-        firstChild: _buildCollapsedCard(),
-        secondChild: _buildExpandedCard(),
-        crossFadeState:
-            _isCollapsed ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-        duration: const Duration(milliseconds: 200),
+      child: Column(
+        children: [
+          // Transcription Toggle
+          buildSwitchRow(
+            "Transcription",
+            widget.isTranscriptionEnabled,
+            onChanged: (bool enabled) {
+              widget.onTranscriptionToggle(enabled);
+              if (enabled) {
+                widget.soundEnhancerBloc.add(StartTranscriptionEvent());
+                setState(() => _isCollapsed = false); 
+              } else {
+                widget.soundEnhancerBloc.add(StopTranscriptionEvent());
+                setState(() => _isCollapsed = true); 
+              }
+            },
+          ),
+          if (widget.isTranscriptionEnabled)
+            AnimatedCrossFade(
+              firstChild: _buildCollapsedCard(),
+              secondChild: _buildExpandedCard(),
+              crossFadeState: widget.isTranscriptionEnabled && !_isCollapsed
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 200),
+            ),
+        ],
       ),
     );
   }
@@ -62,7 +88,7 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            "Transcription",
+            "Translated Text",
             style: TextStyle(
               color: widget.themeProvider.themeData.textTheme.bodyMedium?.color,
               fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
@@ -86,7 +112,7 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Transcription",
+                "Translated Text",
                 style: TextStyle(
                   color: widget
                       .themeProvider.themeData.textTheme.bodyMedium?.color,
@@ -171,6 +197,34 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildSwitchRow(
+    String title,
+    bool value, {
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: widget.themeProvider.themeData.textTheme.bodyMedium?.color,
+              fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: widget.themeProvider.themeData.primaryColor,
+            inactiveTrackColor: Colors.grey,
           ),
         ],
       ),

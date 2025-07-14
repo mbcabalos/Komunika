@@ -3,8 +3,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:developer' as developer;
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
@@ -102,7 +100,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       NativeAudioRecorder.audioStream.listen(
         (Uint8List buffer) {
           final amplified = _processAudioChunk(buffer);
-          print("Audio chunk received, length: ${amplified.length}");
+          // print("Audio chunk received, length: ${amplified.length}");
           _handleAudioChunk(amplified);
           _player.foodSink?.add(FoodData(amplified));
         },
@@ -178,7 +176,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
 
         for (final s in denoised) {
           final amplified = (s * _currentGain).clamp(-32768, 32767).toInt();
-          print("Amplifier gain: $_currentGain");
+          // print("Amplifier gain: $_currentGain");
           outputSamples.add(amplified);
         }
       }

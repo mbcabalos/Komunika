@@ -148,22 +148,17 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
                     _micMode = newMode;
                   });
                 },
-                isTranscriptionEnabled: _isTranscriptionEnabled,
-                onTranscriptionToggle: (bool value) {
-                  setState(() {
-                    _isTranscriptionEnabled = value;
-                    debugPrint(
-                      "Transcription enabled: $_isTranscriptionEnabled",
-                    );
-                  });
-                },
               ),
               if (_micMode != 0)
                 SpeechToTextCard(
                   themeProvider: themeProvider,
                   soundEnhancerBloc: widget.soundEnhancerBloc,
                   textController: _textController,
+                  micMode: _micMode,
                   isTranscriptionEnabled: _isTranscriptionEnabled,
+                  onTranscriptionToggle: (enabled) {
+                    setState(() => _isTranscriptionEnabled = enabled);
+                  },
                 ),
             ],
           ),
