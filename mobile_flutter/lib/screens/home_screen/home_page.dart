@@ -11,6 +11,7 @@ import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
+import 'package:komunika/services/live-service-handler/speex_denoiser.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/colors.dart';
@@ -38,6 +39,7 @@ class _HomePageState extends State<HomePage> {
   late SoundEnhancerBloc soundEnhancerBloc;
   late TextToSpeechBloc textToSpeechBloc;
   final socketService = SocketService();
+  final speexDenoiser = SpeexDenoiser();
   final globalService = GlobalRepositoryImpl();
   final databaseHelper = DatabaseHelper();
   List<Map<String, dynamic>> quickSpeechItems = [];
@@ -50,7 +52,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     homeBloc = HomeBloc(databaseHelper);
-    soundEnhancerBloc = SoundEnhancerBloc(socketService);
+    soundEnhancerBloc = SoundEnhancerBloc(socketService, speexDenoiser);
     textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
     homeBloc.add(HomeLoadingEvent());
     homeBloc.add(FetchAudioEvent());

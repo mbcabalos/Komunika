@@ -3,10 +3,12 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:developer' as developer;
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
+import 'package:komunika/services/live-service-handler/speex_denoiser.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:komunika/services/live-service-handler/native_audio_recorder.dart';
@@ -21,12 +23,15 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   final StreamController<String> _transcriptionController =
       StreamController<String>();
   final SocketService socketService;
+  SpeexDenoiser? _denoiser;
 
   bool recording = false;
   bool _transcribing = false;
+  bool _enableDenoise = false;
   double _currentGain = 1.0;
 
-  SoundEnhancerBloc(this.socketService) : super(SoundEnhancerLoadingState()) {
+  SoundEnhancerBloc(this.socketService, SpeexDenoiser speexDenoiser)
+      : super(SoundEnhancerLoadingState()) {
     // Event handlers
     on<SoundEnhancerLoadingEvent>(_onLoadingEvent);
     on<RequestPermissionEvent>(_onRequestPermission);
@@ -45,6 +50,8 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     _setupSocketListeners();
   }
 
+  List<int> _sampleBuffer = [];
+
   void _setupSocketListeners() {
     socketService.socket?.on("transcription_result", (data) {
       if (data != null && data["text"] != null) {
@@ -59,29 +66,6 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
         add(LivePreviewTranscriptionEvent(data["live_text"]));
       }
     });
-  }
-
-  // --- Audio Processing Methods ---
-
-  Uint8List _amplifyPCM(Uint8List input, double gain) {
-    final output = BytesBuilder();
-    final byteData = ByteData.sublistView(input);
-
-    for (int i = 0; i < byteData.lengthInBytes; i += 2) {
-      int sample = byteData.getInt16(i, Endian.little);
-      sample = (sample * gain).clamp(-32768, 32767).toInt();
-      output.addByte(sample & 0xFF);
-      output.addByte((sample >> 8) & 0xFF);
-    }
-
-    return output.toBytes();
-  }
-
-  Uint8List _processAudioChunk(Uint8List chunk) {
-    var processed = _amplifyPCM(chunk, _currentGain);
-
-    // Optional: Add other processing here (noise reduction, etc.)
-    return processed;
   }
 
   // --- Event Handlers ---
@@ -135,56 +119,83 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     }
   }
 
+  // --- Audio Processing Methods ---
+
+  Uint8List _amplifyPCM(Uint8List input, double gain) {
+    final output = BytesBuilder();
+    final byteData = ByteData.sublistView(input);
+
+    for (int i = 0; i < byteData.lengthInBytes; i += 2) {
+      int sample = byteData.getInt16(i, Endian.little);
+      sample = (sample * gain).clamp(-32768, 32767).toInt();
+      output.addByte(sample & 0xFF);
+      output.addByte((sample >> 8) & 0xFF);
+    }
+
+    return output.toBytes();
+  }
+
+  Uint8List _encodeInt16LE(List<int> samples) {
+    final bytes = BytesBuilder();
+    for (var sample in samples) {
+      bytes.addByte(sample & 0xFF); // low byte
+      bytes.addByte((sample >> 8) & 0xFF); // high byte
+    }
+    return bytes.toBytes();
+  }
+
   Future<void> _onStartNoiseSupressor(
       StartNoiseSupressor event, Emitter<SoundEnhancerState> emit) async {
-    print("NoiseSupressor start");
-    NativeAudioRecorder.startNoiseSupressor();
+    _enableDenoise = true;
+    _denoiser ??= SpeexDenoiser(frameSize: 160, sampleRate: 16000);
   }
 
   Future<void> _onStoptNoiseSupressor(
       StopNoiseSupressor event, Emitter<SoundEnhancerState> emit) async {
-    NativeAudioRecorder.stopNoiseSupressor();
+    _enableDenoise = false;
+    _denoiser?.dispose();
+    _denoiser = null;
   }
 
-  // Future<void> _onStartRecording(
-  //     StartRecordingEvent event, Emitter<SoundEnhancerState> emit) async {
-  //   if (recording) return;
+  Uint8List _processAudioChunk(Uint8List chunk) {
+    if (_enableDenoise && _denoiser != null) {
+      final byteData = ByteData.sublistView(chunk);
+      final inputShorts = List<int>.generate(
+        chunk.lengthInBytes ~/ 2,
+        (i) => byteData.getInt16(i * 2, Endian.little),
+      );
 
-  //   try {
-  //     // Initialize with saved gain
-  //     _currentGain = await PreferencesUtils.getAmplifierVolume();
+      // Buffer for denoising
+      _sampleBuffer.addAll(inputShorts);
 
-  //     _startNewStream();
-  //     await _recorder.openRecorder();
+      final outputSamples = <int>[];
 
-  //     await _recorder.startRecorder(
-  //       toStream: _audioStreamController!.sink,
-  //       codec: Codec.pcm16,
-  //       sampleRate: 16000,
-  //       numChannels: 1,
-  //     );
+      while (_sampleBuffer.length >= 160) {
+        final frame = _sampleBuffer.sublist(0, 160);
+        _sampleBuffer = _sampleBuffer.sublist(160);
 
-  //     await _player.startPlayerFromStream(
-  //       codec: Codec.pcm16,
-  //       sampleRate: 16000,
-  //       numChannels: 1,
-  //     );
+        final denoised = _denoiser!.denoise(frame);
 
-  //     _audioStreamController!.stream.listen(
-  //       (Uint8List buffer) {
-  //         final processed = _processAudioChunk(buffer);
-  //         _handleAudioChunk(buffer);
-  //         _player.foodSink?.add(FoodData(processed));
-  //       },
-  //       onError: (e) => developer.log("Audio stream error: $e"),
-  //     );
+        for (final s in denoised) {
+          final amplified = (s * _currentGain).clamp(-32768, 32767).toInt();
+          print("Amplifier gain: $_currentGain");
+          outputSamples.add(amplified);
+        }
+      }
 
-  //     recording = true;
-  //     developer.log("Tap recording started with gain: $_currentGain");
-  //   } catch (e) {
-  //     emit(SoundEnhancerErrorState(message: "Tap recording failed: $e"));
-  //   }
-  // }
+      // Convert to Uint8List using ByteData (ensures endian correctness)
+      final outputBytes = BytesBuilder();
+      for (final sample in outputSamples) {
+        outputBytes.addByte(sample & 0xFF); // little endian low byte
+        outputBytes.addByte((sample >> 8) & 0xFF); // high byte
+      }
+
+      return outputBytes.toBytes();
+    }
+
+    // If denoise disabled, fallback to old working amplifier
+    return _amplifyPCM(chunk, _currentGain);
+  }
 
   Future<void> _onStopRecording(
       StopRecordingEvent event, Emitter<SoundEnhancerState> emit) async {
@@ -197,19 +208,6 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       emit(SoundEnhancerErrorState(message: "Stopping failed: $e"));
     }
   }
-
-  // Future<void> _onStopRecording(
-  //     StopRecordingEvent event, Emitter<SoundEnhancerState> emit) async {
-  //   try {
-  //     await _recorder.stopRecorder();
-  //     await _player.stopPlayer();
-  //     await _audioStreamController?.close();
-  //     recording = false;
-  //     developer.log("Tap recording stopped");
-  //   } catch (e) {
-  //     emit(SoundEnhancerErrorState(message: "Stop recording failed: $e"));
-  //   }
-  // }
 
   FutureOr<void> _onStartTranscription(
       StartTranscriptionEvent event, Emitter<SoundEnhancerState> emit) async {

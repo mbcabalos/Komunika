@@ -123,7 +123,10 @@ private fun startNativeRecording() {
         bufferSize
     )
 
-    val buffer = ByteArray(bufferSize)
+    val speexFrameSize = 160 // samples
+    val speexFrameBytes = speexFrameSize * 2 // 16-bit PCM = 2 bytes/sample
+    val buffer = ByteArray(speexFrameBytes)
+
     isRecording = true
     audioRecord?.startRecording()
 
@@ -133,21 +136,19 @@ private fun startNativeRecording() {
         try {
             while (isRecording) {
                 val read = audioRecord?.read(buffer, 0, buffer.size, AudioRecord.READ_BLOCKING) ?: -1
-                if (read > 0) {
-                    val chunk = buffer.copyOf(read)
-                    // Post the audio chunk to the UI thread
+                if (read == buffer.size) {
+                    val chunk = buffer.copyOf()
                     mainHandler.post {
                         eventSink?.success(chunk)
                     }
-                } else if (read < 0) {
-                    Log.e("AudioRecord", "Read error: $read")
+                } else {
+                    Log.w("AudioRecord", "Dropped frame: expected $speexFrameBytes bytes, got $read")
                 }
             }
         } catch (e: Exception) {
             Log.e("AudioRecord", "Exception during recording", e)
         }
     }
-
     audioThread?.start()
 }
 
