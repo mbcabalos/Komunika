@@ -9,8 +9,6 @@ class SoundAmplifierScreen extends StatefulWidget {
   final SoundEnhancerBloc soundEnhancerBloc;
   final int micMode;
   final ValueChanged<int> onMicModeChanged;
-  final bool isTranscriptionEnabled;
-  final ValueChanged<bool> onTranscriptionToggle;
 
   const SoundAmplifierScreen({
     super.key,
@@ -18,8 +16,6 @@ class SoundAmplifierScreen extends StatefulWidget {
     required this.micMode,
     required this.onMicModeChanged,
     required this.soundEnhancerBloc,
-    required this.isTranscriptionEnabled,
-    required this.onTranscriptionToggle,
   });
 
   @override
@@ -29,6 +25,7 @@ class SoundAmplifierScreen extends StatefulWidget {
 class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
   double _amplifierVolumeLevel = 1.0;
   bool isNoiseSupressorActive = false;
+  double _noiseReductionLevel = 0.5;
 
   @override
   void initState() {
@@ -132,21 +129,10 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                       }
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
 
-                  // Transcription Toggle
-                  buildSwitchRow(
-                    "Transcription",
-                    widget.isTranscriptionEnabled,
-                    onChanged: (bool enabled) {
-                      widget.onTranscriptionToggle(enabled);
-                      if (enabled) {
-                        widget.soundEnhancerBloc.add(StartTranscriptionEvent());
-                      } else {
-                        widget.soundEnhancerBloc.add(StopTranscriptionEvent());
-                      }
-                    },
-                  ),
+                  // Noise Reduction Slider (always visible but conditionally enabled)
+                  buildNoiseReductionSlider(),
                   const SizedBox(height: 12),
 
                   // Amplifier Level
@@ -211,6 +197,91 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
             value: value,
             onChanged: onChanged,
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget buildNoiseReductionSlider() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Noise Reduction Level',
+              style: TextStyle(
+                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+                color: isNoiseSupressorActive
+                    ? null
+                    : Colors.grey, // Grey out text when disabled
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.noise_control_off,
+              size: ResponsiveUtils.getResponsiveSize(context, 18),
+              color: isNoiseSupressorActive
+                  ? null
+                  : Colors.grey, // Grey out icon when disabled
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            Text('Low',
+                style: TextStyle(
+                  color: isNoiseSupressorActive ? null : Colors.grey,
+                )),
+            Expanded(
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  sliderTheme: SliderTheme.of(context).copyWith(
+                    activeTrackColor: isNoiseSupressorActive
+                        ? widget.themeProvider.themeData.primaryColor
+                        : Colors.grey,
+                    inactiveTrackColor: isNoiseSupressorActive
+                        ? widget.themeProvider.themeData.primaryColor
+                            .withOpacity(0.5)
+                        : Colors.grey.withOpacity(0.3),
+                    thumbColor: isNoiseSupressorActive
+                        ? widget.themeProvider.themeData.primaryColor
+                        : Colors.grey,
+                    disabledActiveTrackColor: Colors.grey,
+                    disabledThumbColor: Colors.grey,
+                    disabledInactiveTrackColor: Colors.grey.withOpacity(0.3),
+                    trackHeight: ResponsiveUtils.getResponsiveSize(context, 3),
+                    thumbShape: RoundSliderThumbShape(
+                      enabledThumbRadius:
+                          ResponsiveUtils.getResponsiveSize(context, 10),
+                    ),
+                    overlayShape: RoundSliderOverlayShape(
+                      overlayRadius:
+                          ResponsiveUtils.getResponsiveSize(context, 16),
+                    ),
+                  ),
+                ),
+                child: Slider(
+                  value: _noiseReductionLevel,
+                  min: 0,
+                  max: 1,
+                  divisions: 10,
+                  label: '${(_noiseReductionLevel * 100).round()}%',
+                  onChanged: isNoiseSupressorActive
+                      ? (double value) {
+                          setState(() {
+                            _noiseReductionLevel = value;
+                          });
+                        }
+                      : null, // Disable slider when noise reduction is off
+                ),
+              ),
+            ),
+            Text('High',
+                style: TextStyle(
+                  color: isNoiseSupressorActive ? null : Colors.grey,
+                )),
+          ],
         ),
       ],
     );
