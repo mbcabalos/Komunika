@@ -10,7 +10,7 @@ class SpeexDenoiser {
   SpeexDenoiser({
     this.frameSize = 160,
     this.sampleRate = 16000,
-    int noiseSuppressDb = -50,
+    int noiseSuppressDb = -25,
   }) {
     _state = speexPreprocessInit(frameSize, sampleRate);
     if (_state == nullptr) {
@@ -22,6 +22,23 @@ class SpeexDenoiser {
         SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, noiseSuppressDb); // Set level
     _setCtlInt(SPEEX_PREPROCESS_SET_AGC, 0); // Disable AGC
     _setCtlInt(SPEEX_PREPROCESS_SET_VAD, 0); // Disable VAD
+  }
+
+  void setNoiseSuppressDb(int dbLevel) {
+    if (dbLevel > -10 || dbLevel < -50) {
+      throw ArgumentError(
+          "Noise suppression level must be between -10 and -50 dB.");
+    }
+    final ptr = calloc<Int32>()..value = dbLevel;
+    final result = speexPreprocessCtl(
+        _state, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, ptr.cast());
+    calloc.free(ptr);
+
+    if (result != 0) {
+      print("⚠️ speexPreprocessCtl returned error code: $result");
+    } else {
+      print("✅ Noise suppression updated to $dbLevel dB");
+    }
   }
 
   void _setCtlInt(int request, int value) {
