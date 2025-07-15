@@ -27,6 +27,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   bool _transcribing = false;
   bool _enableDenoise = false;
   double _currentGain = 1.0;
+  int _denoiseLevel = -10;
 
   SoundEnhancerBloc(this.socketService, SpeexDenoiser speexDenoiser)
       : super(SoundEnhancerLoadingState()) {
@@ -38,6 +39,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     on<StartTranscriptionEvent>(_onStartTranscription);
     on<StopTranscriptionEvent>(_onStopTranscription);
     on<SetAmplificationEvent>(_onSetAmplification);
+    on<SetDenoiseLevelEvent>(_onSetDenoiseLevel);
     on<NewTranscriptionEvent>(_onNewTranscription);
     on<LivePreviewTranscriptionEvent>(_onLivePreview);
     on<ClearTextEvent>(_onClearText);
@@ -90,6 +92,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
 
     try {
       _currentGain = await PreferencesUtils.getAmplifierVolume();
+      _denoiseLevel = await PreferencesUtils.getDenoiseLevel();
       await _player.openPlayer();
       await NativeAudioRecorder.start();
       await _player.startPlayerFromStream(
@@ -133,18 +136,12 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     return output.toBytes();
   }
 
-  Uint8List _encodeInt16LE(List<int> samples) {
-    final bytes = BytesBuilder();
-    for (var sample in samples) {
-      bytes.addByte(sample & 0xFF); // low byte
-      bytes.addByte((sample >> 8) & 0xFF); // high byte
-    }
-    return bytes.toBytes();
-  }
-
   Future<void> _onStartNoiseSupressor(
       StartNoiseSupressor event, Emitter<SoundEnhancerState> emit) async {
     _enableDenoise = true;
+    _denoiser ??= SpeexDenoiser(
+      noiseSuppressDb: _denoiseLevel, // initial value
+    );
     _denoiser ??= SpeexDenoiser(frameSize: 160, sampleRate: 16000);
   }
 
@@ -226,6 +223,23 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       developer.log("Amplification set to: $_currentGain");
     } catch (e) {
       emit(SoundEnhancerErrorState(message: "Failed to set amplification: $e"));
+    }
+  }
+
+  Future<void> _onSetDenoiseLevel(
+      SetDenoiseLevelEvent event, Emitter<SoundEnhancerState> emit) async {
+    try {
+      _denoiser ??= SpeexDenoiser(
+        noiseSuppressDb: _denoiseLevel, // initial value
+      );
+      _denoiseLevel = event.level.clamp(-50, -10);
+      print("Calling setNoiseSuppressDb with $_denoiseLevel");
+      print("_denoiser is: $_denoiser");
+      _denoiser?.setNoiseSuppressDb(_denoiseLevel);
+      await PreferencesUtils.storeDenoiseLevel(_denoiseLevel);
+      print("Denoise set to: $_denoiseLevel");
+    } catch (e) {
+      emit(SoundEnhancerErrorState(message: "Failed to set denoise level: $e"));
     }
   }
 

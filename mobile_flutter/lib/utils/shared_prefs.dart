@@ -105,8 +105,18 @@ class PreferencesUtils {
     await prefs.setDouble('isAmplifierVolume', volume);
   }
 
+  static Future<void> storeDenoiseLevel(int level) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('isDenoiseLevel', level);
+  }
+
   static Future<double> getAmplifierVolume() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getDouble('isAmplifierVolume') ?? 1.0;
+  }
+
+  static Future<int> getDenoiseLevel() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('isDenoiseLevel') ?? -10;
   }
 }

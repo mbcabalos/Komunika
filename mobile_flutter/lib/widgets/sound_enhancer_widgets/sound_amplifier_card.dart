@@ -25,20 +25,23 @@ class SoundAmplifierScreen extends StatefulWidget {
 class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
   double _amplifierVolumeLevel = 1.0;
   bool isNoiseSupressorActive = false;
-  double _noiseReductionLevel = 0.5;
+  int _noiseReductionPercent = 50;
 
   @override
   void initState() {
     super.initState();
-    _loadAmplifierVolume();
+    _loadEnhancerValues();
   }
 
-  Future<void> _loadAmplifierVolume() async {
+  Future<void> _loadEnhancerValues() async {
     try {
       final volume = await PreferencesUtils.getAmplifierVolume();
+      final level = await PreferencesUtils.getDenoiseLevel();
       if (mounted) {
         setState(() {
           _amplifierVolumeLevel = volume;
+          _noiseReductionPercent =
+              (((-level - 10) / 40) * 90 + 10).round().clamp(10, 100);
         });
       }
     } catch (e) {
@@ -235,47 +238,54 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                 )),
             Expanded(
               child: Theme(
-                data: Theme.of(context).copyWith(
-                  sliderTheme: SliderTheme.of(context).copyWith(
-                    activeTrackColor: isNoiseSupressorActive
-                        ? widget.themeProvider.themeData.primaryColor
-                        : Colors.grey,
-                    inactiveTrackColor: isNoiseSupressorActive
-                        ? widget.themeProvider.themeData.primaryColor
-                            .withOpacity(0.5)
-                        : Colors.grey.withOpacity(0.3),
-                    thumbColor: isNoiseSupressorActive
-                        ? widget.themeProvider.themeData.primaryColor
-                        : Colors.grey,
-                    disabledActiveTrackColor: Colors.grey,
-                    disabledThumbColor: Colors.grey,
-                    disabledInactiveTrackColor: Colors.grey.withOpacity(0.3),
-                    trackHeight: ResponsiveUtils.getResponsiveSize(context, 3),
-                    thumbShape: RoundSliderThumbShape(
-                      enabledThumbRadius:
-                          ResponsiveUtils.getResponsiveSize(context, 10),
-                    ),
-                    overlayShape: RoundSliderOverlayShape(
-                      overlayRadius:
-                          ResponsiveUtils.getResponsiveSize(context, 16),
+                  data: Theme.of(context).copyWith(
+                    sliderTheme: SliderTheme.of(context).copyWith(
+                      activeTrackColor: isNoiseSupressorActive
+                          ? widget.themeProvider.themeData.primaryColor
+                          : Colors.grey,
+                      inactiveTrackColor: isNoiseSupressorActive
+                          ? widget.themeProvider.themeData.primaryColor
+                              .withOpacity(0.5)
+                          : Colors.grey.withOpacity(0.3),
+                      thumbColor: isNoiseSupressorActive
+                          ? widget.themeProvider.themeData.primaryColor
+                          : Colors.grey,
+                      disabledActiveTrackColor: Colors.grey,
+                      disabledThumbColor: Colors.grey,
+                      disabledInactiveTrackColor: Colors.grey.withOpacity(0.3),
+                      trackHeight:
+                          ResponsiveUtils.getResponsiveSize(context, 3),
+                      thumbShape: RoundSliderThumbShape(
+                        enabledThumbRadius:
+                            ResponsiveUtils.getResponsiveSize(context, 10),
+                      ),
+                      overlayShape: RoundSliderOverlayShape(
+                        overlayRadius:
+                            ResponsiveUtils.getResponsiveSize(context, 16),
+                      ),
                     ),
                   ),
-                ),
-                child: Slider(
-                  value: _noiseReductionLevel,
-                  min: 0,
-                  max: 1,
-                  divisions: 10,
-                  label: '${(_noiseReductionLevel * 100).round()}%',
-                  onChanged: isNoiseSupressorActive
-                      ? (double value) {
-                          setState(() {
-                            _noiseReductionLevel = value;
-                          });
-                        }
-                      : null, // Disable slider when noise reduction is off
-                ),
-              ),
+                  child: Slider(
+                    value: _noiseReductionPercent.toDouble(),
+                    min: 10,
+                    max: 100,
+                    divisions: 9, // 10–100% in steps of 10%
+                    label: '$_noiseReductionPercent%',
+                    onChanged: isNoiseSupressorActive
+                        ? (double value) {
+                            setState(() {
+                              _noiseReductionPercent = value.round();
+                              // Convert % to dB: 10% = -10, 100% = -50
+                              final mappedDb =
+                                  -((_noiseReductionPercent / 100) * 40 + 10)
+                                      .round();
+                              widget.soundEnhancerBloc.add(
+                                SetDenoiseLevelEvent(mappedDb),
+                              );
+                            });
+                          }
+                        : null,
+                  )),
             ),
             Text('High',
                 style: TextStyle(
