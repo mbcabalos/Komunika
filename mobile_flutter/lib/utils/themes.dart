@@ -54,10 +54,10 @@ class ThemeProvider extends ChangeNotifier {
         ),
       ),
       textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: ColorsPalette.black),
+          bodyLarge: TextStyle(color: ColorsPalette.white),
           bodyMedium: TextStyle(color: ColorsPalette.black),
           bodySmall: TextStyle(color: ColorsPalette.white)),
-      iconTheme: const IconThemeData(color: ColorsPalette.black),
+      iconTheme: const IconThemeData(color: Colors.black),
     );
   }
 

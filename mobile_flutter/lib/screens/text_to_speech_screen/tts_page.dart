@@ -12,6 +12,8 @@ import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/utils/snack_bar.dart';
 import 'package:komunika/utils/themes.dart';
+import 'package:komunika/widgets/global_widgets/app_bar.dart';
+import 'package:komunika/widgets/text_to_speech_widgets/text_area_card.dart';
 
 class TextToSpeechScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
@@ -57,70 +59,22 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
       value: widget.ttsBloc,
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
+        appBar: AppBarWidget(
+          title: context.translate("tts_title"),
+          titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+          themeProvider: widget.themeProvider,
+          isBackButton: false,
+        ),
         floatingActionButton: FloatingActionButton(
           onPressed: _showImageSourceDialog,
           backgroundColor: widget.themeProvider.themeData.primaryColor,
           tooltip: context.translate("tts_image_processing_title"),
           child: Icon(
-            Icons.camera_alt_rounded,
+            Icons.document_scanner_rounded,
             color: widget.themeProvider.themeData.textTheme.bodySmall?.color,
           ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-        appBar: AppBar(
-          title: Padding(
-            padding: const EdgeInsets.only(top: 7.0),
-            child: Text(
-              context.translate("tts_title"),
-              style: TextStyle(
-                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
-              ),
-            ),
-          ),
-          leading: Padding(
-            padding: EdgeInsets.only(
-              top: ResponsiveUtils.getResponsiveSize(context, 7),
-            ),
-            child: IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: ResponsiveUtils.getResponsiveSize(context, 10),
-              ),
-              onPressed: () {
-                _textController.clear();
-                Navigator.pop(context);
-              },
-            ),
-          ),
-          actions: [
-            Padding(
-              padding: EdgeInsets.only(
-                top: ResponsiveUtils.getResponsiveSize(context, 7),
-                right: ResponsiveUtils.getResponsiveSize(context, 8),
-              ),
-              child: IconButton(
-                icon: Icon(
-                  _isMaleVoice ? Icons.male_rounded : Icons.female_rounded,
-                  color: _isMaleVoice ? ColorsPalette.blue : ColorsPalette.red,
-                  size: ResponsiveUtils.getResponsiveSize(context, 25),
-                ),
-                onPressed: () async {
-                  setState(() {
-                    _isMaleVoice = !_isMaleVoice;
-                  });
-
-                  selectedVoice = _isMaleVoice
-                      ? "fil-ph-x-fie-local"
-                      : "fil-ph-x-fic-local";
-                  await flutterTts.setLanguage('fil-PH');
-                  await flutterTts
-                      .setVoice({"name": selectedVoice, "locale": "fil-PH"});
-                  print("Selected Voice: $selectedVoice");
-                },
-              ),
-            ),
-          ],
-        ),
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
           listener: (context, state) {
             if (state is ImageCroppedState) {
@@ -160,198 +114,20 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   }
 
   Widget _buildContent(ThemeProvider themeProvider) {
-    final double phoneHeight = MediaQuery.of(context).size.height * 0.7;
+    final double phoneHeight = MediaQuery.of(context).size.height * 0.6;
     final double phoneWidth = MediaQuery.of(context).size.width * 1.0;
     return RefreshIndicator.adaptive(
       onRefresh: _initialize,
-      child: Padding(
-        padding: EdgeInsets.all(
-          ResponsiveUtils.getResponsiveSize(context, 16),
-        ),
-        child: ListView(
+      child: SingleChildScrollView(
+        child: Column(
           children: [
-            SizedBox(
-              width: phoneWidth,
-              height: phoneHeight,
-              child: Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: themeProvider.themeData.cardColor,
-                      borderRadius: BorderRadius.circular(
-                        ResponsiveUtils.getResponsiveSize(context, 12),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      children: [
-                        TextField(
-                          readOnly: false,
-                          controller: _textController,
-                          style: TextStyle(
-                            color: themeProvider
-                                .themeData.textTheme.bodyMedium?.color,
-                            fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                context, 20),
-                          ),
-                          decoration: InputDecoration(
-                            hintText: context.translate("tts_hint2"),
-                            hintStyle: TextStyle(
-                              color: Colors.grey,
-                              fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                  context, 16),
-                            ),
-                            border: InputBorder.none,
-                            fillColor: Colors.transparent,
-                            filled: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: ResponsiveUtils.getResponsiveSize(
-                                  context, 12),
-                              vertical: ResponsiveUtils.getResponsiveSize(
-                                  context, 16),
-                            ),
-                          ),
-                          textAlignVertical: TextAlignVertical.center,
-                          maxLines: 17,
-                          keyboardType: TextInputType.multiline,
-                        ),
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const SizedBox(width: 8),
-                              Container(
-                                width: 30,
-                                height: 30,
-                                decoration: BoxDecoration(
-                                  color: ColorsPalette.grey.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.expand_outlined,
-                                      size: 15, color: Colors.grey),
-                                  onPressed: () {
-                                    showDialog(
-                                      context: context,
-                                      barrierDismissible: false,
-                                      builder: (context) {
-                                        return Dialog(
-                                          insetPadding: EdgeInsets.zero,
-                                          backgroundColor: widget
-                                              .themeProvider
-                                              .themeData
-                                              .scaffoldBackgroundColor,
-                                          child: Column(
-                                            children: [
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 16,
-                                                        vertical: 12),
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: IconButton(
-                                                  icon: const Icon(
-                                                      Icons.expand_less,
-                                                      color: Colors.grey),
-                                                  onPressed: () =>
-                                                      Navigator.pop(context),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 16,
-                                                      vertical: 8),
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      color: widget
-                                                          .themeProvider
-                                                          .themeData
-                                                          .cardColor,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              12),
-                                                    ),
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 12),
-                                                    child: TextField(
-                                                      controller:
-                                                          _textController,
-                                                      expands: true,
-                                                      maxLines: null,
-                                                      minLines: null,
-                                                      keyboardType:
-                                                          TextInputType
-                                                              .multiline,
-                                                      style: widget
-                                                          .themeProvider
-                                                          .themeData
-                                                          .textTheme
-                                                          .bodyLarge,
-                                                      decoration:
-                                                          const InputDecoration(
-                                                        border:
-                                                            InputBorder.none,
-                                                        hintText:
-                                                            "Type your text here...",
-                                                        hintStyle: TextStyle(
-                                                            color: Colors.grey),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 8,
-                          right: 8,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const SizedBox(width: 8),
-                              Container(
-                                width: 30,
-                                height: 30,
-                                decoration: BoxDecoration(
-                                  color: ColorsPalette.grey.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.clear,
-                                      size: 15, color: Colors.grey),
-                                  onPressed: () {
-                                    _textController.clear();
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+            Container(
+              margin: EdgeInsets.all(ResponsiveUtils.getResponsiveSize(context, 16)),
+              child: TextAreaCard(
+                themeProvider: themeProvider,
+                textController: _textController,
+                width: phoneWidth,
+                height: phoneHeight,
               ),
             ),
             Row(
@@ -607,6 +383,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                 ),
               ],
             ),
+            SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 20)),
           ],
         ),
       ),
@@ -664,7 +441,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                 ),
                 title: Text(
                   context.translate("tts_gallery"),
-                  style: widget.themeProvider.themeData.textTheme.bodyLarge,
+                  style: widget.themeProvider.themeData.textTheme.bodyMedium,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

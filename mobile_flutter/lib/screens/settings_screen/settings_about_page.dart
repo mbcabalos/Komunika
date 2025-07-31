@@ -22,10 +22,7 @@ class AboutPage extends StatelessWidget {
             title: context.translate("about_title"),
             titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
             themeProvider: themeProvider,
-            isBackButton: true,
-            isSettingButton: false,
-            isHistoryButton: false,
-            database: '',
+            isBackButton: false,
           ),
           body: SingleChildScrollView(
             padding: EdgeInsets.all(
@@ -137,8 +134,8 @@ class AboutPage extends StatelessWidget {
                       assetPath: 'assets/icons/communication.png',
                       themeProvider: themeProvider,
                       onPressed: () {
-                        launchUrl(
-                            Uri.parse('https://web.facebook.com/profile.php?id=61573900271206'));
+                        launchUrl(Uri.parse(
+                            'https://web.facebook.com/profile.php?id=61573900271206'));
                       },
                       size: ResponsiveUtils.getResponsiveSize(context, 25),
                     ),

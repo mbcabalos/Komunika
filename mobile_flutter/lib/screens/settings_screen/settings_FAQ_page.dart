@@ -54,11 +54,7 @@ class _FAQPageState extends State<FAQPage> {
           appBar: AppBarWidget(
             title: context.translate("faq_title"),
             titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
-            themeProvider: widget.themeProvider,
-            isBackButton: true,
-            isSettingButton: false,
-            isHistoryButton: false,
-            database: '',
+            themeProvider: widget.themeProvider, isBackButton: false,
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
