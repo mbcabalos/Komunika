@@ -7,6 +7,7 @@ import 'package:komunika/bloc/bloc_sound_enhancer/sound_enhancer_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_walkthrough/walkthrough_bloc.dart';
 import 'package:komunika/screens/sound_enhancer_screen/sound_enhancer_screen.dart';
+import 'package:komunika/screens/text_to_speech_screen/tts_page%20copy.dart';
 import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
 import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
@@ -110,9 +111,6 @@ class _HomePageState extends State<HomePage> {
               titleSize: ResponsiveUtils.getResponsiveFontSize(context, 35),
               themeProvider: themeProvider,
               isBackButton: false,
-              isSettingButton: true,
-              isHistoryButton: false,
-              database: '',
             ),
             body: BlocConsumer<HomeBloc, HomeState>(
               listener: (context, state) {

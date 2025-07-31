@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
+import 'package:komunika/utils/app_localization_translate.dart';
+import 'package:komunika/utils/responsive.dart';
+import 'package:komunika/utils/themes.dart';
+import 'package:komunika/widgets/global_widgets/app_bar.dart';
 
 class TextToSpeechScreen2 extends StatefulWidget {
-  const TextToSpeechScreen2({super.key});
+  final ThemeProvider themeProvider;
+  final TextToSpeechBloc textToSpeechBloc;
+  const TextToSpeechScreen2(
+      {super.key, required this.themeProvider, required this.textToSpeechBloc});
 
   @override
   State<TextToSpeechScreen2> createState() => _TextToSpeechScreenState2();
@@ -29,14 +37,16 @@ class _TextToSpeechScreenState2 extends State<TextToSpeechScreen2> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Text to Speech'),
+      appBar: AppBarWidget(
+        title: context.translate("tts_title"),
+        titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+        themeProvider: widget.themeProvider,
+        isBackButton: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-
             // Action buttons
             Row(
               children: [

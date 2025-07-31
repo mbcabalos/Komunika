@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_sound_enhancer/sound_enhancer_bloc.dart';
+import 'package:komunika/utils/app_localization_translate.dart';
+import 'package:komunika/widgets/global_widgets/app_bar.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_visualization_card.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_amplifier_card.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
-import 'package:komunika/widgets/global_widgets/history.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/speech_to_text_card.dart';
 
 class SoundEnhancerScreen extends StatefulWidget {
@@ -46,56 +47,11 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
       value: widget.soundEnhancerBloc,
       child: Scaffold(
         backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
-        appBar: AppBar(
-          title: Padding(
-            padding: const EdgeInsets.only(top: 7.0),
-            child: Text(
-              "Sound Enhancer",
-              style: TextStyle(
-                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
-              ),
-            ),
-          ),
-          leading: Padding(
-            padding: EdgeInsets.only(
-              top: ResponsiveUtils.getResponsiveSize(context, 7),
-            ),
-            child: IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: ResponsiveUtils.getResponsiveSize(context, 10),
-              ),
-              onPressed: () {
-                if (_textController.text.isNotEmpty) {
-                  dbHelper.saveSpeechToTextHistory(_textController.text);
-                }
-                _textController.clear();
-                widget.soundEnhancerBloc.add(StopRecordingEvent());
-                Navigator.pop(context);
-              },
-            ),
-          ),
-          actions: [
-            Padding(
-              padding: EdgeInsets.only(
-                top: ResponsiveUtils.getResponsiveSize(context, 7),
-                right: ResponsiveUtils.getResponsiveSize(context, 8),
-              ),
-              child: IconButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => HistoryPage(
-                          themeProvider: widget.themeProvider,
-                          database: 'stt',
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.history_rounded)),
-            ),
-          ],
+        appBar: AppBarWidget(
+          title: context.translate("sound_enhancer_title"),
+          titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+          themeProvider: widget.themeProvider,
+          isBackButton: false,
         ),
         body: BlocConsumer<SoundEnhancerBloc, SoundEnhancerState>(
           listener: (context, state) {

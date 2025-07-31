@@ -52,9 +52,6 @@ class _VoiceMessagePageState extends State<VoiceMessagePage> {
           titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
           themeProvider: widget.themeProvider,
           isBackButton: true,
-          isSettingButton: false,
-          isHistoryButton: false,
-          database: '',
         ),
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
           listener: (context, state) {

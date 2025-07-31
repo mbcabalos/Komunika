@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:komunika/screens/home_screen/bottom_nav_page.dart';
 import 'package:komunika/screens/home_screen/home_page.dart';
 import 'package:komunika/screens/splash_screen/splash_screen.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
@@ -92,7 +93,6 @@ class _MyAppState extends State<MyApp> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return ShowCaseWidget(
       builder: (context) => MaterialApp(
-        //showcase widget builder context
         debugShowCheckedModeBanner: false,
         title: 'Komunika',
         supportedLocales: const [
@@ -118,7 +118,7 @@ class _MyAppState extends State<MyApp> {
         initialRoute: '/',
         routes: {
           '/': (context) => const SplashScreen(),
-          '/home': (context) => const HomePage(),
+          '/home': (context) => BottomNavScreen(themeProvider: themeProvider,),
         },
       ),
     );

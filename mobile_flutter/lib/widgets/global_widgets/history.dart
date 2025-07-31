@@ -114,9 +114,6 @@ class HistoryPageState extends State<HistoryPage> {
         titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
         themeProvider: widget.themeProvider,
         isBackButton: true,
-        isSettingButton: false,
-        isHistoryButton: false,
-        database: '',
       ),
       body: ListView.builder(
         itemCount: sortedDates.length,

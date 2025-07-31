@@ -93,14 +93,30 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                           widget.themeProvider.themeData.primaryColor,
                       splashColor: widget.themeProvider.themeData.primaryColor
                           .withOpacity(0.3),
-                      children: const [
+                      children: [
                         Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text("Off"),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            "Off",
+                            style: TextStyle(
+                              fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                  context, 14),
+                              color: widget.themeProvider.themeData.textTheme
+                                  .bodyMedium?.color,
+                            ),
+                          ),
                         ),
                         Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text("Microphone (Phone / Headset)"),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            "Microphone (Phone / Headset)",
+                            style: TextStyle(
+                              fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                  context, 14),
+                              color: widget.themeProvider.themeData.textTheme
+                                  .bodyMedium?.color,
+                            ),
+                          ),
                         ),
                       ],
                       onPressed: (index) {

@@ -11,15 +11,15 @@ import 'package:komunika/utils/fonts.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/global_widgets/app_bar.dart';
 
-class SettingPage extends StatefulWidget {
+class SettingScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
-  const SettingPage({super.key, required this.themeProvider});
+  const SettingScreen({super.key, required this.themeProvider});
 
   @override
-  State<SettingPage> createState() => SettingPageState();
+  State<SettingScreen> createState() => SettingScreenState();
 }
 
-class SettingPageState extends State<SettingPage> {
+class SettingScreenState extends State<SettingScreen> {
   String selectedTheme = 'Light';
   String selectedLanguage = 'English';
 
@@ -47,10 +47,7 @@ class SettingPageState extends State<SettingPage> {
             title: context.translate('settings_title'),
             titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
             themeProvider: widget.themeProvider,
-            isBackButton: true,
-            isSettingButton: false,
-            isHistoryButton: false,
-            database: '',
+            isBackButton: false,
           ),
           body: SingleChildScrollView(
             padding: EdgeInsets.all(
@@ -162,31 +159,6 @@ class SettingPageState extends State<SettingPage> {
                     );
                   },
                 ),
-                // _buildSettingItem(
-                //   themeProvider: themeProvider,
-                //   icon: Icons.update,
-                //   title: context.translate('settings_update_available'),
-                //   trailing: Container(
-                //     padding:
-                //         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                //     decoration: BoxDecoration(
-                //       color: ColorsPalette.grey,
-                //       borderRadius: BorderRadius.circular(12),
-                //     ),
-                //     child: Text(
-                //       context.translate('settings_update'),
-                //       style: TextStyle(
-                //         fontSize:
-                //             ResponsiveUtils.getResponsiveFontSize(context, 12),
-                //         fontFamily: Fonts.main,
-                //         color: ColorsPalette.white,
-                //       ),
-                //     ),
-                //   ),
-                //   onTap: () {
-                //     // Navigate to update page
-                //   },
-                // ),
               ],
             ),
           ),
