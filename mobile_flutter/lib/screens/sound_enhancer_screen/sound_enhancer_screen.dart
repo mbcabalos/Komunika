@@ -9,13 +9,12 @@ import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/speech_to_text_card.dart';
+import 'package:provider/provider.dart';
 
 class SoundEnhancerScreen extends StatefulWidget {
-  final ThemeProvider themeProvider;
   final SoundEnhancerBloc soundEnhancerBloc;
   const SoundEnhancerScreen(
       {super.key,
-      required this.themeProvider,
       required this.soundEnhancerBloc});
 
   @override
@@ -26,7 +25,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
   final TextEditingController _textController = TextEditingController();
 
   final dbHelper = DatabaseHelper();
-  int _micMode = 0; // 0: Off, 1: Phone Mic, 2: Headset Mic
+  int _micMode = 0; // 0: Off, 1: On
   bool _isTranscriptionEnabled = false;
 
   @override
@@ -43,14 +42,15 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return BlocProvider.value(
       value: widget.soundEnhancerBloc,
       child: Scaffold(
-        backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
+        backgroundColor: themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
           title: context.translate("sound_enhancer_title"),
           titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
-          themeProvider: widget.themeProvider,
+          themeProvider: themeProvider,
           isBackButton: false,
         ),
         body: BlocConsumer<SoundEnhancerBloc, SoundEnhancerState>(
@@ -65,11 +65,11 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
             if (state is SoundEnhancerLoadingState) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is SoundEnhancerLoadedSuccessState) {
-              return _buildContent(widget.themeProvider);
+              return _buildContent(themeProvider);
             } else if (state is SoundEnhancerErrorState) {
               return const Text('Error processing text to speech!');
             } else {
-              return _buildContent(widget.themeProvider);
+              return _buildContent(themeProvider);
             }
           },
         ),
@@ -91,7 +91,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
             children: [
               SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
               SoundVisualizationCard(
-                themeProvider: widget.themeProvider,
+                themeProvider: themeProvider,
                 isActive: _micMode == 0 ? false : true,
               ),
               SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 16)),

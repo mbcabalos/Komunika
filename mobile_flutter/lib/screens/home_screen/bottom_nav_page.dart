@@ -9,7 +9,7 @@ import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/services/live-service-handler/speex_denoiser.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
-import 'package:komunika/utils/themes.dart';  
+import 'package:komunika/utils/themes.dart';
 
 class BottomNavScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
@@ -40,11 +40,8 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
 
     // Initialize screens after BLoCs are created
     _screens = [
-      SoundEnhancerScreen(
-          themeProvider: widget.themeProvider,
-          soundEnhancerBloc: soundEnhancerBloc),
+      SoundEnhancerScreen(soundEnhancerBloc: soundEnhancerBloc),
       TextToSpeechScreen(
-        themeProvider: widget.themeProvider,
         ttsBloc: textToSpeechBloc,
       ),
       SettingScreen(themeProvider: widget.themeProvider),

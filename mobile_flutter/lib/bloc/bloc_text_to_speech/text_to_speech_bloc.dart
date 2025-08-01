@@ -62,19 +62,6 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
     }
   }
 
-  Future<void> flutterTTSEvent(
-      FlutterTTSEvent event, Emitter<TextToSpeechState> emit) async {
-    try {
-      await flutterTts.setPitch(1.0);
-      await flutterTts.setSpeechRate(0.5);
-      await flutterTts.speak(event.text);
-      await _fetchAndEmitAudioItems(emit);
-      emit(AudioPlaybackCompletedState());
-    } catch (e) {
-      emit(TextToSpeechErrorState(message: "$e"));
-    }
-  }
-
   FutureOr<void> addToFavoriteEvent(
       AddToFavoriteEvent event, Emitter<TextToSpeechState> emit) async {
     try {
@@ -121,12 +108,31 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
       await for (final playerState in player.playerStateStream) {
         if (playerState.processingState == ProcessingState.completed) {
           emit(AudioPlaybackCompletedState());
-          break; // Stop listening after emitting the state
+          break;
         }
       }
       await _fetchAndEmitAudioItems(emit);
     } catch (e) {
       emit(TextToSpeechErrorState(message: '$e'));
+    }
+  }
+
+  Future<void> flutterTTSEvent(
+      FlutterTTSEvent event, Emitter<TextToSpeechState> emit) async {
+    try {
+      await flutterTts.setPitch(1.0);
+      await flutterTts.setSpeechRate(0.5);
+
+      flutterTts.setCompletionHandler(() {
+        print("Audio playback completed");
+        emit(AudioPlaybackCompletedState());
+      });
+
+      await flutterTts.speak(event.text);
+      await _fetchAndEmitAudioItems(emit);
+      // Do NOT emit AudioPlaybackCompletedState here!
+    } catch (e) {
+      emit(TextToSpeechErrorState(message: "$e"));
     }
   }
 
@@ -156,9 +162,8 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
         compressQuality: 100,
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle:
-                "\n Crop Image", 
-            toolbarColor: ColorsPalette.accent, 
+            toolbarTitle: "\n Crop Image",
+            toolbarColor: ColorsPalette.accent,
             toolbarWidgetColor: ColorsPalette.white,
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: false,

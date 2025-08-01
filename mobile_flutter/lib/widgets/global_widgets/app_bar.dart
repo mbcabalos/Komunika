@@ -10,6 +10,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final bool isSettingButton;
   final bool isHistoryButton;
   final String database;
+  final Widget? customAction; // <-- Add this line
 
   const AppBarWidget({
     super.key,
@@ -20,6 +21,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
     this.isSettingButton = false,
     this.isHistoryButton = false,
     this.database = '',
+    this.customAction, // <-- Add this line
   });
 
   @override
@@ -36,7 +38,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
           fontFamily: Fonts.main,
           fontWeight: FontWeight.w600,
           color: themeProvider.themeData.textTheme.bodyLarge?.color,
-          letterSpacing: 5, 
+          letterSpacing: 5,
         ),
       ),
       leading: isBackButton
@@ -49,6 +51,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
             )
           : null,
       actions: [
+        if (customAction != null) customAction!, // <-- Add this line
         if (isHistoryButton)
           IconButton(
             icon: Icon(

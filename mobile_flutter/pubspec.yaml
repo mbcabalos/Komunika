@@ -120,6 +120,7 @@ flutter:
     - assets/audio/
     - assets/icons/
     - assets/images/
+    - assets/flags/
     - assets/languages/
     - assets/languages/en.json
 
