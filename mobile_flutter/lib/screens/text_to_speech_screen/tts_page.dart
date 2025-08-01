@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -14,13 +17,12 @@ import 'package:komunika/utils/snack_bar.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/global_widgets/app_bar.dart';
 import 'package:komunika/widgets/text_to_speech_widgets/text_area_card.dart';
+import 'package:provider/provider.dart';
 
 class TextToSpeechScreen extends StatefulWidget {
-  final ThemeProvider themeProvider;
   final TextToSpeechBloc ttsBloc;
   const TextToSpeechScreen({
     super.key,
-    required this.themeProvider,
     required this.ttsBloc,
   });
 
@@ -33,19 +35,53 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   final TextEditingController _titleController = TextEditingController();
   final FlutterTts flutterTts = FlutterTts();
   final ImagePicker _imagePicker = ImagePicker();
-  Map<String, String> ttsSettings = {};
-  bool _isMaleVoice = false;
-  String selectedLangauge = '';
-  String selectedVoice = '';
+
+  // TTS Control Variables
+  double rate = 0.5;
+  bool isCurrentLanguageInstalled = false;
   bool currentlyPlaying = false;
-  bool save = false;
+
+  Map<String, String> ttsSettings = {};
+
   List<XFile> _selectedImages = [];
   int _currentProcessingIndex = 0;
+  String? language;
+  String? selectedVoice;
+  final List<Map<String, String>> _voiceOptions = [
+    {
+      "image": "assets/flags/us_male.png",
+      "label": "US - MALE",
+      "language": "en-US",
+      "voice":
+          "en-us-x-sfg#male_1-local", // Example, use actual voice name from flutterTts.getVoices
+    },
+    {
+      "image": "assets/flags/us_female.png",
+      "label": "US - FEMALE",
+      "language": "en-US",
+      "voice": "en-us-x-sfg#female_1-local",
+    },
+    {
+      "image": "assets/flags/ph_male.png",
+      "label": "PH - MALE",
+      "language": "fil-PH",
+      "voice": "fil-ph-x-fia-local",
+    },
+    {
+      "image": "assets/flags/ph_female.png",
+      "label": "PH - FEMALE",
+      "language": "fil-PH",
+      "voice": "fil-ph-x-fib-local",
+    },
+  ];
+
+  final List<double> _rateOptions = [0.5, 0.75, 1.0];
 
   @override
   void initState() {
     super.initState();
     _initialize();
+    _initTts();
   }
 
   Future<void> _initialize() async {
@@ -53,28 +89,134 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     ttsSettings = await PreferencesUtils.getTTSSettings();
   }
 
+  Future<void> _initTts() async {
+    _setAwaitOptions();
+
+    if (isAndroid) {
+      _getDefaultVoice();
+    }
+
+    flutterTts.setStartHandler(() {
+      setState(() {
+        currentlyPlaying = true;
+      });
+    });
+
+    flutterTts.setCompletionHandler(() {
+      setState(() {
+        currentlyPlaying = false;
+      });
+    });
+
+    flutterTts.setCancelHandler(() {
+      setState(() {
+        currentlyPlaying = false;
+      });
+    });
+
+    flutterTts.setErrorHandler((msg) {
+      setState(() {
+        currentlyPlaying = false;
+      });
+      showCustomSnackBar(context, "TTS Error: $msg", ColorsPalette.red);
+    });
+  }
+
+  Future<void> _getDefaultVoice() async {
+    var voice = await flutterTts.getDefaultVoice;
+    if (voice != null) {
+      print(voice);
+    }
+  }
+
+  Future<void> _setAwaitOptions() async {
+    await flutterTts.awaitSpeakCompletion(true);
+  }
+
+  Future<void> _speak() async {
+    List voices = await flutterTts.getVoices;
+    print(voices);
+    final text = _textController.text.trim();
+    if (text.isEmpty) {
+      showCustomSnackBar(context, "Text field is empty!", ColorsPalette.red);
+      return;
+    }
+
+    await flutterTts.setEngine("com.google.android.tts");
+    await flutterTts.setVolume(1.0);
+    await flutterTts.setSpeechRate(rate);
+    await flutterTts.setPitch(1.0);
+
+    if (language != null) {
+      await flutterTts.setLanguage(language!);
+    }
+    if (selectedVoice != null) {
+      await flutterTts.setVoice({"name": selectedVoice!});
+    }
+
+    await flutterTts.speak(text);
+  }
+
+  Future<void> _stop() async {
+    await flutterTts.stop();
+    setState(() {
+      currentlyPlaying = false;
+    });
+  }
+
+  Future<void> _pause() async {
+    await flutterTts.pause();
+    setState(() {
+      currentlyPlaying = false;
+    });
+  }
+
+  bool get isAndroid => !kIsWeb && Platform.isAndroid;
+
+  @override
+  void dispose() {
+    flutterTts.stop();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return BlocProvider.value(
       value: widget.ttsBloc,
       child: Scaffold(
-        backgroundColor: widget.themeProvider.themeData.scaffoldBackgroundColor,
+        backgroundColor: themeProvider.themeData.scaffoldBackgroundColor,
         appBar: AppBarWidget(
           title: context.translate("tts_title"),
           titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
-          themeProvider: widget.themeProvider,
+          themeProvider: themeProvider,
           isBackButton: false,
+          customAction: IconButton(
+              tooltip: context.translate("tts_image_processing_title"),
+              icon: Icon(
+                Icons.storage_rounded,
+                color: themeProvider.themeData.textTheme.bodySmall?.color,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => VoiceMessagePage(
+                      themeProvider: themeProvider,
+                      textToSpeechBloc: widget.ttsBloc,
+                    ),
+                  ),
+                );
+              }),
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: _showImageSourceDialog,
-          backgroundColor: widget.themeProvider.themeData.primaryColor,
-          tooltip: context.translate("tts_image_processing_title"),
+          backgroundColor: themeProvider.themeData.primaryColor,
           child: Icon(
             Icons.document_scanner_rounded,
-            color: widget.themeProvider.themeData.textTheme.bodySmall?.color,
+            color: themeProvider.themeData.textTheme.bodySmall?.color,
           ),
         ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
           listener: (context, state) {
             if (state is ImageCroppedState) {
@@ -91,21 +233,16 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
               showCustomSnackBar(
                   context, "Error, Please try again", ColorsPalette.red);
             }
-            if (state is AudioPlaybackCompletedState) {
-              setState(() {
-                currentlyPlaying = false;
-              });
-            }
           },
           builder: (context, state) {
             if (state is TextToSpeechLoadingState) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is TextToSpeechLoadedSuccessState) {
-              return _buildContent(widget.themeProvider);
+              return _buildContent(themeProvider);
             } else if (state is TextToSpeechErrorState) {
               return const Text('Error processing text to speech!');
             } else {
-              return _buildContent(widget.themeProvider);
+              return _buildContent(themeProvider);
             }
           },
         ),
@@ -122,267 +259,21 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
         child: Column(
           children: [
             Container(
-              margin: EdgeInsets.all(ResponsiveUtils.getResponsiveSize(context, 16)),
+              margin: EdgeInsets.all(
+                  ResponsiveUtils.getResponsiveSize(context, 16)),
               child: TextAreaCard(
                 themeProvider: themeProvider,
-                textController: _textController,
+                ttsBloc: widget.ttsBloc,
+                titleController: _titleController,
+                contentController: _textController,
                 width: phoneWidth,
                 height: phoneHeight,
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => VoiceMessagePage(
-                              themeProvider: widget.themeProvider,
-                              textToSpeechBloc: widget.ttsBloc),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: ResponsiveUtils.getResponsiveSize(context, 50),
-                      height: ResponsiveUtils.getResponsiveSize(context, 50),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: themeProvider.themeData.primaryColor,
-                      ),
-                      child: Icon(
-                        Icons.list_rounded,
-                        color:
-                            themeProvider.themeData.textTheme.bodySmall?.color,
-                        size: ResponsiveUtils.getResponsiveSize(context, 40),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: ResponsiveUtils.getResponsiveSize(context, 20)),
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: GestureDetector(
-                    onTap: currentlyPlaying
-                        ? null
-                        : () {
-                            _titleController.text.trim();
-                            final text = _textController.text.trim();
-                            if (text.isNotEmpty) {
-                              setState(() {
-                                currentlyPlaying = true;
-                              });
-                              widget.ttsBloc.add(FlutterTTSEvent(
-                                  text: text,
-                                  language: ttsSettings['language'].toString(),
-                                  voice: ttsSettings['voice'].toString()));
-                            } else {
-                              showCustomSnackBar(
-                                context,
-                                "Text field is empty!",
-                                ColorsPalette.red,
-                              );
-                            }
-                          },
-                    child: Container(
-                      width: ResponsiveUtils.getResponsiveSize(context, 80),
-                      height: ResponsiveUtils.getResponsiveSize(context, 80),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: themeProvider.themeData.primaryColor,
-                      ),
-                      child: currentlyPlaying
-                          ? Icon(
-                              Icons.pause_outlined,
-                              color: themeProvider
-                                  .themeData.textTheme.bodySmall?.color,
-                              size: ResponsiveUtils.getResponsiveSize(
-                                  context, 60),
-                            )
-                          : Icon(
-                              Icons.play_arrow_rounded,
-                              color: themeProvider
-                                  .themeData.textTheme.bodySmall?.color,
-                              size: ResponsiveUtils.getResponsiveSize(
-                                  context, 60),
-                            ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: ResponsiveUtils.getResponsiveSize(context, 20)),
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: GestureDetector(
-                    onTap: () async {
-                      final text = _textController.text.trim();
-                      if (text.isNotEmpty) {
-                        final enteredTitle = await showDialog<String>(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              backgroundColor:
-                                  themeProvider.themeData.primaryColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              title: Text(
-                                "Enter Title",
-                                style: TextStyle(
-                                  color: themeProvider
-                                      .themeData.textTheme.bodySmall?.color,
-                                  fontSize:
-                                      ResponsiveUtils.getResponsiveFontSize(
-                                          context, 20),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              content: Container(
-                                decoration: BoxDecoration(
-                                  color:
-                                      widget.themeProvider.themeData.cardColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 12),
-                                child: TextField(
-                                  controller: _titleController,
-                                  style: widget.themeProvider.themeData
-                                      .textTheme.bodyLarge,
-                                  decoration: InputDecoration(
-                                    hintText: "Enter title here",
-                                    hintStyle: TextStyle(
-                                      color: Colors.grey.shade600,
-                                    ),
-                                    border: InputBorder.none,
-                                  ),
-                                ),
-                              ),
-                              actions: [
-                                FilledButton(
-                                  onPressed: () {
-                                    _titleController.clear();
-                                    save = false;
-                                    Navigator.pop(context);
-                                  },
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: ColorsPalette.red,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 8),
-                                  ),
-                                  child: Text(
-                                    context.translate("tts_cancel"),
-                                    style: TextStyle(
-                                      color: widget.themeProvider.themeData
-                                          .textTheme.bodySmall?.color,
-                                      fontSize:
-                                          ResponsiveUtils.getResponsiveFontSize(
-                                              context, 14),
-                                    ),
-                                  ),
-                                ),
-                                FilledButton(
-                                  onPressed: () {
-                                    _titleController.clear();
-                                    save = true;
-                                    Navigator.pop(
-                                        context, _titleController.text.trim());
-                                  },
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: ColorsPalette.green,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 8),
-                                  ),
-                                  child: Text(
-                                    context.translate("tts_proceed"),
-                                    style: TextStyle(
-                                      color: widget.themeProvider.themeData
-                                          .textTheme.bodySmall?.color,
-                                      fontSize:
-                                          ResponsiveUtils.getResponsiveFontSize(
-                                              context, 14),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                        if (save != false) {
-                          if (enteredTitle != null && enteredTitle.isNotEmpty) {
-                            widget.ttsBloc.add(
-                              CreateTextToSpeechEvent(
-                                text: text,
-                                title: enteredTitle,
-                                save: true,
-                              ),
-                            );
-                            _textController.clear();
-                            showCustomSnackBar(
-                                context, "Saved!", ColorsPalette.green);
-                          } else {
-                            showCustomSnackBar(context,
-                                "Error, Please try again!", ColorsPalette.red);
-                          }
-                        } else {}
-                      } else {
-                        showCustomSnackBar(
-                            context, "Text field is empty!", ColorsPalette.red);
-                      }
-                    },
-                    child: Container(
-                      width: ResponsiveUtils.getResponsiveSize(context, 50),
-                      height: ResponsiveUtils.getResponsiveSize(context, 50),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: themeProvider.themeData.primaryColor,
-                      ),
-                      child: Icon(
-                        Icons.save_alt_rounded,
-                        color:
-                            themeProvider.themeData.textTheme.bodySmall?.color,
-                        size: ResponsiveUtils.getResponsiveSize(context, 35),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+
+            // TTS Controls Section
+            _buildTtsControls(themeProvider),
+
             SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 20)),
           ],
         ),
@@ -390,11 +281,223 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     );
   }
 
+  Widget _buildTtsControls(ThemeProvider themeProvider) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          children: [
+            _buildControlButton(
+              label: "Voice",
+              backgroundColor: themeProvider.themeData.cardColor,
+              textColor: themeProvider.themeData.textTheme.bodyMedium?.color,
+              height: 50,
+              width: 100,
+              onPressed: () async {
+                await showDialog(
+                  context: context,
+                  builder: (context) => Dialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Container(
+                      width: 200,
+                      height: 220,
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: _voiceOptions.sublist(0, 2).map((option) {
+                              return _buildVoiceOption(option);
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: _voiceOptions.sublist(2, 4).map((option) {
+                              return _buildVoiceOption(option);
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+              themeProvider: themeProvider,
+            ),
+          ],
+        ),
+        SizedBox(width: ResponsiveUtils.getResponsiveSize(context, 20)),
+
+        // Play/Pause Button
+        _buildControlButton(
+          icon: currentlyPlaying
+              ? Icons.pause_outlined
+              : Icons.play_arrow_rounded,
+          iconSize: ResponsiveUtils.getResponsiveSize(context, 50),
+          height: 80,
+          width: 100,
+          onPressed: currentlyPlaying ? _pause : _speak,
+          themeProvider: themeProvider,
+        ),
+
+        SizedBox(width: ResponsiveUtils.getResponsiveSize(context, 20)),
+
+        _buildControlButton(
+          label: "${rate.toStringAsFixed(2)}x",
+          backgroundColor: themeProvider.themeData.cardColor,
+          textColor: themeProvider.themeData.textTheme.bodyMedium?.color,
+          height: 50,
+          width: 100,
+          onPressed: () async {
+            await showDialog(
+              context: context,
+              builder: (context) => Dialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Container(
+                  width: 100,
+                  height: 200,
+                  padding: const EdgeInsets.all(8),
+                  child: ListView.builder(
+                    itemCount: _rateOptions.length,
+                    itemBuilder: (context, index) {
+                      final option = _rateOptions[index];
+                      return ListTile(
+                        title: Text("${option.toStringAsFixed(2)}x"),
+                        selected: rate == option,
+                        onTap: () {
+                          setState(() {
+                            rate = option;
+                          });
+                          Navigator.pop(context);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+          themeProvider: themeProvider,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVoiceOption(Map<String, String> option) {
+    final isSelected = selectedVoice == option["voice"];
+    return GestureDetector(
+      onTap: () async {
+        setState(() {
+          language = option["language"];
+          selectedVoice = option["voice"];
+        });
+        await flutterTts.setLanguage(option["language"]!);
+        await flutterTts.setVoice({"name": option["voice"]!});
+        Navigator.pop(context);
+      },
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: isSelected ? Colors.blue : Colors.transparent,
+                width: 2,
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: CircleAvatar(
+              radius: 30,
+              backgroundImage: AssetImage(option["image"]!),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            option["label"]!,
+            style: TextStyle(
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? Colors.blue : Colors.black,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildControlButton({
+    IconData? icon,
+    String? label,
+    double? width,
+    double? height,
+    Color? backgroundColor,
+    Color? textColor,
+    Color? iconColor,
+    double? iconSize,
+    double? fontSize,
+    required VoidCallback onPressed,
+    required ThemeProvider themeProvider,
+  }) {
+    // Calculate font size if not provided
+    final calculatedFontSize =
+        fontSize ?? ResponsiveUtils.getResponsiveFontSize(context, 14);
+
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          width: height,
+          height: width,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: backgroundColor ?? themeProvider.themeData.primaryColor,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null)
+                Icon(
+                  icon,
+                  color: iconColor ??
+                      themeProvider.themeData.textTheme.bodySmall?.color,
+                  size: iconSize,
+                ),
+              if (label != null && label.isNotEmpty)
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: textColor ??
+                        themeProvider.themeData.textTheme.bodySmall?.color,
+                    fontSize: calculatedFontSize,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _showImageSourceDialog() async {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: widget.themeProvider.themeData.primaryColor,
+        backgroundColor: themeProvider.themeData.primaryColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -406,8 +509,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
               Text(
                 context.translate("tts_select_source"),
                 style: TextStyle(
-                  color:
-                      widget.themeProvider.themeData.textTheme.bodySmall?.color,
+                  color: themeProvider.themeData.textTheme.bodySmall?.color,
                   fontWeight: FontWeight.bold,
                   fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
                 ),
@@ -416,16 +518,16 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
               ListTile(
                 leading: Icon(
                   Icons.camera_alt_rounded,
-                  color: widget.themeProvider.themeData.primaryColor,
+                  color: themeProvider.themeData.primaryColor,
                 ),
                 title: Text(
                   context.translate("tts_camera"),
-                  style: widget.themeProvider.themeData.textTheme.bodyMedium,
+                  style: themeProvider.themeData.textTheme.bodyMedium,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                tileColor: widget.themeProvider.themeData.cardColor,
+                tileColor: themeProvider.themeData.cardColor,
                 onTap: () {
                   Navigator.pop(context);
                   widget.ttsBloc.add(
@@ -437,16 +539,16 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
               ListTile(
                 leading: Icon(
                   Icons.photo_library_rounded,
-                  color: widget.themeProvider.themeData.primaryColor,
+                  color: themeProvider.themeData.primaryColor,
                 ),
                 title: Text(
                   context.translate("tts_gallery"),
-                  style: widget.themeProvider.themeData.textTheme.bodyMedium,
+                  style: themeProvider.themeData.textTheme.bodyMedium,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                tileColor: widget.themeProvider.themeData.cardColor,
+                tileColor: themeProvider.themeData.cardColor,
                 onTap: () {
                   Navigator.pop(context);
                   _pickMultipleImages();
@@ -478,6 +580,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   }
 
   Future<void> _extractTextFromImage(String imagePath) async {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -493,8 +596,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
               Text(
                 context.translate("tts_processing_image"),
                 style: TextStyle(
-                  color: widget
-                      .themeProvider.themeData.textTheme.bodyMedium?.color,
+                  color: themeProvider.themeData.textTheme.bodyMedium?.color,
                   fontWeight: FontWeight.bold,
                   fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
                 ),
@@ -505,8 +607,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
               Text(
                 context.translate("tts_extracting_text"),
                 style: TextStyle(
-                  color: widget
-                      .themeProvider.themeData.textTheme.bodyMedium?.color,
+                  color: themeProvider.themeData.textTheme.bodyMedium?.color,
                   fontWeight: FontWeight.bold,
                   fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
                 ),
@@ -534,11 +635,12 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
 
   Future<void> _showBatchProcessingDialog() async {
     bool confirmBatch = false;
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
     await showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: widget.themeProvider.themeData.primaryColor,
+        backgroundColor: themeProvider.themeData.primaryColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -550,8 +652,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
               Text(
                 context.translate("tts_batch_process_title"),
                 style: TextStyle(
-                  color:
-                      widget.themeProvider.themeData.textTheme.bodySmall?.color,
+                  color: themeProvider.themeData.textTheme.bodySmall?.color,
                   fontWeight: FontWeight.bold,
                   fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
                 ),
@@ -562,8 +663,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     .translate("tts_batch_process_message")
                     .replaceAll("{count}", _selectedImages.length.toString()),
                 style: TextStyle(
-                  color:
-                      widget.themeProvider.themeData.textTheme.bodySmall?.color,
+                  color: themeProvider.themeData.textTheme.bodySmall?.color,
                   fontSize: ResponsiveUtils.getResponsiveFontSize(context, 14),
                 ),
                 textAlign: TextAlign.center,
@@ -587,8 +687,8 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     child: Text(
                       context.translate("tts_cancel"),
                       style: TextStyle(
-                        color: widget
-                            .themeProvider.themeData.textTheme.bodySmall?.color,
+                        color:
+                            themeProvider.themeData.textTheme.bodySmall?.color,
                         fontSize:
                             ResponsiveUtils.getResponsiveFontSize(context, 14),
                       ),
@@ -611,8 +711,8 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     child: Text(
                       context.translate("tts_proceed"),
                       style: TextStyle(
-                        color: widget
-                            .themeProvider.themeData.textTheme.bodySmall?.color,
+                        color:
+                            themeProvider.themeData.textTheme.bodySmall?.color,
                         fontSize:
                             ResponsiveUtils.getResponsiveFontSize(context, 14),
                       ),
@@ -635,6 +735,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   }
 
   Future<void> _processBatchImages() async {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -652,8 +753,8 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   Text(
                     context.translate("tts_processing_batch"),
                     style: TextStyle(
-                      color: widget
-                          .themeProvider.themeData.textTheme.bodyMedium?.color,
+                      color:
+                          themeProvider.themeData.textTheme.bodyMedium?.color,
                       fontWeight: FontWeight.bold,
                       fontSize:
                           ResponsiveUtils.getResponsiveFontSize(context, 20),
@@ -674,8 +775,8 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                         .replaceAll(
                             "{total}", _selectedImages.length.toString()),
                     style: TextStyle(
-                      color: widget
-                          .themeProvider.themeData.textTheme.bodyMedium?.color,
+                      color:
+                          themeProvider.themeData.textTheme.bodyMedium?.color,
                       fontSize:
                           ResponsiveUtils.getResponsiveFontSize(context, 14),
                     ),
