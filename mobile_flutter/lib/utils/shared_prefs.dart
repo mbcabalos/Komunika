@@ -105,6 +105,11 @@ class PreferencesUtils {
     await prefs.setDouble('isAmplifierVolume', volume);
   }
 
+  static Future<void> storeAudioBalanceLevel(double balance) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('isAudioBalanceLevel', balance);
+  }
+
   static Future<void> storeDenoiseLevel(int level) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt('isDenoiseLevel', level);
