@@ -54,7 +54,7 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
         children: [
           // Transcription Toggle
           buildSwitchRow(
-            "Transcription",
+            context.translate("sound_enhancer_transcription"),
             widget.isTranscriptionEnabled,
             onChanged: (bool enabled) {
               widget.onTranscriptionToggle(enabled);
@@ -88,7 +88,7 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            "Translated Text",
+            context.translate("sound_enhancer_transcription_translated_text"),
             style: TextStyle(
               color: widget.themeProvider.themeData.textTheme.bodyMedium?.color,
               fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
@@ -112,7 +112,7 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Translated Text",
+                context.translate("sound_enhancer_transcription_translated_text"),
                 style: TextStyle(
                   color: widget
                       .themeProvider.themeData.textTheme.bodyMedium?.color,
@@ -156,7 +156,7 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
                             ResponsiveUtils.getResponsiveFontSize(context, 16),
                       ),
                       decoration: InputDecoration(
-                        hintText: context.translate("sound_enhancer_hint"),
+                        hintText: context.translate("sound_enhancer_transcription_hint"),
                         border: InputBorder.none,
                         fillColor: Colors.transparent,
                         filled: true,

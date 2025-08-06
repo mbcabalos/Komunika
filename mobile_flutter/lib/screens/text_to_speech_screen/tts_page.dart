@@ -191,26 +191,28 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
           titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
           themeProvider: themeProvider,
           isBackButton: false,
-          customAction: IconButton(
-              tooltip: context.translate("tts_image_processing_title"),
-              icon: Icon(
-                Icons.storage_rounded,
-                color: themeProvider.themeData.textTheme.bodySmall?.color,
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => VoiceMessagePage(
-                      themeProvider: themeProvider,
-                      textToSpeechBloc: widget.ttsBloc,
-                    ),
-                  ),
-                );
-              }),
+          // customAction: IconButton(
+          //     tooltip: context.translate("tts_image_processing_title"),
+          //     icon: Icon(
+          //       Icons.storage_rounded,
+          //       color: themeProvider.themeData.textTheme.bodySmall?.color,
+          //     ),
+          //     onPressed: () {
+          //       Navigator.push(
+          //         context,
+          //         MaterialPageRoute(
+          //           builder: (context) => VoiceMessagePage(
+          //             themeProvider: themeProvider,
+          //             textToSpeechBloc: widget.ttsBloc,
+          //           ),
+          //         ),
+          //       );
+          //     }),
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: _showImageSourceDialog,
+          onPressed: () {
+            _showImageSourceDialog(themeProvider);
+          },
           backgroundColor: themeProvider.themeData.primaryColor,
           child: Icon(
             Icons.document_scanner_rounded,
@@ -220,7 +222,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
           listener: (context, state) {
             if (state is ImageCroppedState) {
-              _extractTextFromImage(state.croppedImagePath);
+              _extractTextFromImage(state.croppedImagePath, themeProvider);
             }
             if (state is TextExtractionSuccessState) {
               setState(() {
@@ -492,8 +494,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     );
   }
 
-  Future<void> _showImageSourceDialog() async {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+  Future<void> _showImageSourceDialog(ThemeProvider themeProvider) async {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -551,7 +552,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                 tileColor: themeProvider.themeData.cardColor,
                 onTap: () {
                   Navigator.pop(context);
-                  _pickMultipleImages();
+                  _pickMultipleImages(themeProvider);
                 },
               ),
               const SizedBox(height: 16),
@@ -562,7 +563,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     );
   }
 
-  Future<void> _pickMultipleImages() async {
+  Future<void> _pickMultipleImages(ThemeProvider themeProvider) async {
     try {
       final List<XFile> images = await _imagePicker.pickMultiImage(
         imageQuality: 70,
@@ -572,15 +573,14 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
         setState(() {
           _selectedImages = images;
         });
-        _showBatchProcessingDialog();
+        _showBatchProcessingDialog(themeProvider);
       }
     } catch (e) {
       showCustomSnackBar(context, "Error: ${e.toString()}", ColorsPalette.red);
     }
   }
 
-  Future<void> _extractTextFromImage(String imagePath) async {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+  Future<void> _extractTextFromImage(String imagePath, ThemeProvider themeProvider) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -633,9 +633,8 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     }
   }
 
-  Future<void> _showBatchProcessingDialog() async {
+  Future<void> _showBatchProcessingDialog(ThemeProvider themeProvider) async {
     bool confirmBatch = false;
-    final themeProvider = Provider.of<ThemeProvider>(context);
 
     await showDialog(
       context: context,
@@ -730,12 +729,11 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
       setState(() {
         _currentProcessingIndex = 0;
       });
-      await _processBatchImages();
+      await _processBatchImages(themeProvider);
     }
   }
 
-  Future<void> _processBatchImages() async {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+  Future<void> _processBatchImages(ThemeProvider themeProvider) async {
     showDialog(
       context: context,
       barrierDismissible: false,

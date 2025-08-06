@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_headset_detector/flutter_headset_detector.dart';
 import 'package:komunika/bloc/bloc_sound_enhancer/sound_enhancer_bloc.dart';
+import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 
-class SoundAmplifierScreen extends StatefulWidget {
+class SoundAmplifierCard extends StatefulWidget {
   final ThemeProvider themeProvider;
   final SoundEnhancerBloc soundEnhancerBloc;
   final int micMode;
   final ValueChanged<int> onMicModeChanged;
 
-  const SoundAmplifierScreen({
+  const SoundAmplifierCard({
     super.key,
     required this.themeProvider,
     required this.micMode,
@@ -19,18 +21,89 @@ class SoundAmplifierScreen extends StatefulWidget {
   });
 
   @override
-  State<SoundAmplifierScreen> createState() => _SoundAmplifierScreenState();
+  State<SoundAmplifierCard> createState() => _SoundAmplifierCardState();
 }
 
-class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
+class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
   double _amplifierVolumeLevel = 1.0;
   bool isNoiseSupressorActive = false;
   int _noiseReductionPercent = 50;
+  bool _isWiredConnected = false;
+  bool _isWirelessConnected = false;
+  final headsetDetector = HeadsetDetector();
+  bool get _isAnyHeadsetConnected => _isWiredConnected || _isWirelessConnected;
 
   @override
   void initState() {
     super.initState();
+    _initHeadsetDetection();
     _loadEnhancerValues();
+  }
+
+  Future<void> _initHeadsetDetection() async {
+    // Initial state
+    headsetDetector.getCurrentState.then((val) {
+      setState(() {
+        _isWiredConnected = val[HeadsetType.WIRED] == HeadsetState.CONNECTED;
+        _isWirelessConnected =
+            val[HeadsetType.WIRELESS] == HeadsetState.CONNECTED;
+      });
+      // If both are disconnected at startup, ensure mic is off
+      if (!_isWiredConnected && !_isWirelessConnected) {
+        widget.onMicModeChanged(0);
+        widget.soundEnhancerBloc.add(StopRecordingEvent());
+      }
+    });
+
+    // Listen for cCard
+    headsetDetector.setListener((val) {
+      setState(() {
+        switch (val) {
+          case HeadsetChangedEvent.WIRED_CONNECTED:
+            _isWiredConnected = true;
+            break;
+          case HeadsetChangedEvent.WIRED_DISCONNECTED:
+            _isWiredConnected = false;
+            break;
+          case HeadsetChangedEvent.WIRELESS_CONNECTED:
+            _isWirelessConnected = true;
+            break;
+          case HeadsetChangedEvent.WIRELESS_DISCONNECTED:
+            _isWirelessConnected = false;
+            break;
+        }
+        // If both are disconnected after a change, turn off mic mode
+        if (!_isWiredConnected && !_isWirelessConnected) {
+          widget.onMicModeChanged(0);
+          widget.soundEnhancerBloc.add(StopRecordingEvent());
+        }
+      });
+    });
+  }
+
+  void _showHeadsetDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: widget.themeProvider.themeData.cardColor,
+        title:
+            Text(context.translate("sound_enhancer_amplifier_warning_title")),
+        content: Text(
+          context.translate("sound_enhancer_amplifier_warning_content"),
+        ),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: widget.themeProvider.themeData.primaryColor,
+              foregroundColor:
+                  widget.themeProvider.themeData.textTheme.bodySmall?.color,
+            ),
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _loadEnhancerValues() async {
@@ -97,7 +170,7 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
-                            "Off",
+                            context.translate("sound_enhancer_amplifier_off"),
                             style: TextStyle(
                               fontSize: ResponsiveUtils.getResponsiveFontSize(
                                   context, 14),
@@ -108,18 +181,40 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            "Microphone (Phone / Headset)",
-                            style: TextStyle(
-                              fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                  context, 14),
-                              color: widget.themeProvider.themeData.textTheme
-                                  .bodyMedium?.color,
-                            ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                context
+                                    .translate("sound_enhancer_amplifier_on"),
+                                style: TextStyle(
+                                  fontSize:
+                                      ResponsiveUtils.getResponsiveFontSize(
+                                          context, 14),
+                                  color: widget.themeProvider.themeData
+                                      .textTheme.bodyMedium?.color,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                _isAnyHeadsetConnected
+                                    ? Icons.headset
+                                    : Icons.headset_off,
+                                size: ResponsiveUtils.getResponsiveSize(
+                                    context, 16),
+                                color: _isAnyHeadsetConnected
+                                    ? Colors.green
+                                    : Colors.red,
+                              ),
+                            ],
                           ),
                         ),
                       ],
-                      onPressed: (index) {
+                      onPressed: (index) async {
+                        if (index == 1 && !_isAnyHeadsetConnected) {
+                          _showHeadsetDialog();
+                          return;
+                        }
                         widget.onMicModeChanged(index);
                         if (index == 0) {
                           widget.soundEnhancerBloc.add(StopRecordingEvent());
@@ -135,7 +230,8 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                 if (widget.micMode != 0) ...[
                   // Noise Reduction Toggle
                   buildSwitchRow(
-                    "Noise Reduction",
+                    context
+                        .translate("sound_enhancer_amplifier_noise_reduction"),
                     isNoiseSupressorActive,
                     onChanged: (bool enabled) {
                       setState(() {
@@ -150,7 +246,7 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Noise Reduction Slider (always visible but conditionally enabled)
+                  // Noise Reduction Slider
                   buildNoiseReductionSlider(),
                   const SizedBox(height: 12),
 
@@ -159,13 +255,20 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                   const SizedBox(height: 12),
 
                   // Audio Balance
-                  buildSliderRow("Audio Balance", 0.5, Icons.volume_up,
-                      labelL: 'L', labelR: 'R'),
+                  buildSliderRow(
+                      context
+                          .translate("sound_enhancer_amplifier_audio_balance"),
+                      0.5,
+                      Icons.volume_up,
+                      labelL: 'L',
+                      labelR: 'R'),
                 ] else ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
                     child: Text(
-                      "Please select a mic mode to enable sound enhancement features.",
+                      _isAnyHeadsetConnected
+                          ? context.translate("sound_enhancer_amplifier_connected")
+                          : context.translate("sound_enhancer_amplifier_disconnected"),
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize:
@@ -198,7 +301,7 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                   if (value) {
                     return widget.themeProvider.themeData.primaryColor;
                   }
-                  return Colors.grey; // Grey when off
+                  return Colors.grey;
                 },
               ),
               trackColor: WidgetStateProperty.resolveWith<Color>(
@@ -207,7 +310,7 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                     return widget.themeProvider.themeData.primaryColor
                         .withOpacity(0.5);
                   }
-                  return Colors.grey.withOpacity(0.5); // Grey when off
+                  return Colors.grey.withOpacity(0.5);
                 },
               ),
             ),
@@ -228,21 +331,17 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
         Row(
           children: [
             Text(
-              'Noise Reduction Level',
+              context.translate("sound_enhancer_amplifier_noise_reduction_level"),
               style: TextStyle(
                 fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
-                color: isNoiseSupressorActive
-                    ? null
-                    : Colors.grey, // Grey out text when disabled
+                color: isNoiseSupressorActive ? null : Colors.grey,
               ),
             ),
             const SizedBox(width: 8),
             Icon(
               Icons.noise_control_off,
               size: ResponsiveUtils.getResponsiveSize(context, 18),
-              color: isNoiseSupressorActive
-                  ? null
-                  : Colors.grey, // Grey out icon when disabled
+              color: isNoiseSupressorActive ? null : Colors.grey,
             ),
           ],
         ),
@@ -266,9 +365,6 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                       thumbColor: isNoiseSupressorActive
                           ? widget.themeProvider.themeData.primaryColor
                           : Colors.grey,
-                      disabledActiveTrackColor: Colors.grey,
-                      disabledThumbColor: Colors.grey,
-                      disabledInactiveTrackColor: Colors.grey.withOpacity(0.3),
                       trackHeight:
                           ResponsiveUtils.getResponsiveSize(context, 3),
                       thumbShape: RoundSliderThumbShape(
@@ -285,20 +381,21 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
                     value: _noiseReductionPercent.toDouble(),
                     min: 10,
                     max: 100,
-                    divisions: 9, // 10–100% in steps of 10%
+                    divisions: 9,
                     label: '$_noiseReductionPercent%',
                     onChanged: isNoiseSupressorActive
                         ? (double value) {
-                            setState(() {
-                              _noiseReductionPercent = value.round();
-                              // Convert % to dB: 10% = -10, 100% = -50
-                              final mappedDb =
-                                  -((_noiseReductionPercent / 100) * 40 + 10)
-                                      .round();
-                              widget.soundEnhancerBloc.add(
-                                SetDenoiseLevelEvent(mappedDb),
-                              );
-                            });
+                            setState(
+                              () {
+                                _noiseReductionPercent = value.round();
+                                final mappedDb =
+                                    -((_noiseReductionPercent / 100) * 40 + 10)
+                                        .round();
+                                widget.soundEnhancerBloc.add(
+                                  SetDenoiseLevelEvent(mappedDb),
+                                );
+                              },
+                            );
                           }
                         : null,
                   )),
@@ -320,7 +417,7 @@ class _SoundAmplifierScreenState extends State<SoundAmplifierScreen> {
         Row(
           children: [
             Text(
-              'Amplifier Level',
+              context.translate("sound_enhancer_amplifier_amplifier_level"),
               style: TextStyle(
                 fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
               ),

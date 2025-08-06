@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 
@@ -78,7 +79,7 @@ class _SoundVisualizationCardState extends State<SoundVisualizationCard> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Sound Visualization',
+                  context.translate("sound_enhancer_visualization"),
                   style: TextStyle(
                     fontSize:
                         ResponsiveUtils.getResponsiveFontSize(context, 16),
