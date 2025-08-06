@@ -26,6 +26,7 @@ class SoundAmplifierCard extends StatefulWidget {
 
 class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
   double _amplifierVolumeLevel = 1.0;
+  double _audioBalanceLevel = 0.5;
   bool isNoiseSupressorActive = false;
   int _noiseReductionPercent = 50;
   bool _isWiredConnected = false;
@@ -126,6 +127,15 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
     try {
       await PreferencesUtils.storeAmplifierVolume(volume);
       debugPrint('Volume stored: $volume');
+    } catch (e) {
+      debugPrint('Error storing volume: $e');
+    }
+  }
+
+  Future<void> _storeAudioBalanceLevel(double balance) async {
+    try {
+      await PreferencesUtils.storeAudioBalanceLevel(balance);
+      debugPrint('Volume stored: $balance');
     } catch (e) {
       debugPrint('Error storing volume: $e');
     }
@@ -255,7 +265,7 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
                   const SizedBox(height: 12),
 
                   // Audio Balance
-                  buildSliderRow(
+                  buildBalanceSliderRow(
                       context
                           .translate("sound_enhancer_amplifier_audio_balance"),
                       0.5,
@@ -267,8 +277,10 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
                     child: Text(
                       _isAnyHeadsetConnected
-                          ? context.translate("sound_enhancer_amplifier_connected")
-                          : context.translate("sound_enhancer_amplifier_disconnected"),
+                          ? context
+                              .translate("sound_enhancer_amplifier_connected")
+                          : context.translate(
+                              "sound_enhancer_amplifier_disconnected"),
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize:
@@ -331,7 +343,8 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
         Row(
           children: [
             Text(
-              context.translate("sound_enhancer_amplifier_noise_reduction_level"),
+              context
+                  .translate("sound_enhancer_amplifier_noise_reduction_level"),
               style: TextStyle(
                 fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
                 color: isNoiseSupressorActive ? null : Colors.grey,
@@ -476,7 +489,7 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
     );
   }
 
-  Widget buildSliderRow(String title, double value, IconData icon,
+  Widget buildBalanceSliderRow(String title, double value, IconData icon,
       {String labelL = '', String labelR = ''}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -501,8 +514,16 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
                 thumbColor: widget.themeProvider.themeData.primaryColor,
               )),
               child: Slider(
-                value: value,
-                onChanged: (v) {},
+                value: _audioBalanceLevel.clamp(0.0, 1.0),
+                onChanged: (double value) {
+                  setState(() {
+                    _audioBalanceLevel = value;
+                  });
+                  _storeAudioBalanceLevel(value);
+                  widget.soundEnhancerBloc.add(
+                    SetAudioBalanceLevel(value),
+                  );
+                },
               ),
             )),
             if (labelR.isNotEmpty) Text(labelR),

@@ -27,6 +27,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   bool _transcribing = false;
   bool _enableDenoise = false;
   double _currentGain = 1.0;
+  double _balance = 0.5;
   int _denoiseLevel = -10;
 
   SoundEnhancerBloc(this.socketService, SpeexDenoiser speexDenoiser)
@@ -39,6 +40,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     on<StartTranscriptionEvent>(_onStartTranscription);
     on<StopTranscriptionEvent>(_onStopTranscription);
     on<SetAmplificationEvent>(_onSetAmplification);
+    on<SetAudioBalanceLevel>(_onSetAudioBalance);
     on<SetDenoiseLevelEvent>(_onSetDenoiseLevel);
     on<NewTranscriptionEvent>(_onNewTranscription);
     on<LivePreviewTranscriptionEvent>(_onLivePreview);
@@ -98,14 +100,16 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       await _player.startPlayerFromStream(
         codec: Codec.pcm16,
         sampleRate: 16000,
-        numChannels: 1,
+        numChannels: 2,
       );
       NativeAudioRecorder.audioStream.listen(
         (Uint8List buffer) {
           final amplified = _processAudioChunk(buffer);
+          final stereo = _convertToStereo(amplified);
           // print("Audio chunk received, length: ${amplified.length}");
-          _handleAudioChunk(amplified);
-          _player.foodSink?.add(FoodData(amplified));
+          _handleAudioChunk(stereo);
+
+          _player.foodSink?.add(FoodData(stereo));
         },
         onError: (e) {
           developer.log("Native audio stream error: $e");
@@ -134,6 +138,35 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     }
 
     return output.toBytes();
+  }
+
+  // Uint8List _convertToStereo(Uint8List monoBytes) {
+  //   final monoBuffer = Int16List.view(monoBytes.buffer);
+  //   final stereoBuffer = Int16List(monoBuffer.length * 2);
+
+  //   for (int i = 0; i < monoBuffer.length; i++) {
+  //     final sample = monoBuffer[i];
+  //     stereoBuffer[i * 2] = sample; // Left channel
+  //     stereoBuffer[i * 2 + 1] = sample; // Right channel
+  //   }
+
+  //   return Uint8List.view(stereoBuffer.buffer);
+  // }
+
+  Uint8List _convertToStereo(Uint8List monoBytes) {
+    final monoBuffer = Int16List.view(monoBytes.buffer);
+    final stereoBuffer = Int16List(monoBuffer.length * 2);
+    _balance = _balance.clamp(0.0, 1.0);
+    final leftGain = 1.0 - _balance;
+    final rightGain = _balance;
+
+    for (int i = 0; i < monoBuffer.length; i++) {
+      final sample = monoBuffer[i];
+      stereoBuffer[i * 2] = (sample * leftGain).toInt();
+      stereoBuffer[i * 2 + 1] = (sample * rightGain).toInt();
+    }
+
+    return Uint8List.view(stereoBuffer.buffer);
   }
 
   Future<void> _onStartNoiseSupressor(
@@ -221,6 +254,18 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       _currentGain = event.gain.clamp(0.5, 3.0);
       await PreferencesUtils.storeAmplifierVolume(_currentGain);
       developer.log("Amplification set to: $_currentGain");
+    } catch (e) {
+      emit(SoundEnhancerErrorState(message: "Failed to set amplification: $e"));
+    }
+  }
+
+  Future<void> _onSetAudioBalance(
+      SetAudioBalanceLevel event, Emitter<SoundEnhancerState> emit) async {
+    try {
+      // Clamp between 0.5 and 3.0 for reasonable amplification
+      _balance = event.balance.clamp(0.0, 1.0);
+      await PreferencesUtils.storeAudioBalanceLevel(_balance);
+      developer.log("Amplification set to: $_balance");
     } catch (e) {
       emit(SoundEnhancerErrorState(message: "Failed to set amplification: $e"));
     }
