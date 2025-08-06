@@ -139,34 +139,34 @@ class _TextAreaCardState extends State<TextAreaCard> {
                 ),
               ),
             if (widget.showClearButton)
-              Positioned(
-                bottom: 8,
-                right: 8,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: ColorsPalette.grey.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.check,
-                            size: 15, color: Colors.grey),
-                        onPressed: () {
-                          _saveText();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // Positioned(
+              //   bottom: 8,
+              //   right: 8,
+              //   child: Row(
+              //     mainAxisSize: MainAxisSize.min,
+              //     children: [
+              //       const SizedBox(width: 8),
+              //       Container(
+              //         width: 30,
+              //         height: 30,
+              //         decoration: BoxDecoration(
+              //           color: ColorsPalette.grey.withOpacity(0.2),
+              //           borderRadius: BorderRadius.circular(15),
+              //         ),
+              //         child: IconButton(
+              //           icon: const Icon(Icons.check,
+              //               size: 15, color: Colors.grey),
+              //           onPressed: () {
+              //             _saveText();
+              //           },
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
             Positioned(
               bottom: 8,
-              right: 45,
+              right: 8,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

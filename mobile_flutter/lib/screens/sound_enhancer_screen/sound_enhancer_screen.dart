@@ -95,7 +95,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
                 isActive: _micMode == 0 ? false : true,
               ),
               SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 16)),
-              SoundAmplifierScreen(
+              SoundAmplifierCard(
                 themeProvider: themeProvider,
                 soundEnhancerBloc: widget.soundEnhancerBloc,
                 micMode: _micMode,
