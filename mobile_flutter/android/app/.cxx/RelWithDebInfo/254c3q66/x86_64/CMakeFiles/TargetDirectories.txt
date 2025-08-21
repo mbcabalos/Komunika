@@ -1,0 +1,2 @@
+D:/VS Code for Flutter/Large Project/Komunika/mobile_flutter/android/app/.cxx/RelWithDebInfo/254c3q66/x86_64/CMakeFiles/edit_cache.dir
+D:/VS Code for Flutter/Large Project/Komunika/mobile_flutter/android/app/.cxx/RelWithDebInfo/254c3q66/x86_64/CMakeFiles/rebuild_cache.dir

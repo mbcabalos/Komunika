@@ -22,7 +22,7 @@ class AboutPage extends StatelessWidget {
             title: context.translate("about_title"),
             titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
             themeProvider: themeProvider,
-            isBackButton: false,
+            isBackButton: true,
           ),
           body: SingleChildScrollView(
             padding: EdgeInsets.all(
