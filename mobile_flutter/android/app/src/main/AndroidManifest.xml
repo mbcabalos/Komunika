@@ -21,8 +21,7 @@
     <application
         android:label="Komunika"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
-        android:debuggable="false">
+        android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -92,12 +91,6 @@
                     <action android:name="com.example.komunika.UPDATE_TEXT" />
                 </intent-filter>
             </receiver>
-        <activity
-            android:name="com.yalantis.ucrop.UCropActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"> 
-            
-        </activity>
 
     </application>
     <!-- Required to query activities that can process text, see:

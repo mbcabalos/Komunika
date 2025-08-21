@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/utils/fonts.dart';
 
@@ -10,7 +11,8 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final bool isSettingButton;
   final bool isHistoryButton;
   final String database;
-  final Widget? customAction; // <-- Add this line
+  final Widget? customAction;
+  final VoidCallback? onBackPressed; // Custom back button callback
 
   const AppBarWidget({
     super.key,
@@ -21,56 +23,59 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
     this.isSettingButton = false,
     this.isHistoryButton = false,
     this.database = '',
-    this.customAction, // <-- Add this line
+    this.customAction,
+    this.onBackPressed, // Optional custom back action
   });
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+
     return AppBar(
       centerTitle: true,
       automaticallyImplyLeading: false,
       backgroundColor: themeProvider.themeData.primaryColor,
-      elevation: 0,
+      elevation: 2,
       title: Text(
         title,
         style: TextStyle(
           fontSize: titleSize,
           fontFamily: Fonts.main,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: themeProvider.themeData.textTheme.bodyLarge?.color,
-          letterSpacing: 5,
+          letterSpacing: 1.5,
+          shadows: [
+            Shadow(
+              blurRadius: 2,
+              color: Colors.black.withOpacity(0.1),
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
       ),
       leading: isBackButton
-          ? IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios,
-                color: themeProvider.themeData.iconTheme.color,
+          ? Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Container(
+                margin: const EdgeInsets.all(6),
+                child: IconButton(
+                  icon: Icon(
+                    Icons.arrow_back_ios_rounded, 
+                    color: themeProvider.themeData.textTheme.bodyLarge?.color,
+                    size: ResponsiveUtils.getResponsiveSize(context, 20),
+                  ),
+                  onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
+                  splashRadius: ResponsiveUtils.getResponsiveSize(context, 20),
+                  tooltip: 'Back', 
+                ),
               ),
-              onPressed: () => Navigator.of(context).pop(),
             )
           : null,
       actions: [
-        if (customAction != null) customAction!, // <-- Add this line
-        if (isHistoryButton)
-          IconButton(
-            icon: Icon(
-              Icons.history,
-              color: themeProvider.themeData.iconTheme.color,
-            ),
-            onPressed: () {
-              // Handle history button press
-            },
-          ),
-        if (isSettingButton)
-          IconButton(
-            icon: Icon(
-              Icons.settings,
-              color: themeProvider.themeData.iconTheme.color,
-            ),
-            onPressed: () {
-              // Handle settings button press
-            },
+        if (customAction != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: customAction!,
           ),
       ],
     );

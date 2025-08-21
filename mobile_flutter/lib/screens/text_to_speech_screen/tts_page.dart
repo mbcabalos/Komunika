@@ -50,27 +50,39 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   final List<Map<String, String>> _voiceOptions = [
     {
       "image": "assets/flags/us_male.png",
-      "label": "US - MALE",
-      "language": "en-US",
-      "voice": "en-us-x-tpf-local",
+      "label": "Voice 1",
+      "language": "en-GB",
+      "voice": "en-gb-x-gbb-local",
     },
     {
       "image": "assets/flags/us_female.png",
-      "label": "US - FEMALE",
+      "label": "Voice 2",
       "language": "en-US",
       "voice": "en-us-x-sfg-local",
     },
     {
       "image": "assets/flags/ph_male.png",
-      "label": "PH - MALE",
+      "label": "Voice 3",
       "language": "fil-PH",
       "voice": "fil-ph-x-fie-local",
     },
     {
       "image": "assets/flags/ph_female.png",
-      "label": "PH - FEMALE",
+      "label": "Voice 4",
       "language": "fil-PH",
       "voice": "fil-ph-x-fic-local",
+    },
+    {
+      "image": "assets/flags/uk_male.png",
+      "label": "Voice 5",
+      "language": "en-GB",
+      "voice": "en-gb-x-rjs-local",
+    },
+    {
+      "image": "assets/flags/uk_female.png",
+      "label": "Voice 6",
+      "language": "en-GB",
+      "voice": "en-gb-x-gbc-local",
     },
   ];
 
@@ -136,7 +148,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
   }
 
   Future<void> _speak() async {
-    List voices = await flutterTts.getVoices;
+    List<dynamic> voices = await flutterTts.getVoices;
     print(voices);
     final text = _textController.text.trim();
     if (text.isEmpty) {
@@ -148,13 +160,6 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     await flutterTts.setVolume(1.0);
     await flutterTts.setSpeechRate(rate);
     await flutterTts.setPitch(1.0);
-
-    List<dynamic> filipinoVoices = voices
-        .where((voice) =>
-            voice["locale"].toString().toLowerCase().contains("en-us"))
-        .toList();
-
-    print("Available US Voices: $filipinoVoices");
 
     if (language != null) {
       await flutterTts.setLanguage(language!);
@@ -312,26 +317,42 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Container(
-                      width: 200,
-                      height: 220,
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: _voiceOptions.sublist(0, 2).map((option) {
-                              return _buildVoiceOption(option, themeProvider);
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: _voiceOptions.sublist(2, 4).map((option) {
-                              return _buildVoiceOption(option, themeProvider);
-                            }).toList(),
-                          ),
-                        ],
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.6,
+                        maxWidth: 300,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "Select Voice",
+                              style:
+                                  themeProvider.themeData.textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 12),
+                            Flexible(
+                              child: GridView.builder(
+                                shrinkWrap: true,
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  childAspectRatio: 1.5,
+                                  crossAxisSpacing: 8,
+                                  mainAxisSpacing: 8,
+                                ),
+                                itemCount: _voiceOptions.length,
+                                itemBuilder: (context, index) {
+                                  final option = _voiceOptions[index];
+                                  return _buildVoiceOption(
+                                      option, themeProvider);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -431,6 +452,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
         Navigator.pop(context);
       },
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
             decoration: BoxDecoration(
@@ -441,18 +463,24 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
               shape: BoxShape.circle,
             ),
             child: CircleAvatar(
-              radius: 30,
+              radius: 28,
               backgroundImage: AssetImage(option["image"]!),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            option["label"]!,
-            style: TextStyle(
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected
-                  ? Colors.blue
-                  : themeProvider.themeData.textTheme.bodyMedium?.color,
+          const SizedBox(height: 6),
+          Flexible(
+            // prevent text overflow
+            child: Text(
+              option["label"]!,
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected
+                    ? Colors.blue
+                    : themeProvider.themeData.textTheme.bodyMedium?.color,
+              ),
             ),
           ),
         ],

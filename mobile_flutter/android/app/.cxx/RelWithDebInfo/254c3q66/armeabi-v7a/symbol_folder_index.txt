@@ -1,0 +1,1 @@
+D:\VS Code for Flutter\Large Project\Komunika\mobile_flutter\build\app\intermediates\cxx\RelWithDebInfo\254c3q66\obj\armeabi-v7a
