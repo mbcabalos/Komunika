@@ -5,6 +5,22 @@ class PreferencesUtils {
   static const String _textColorKey = "captionTextColor";
   static const String _backgroundColorKey = "captionBackgroundColor";
   static const String _captionEnableStateKey = 'captionEnableState';
+  static const String _walkthroughDoneKey = 'walkthroughDone';
+
+  static Future<void> storeWalkthroughDone(bool isDone) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_walkthroughDoneKey, isDone);
+  }
+
+  static Future<bool> getWalkthroughDone() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_walkthroughDoneKey) ?? false; // Default to false
+  }
+
+  static Future<void> resetWalkthrough() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_walkthroughDoneKey);
+  }
 
   static Future<void> storeCaptionEnableState(bool isEnabled) async {
     final prefs = await SharedPreferences.getInstance();

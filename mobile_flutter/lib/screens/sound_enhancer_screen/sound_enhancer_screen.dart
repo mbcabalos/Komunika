@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_sound_enhancer/sound_enhancer_bloc.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
+import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/widgets/global_widgets/app_bar.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_visualization_card.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_amplifier_card.dart';
@@ -10,12 +11,16 @@ import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/speech_to_text_card.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class SoundEnhancerScreen extends StatefulWidget {
   final SoundEnhancerBloc soundEnhancerBloc;
+  final GlobalKey? ttsNavKey;
+
   const SoundEnhancerScreen(
       {super.key,
-      required this.soundEnhancerBloc});
+      required this.soundEnhancerBloc,
+      this.ttsNavKey});
 
   @override
   State<SoundEnhancerScreen> createState() => SoundEnhancerScreenState();
@@ -23,7 +28,11 @@ class SoundEnhancerScreen extends StatefulWidget {
 
 class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
   final TextEditingController _textController = TextEditingController();
+  GlobalKey keyAmplifier = GlobalKey();
+  GlobalKey keyVisualization = GlobalKey();
+  GlobalKey keySpeechToText = GlobalKey();
 
+  List<TargetFocus> targets = [];
   final dbHelper = DatabaseHelper();
   int _micMode = 0; // 0: Off, 1: On
   bool _isTranscriptionEnabled = false;
@@ -33,6 +42,8 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
     super.initState();
     _textController.clear();
     _initialize();
+    PreferencesUtils.resetWalkthrough();
+    checkWalkthrough();
   }
 
   Future<void> _initialize() async {
@@ -40,6 +51,80 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
     widget.soundEnhancerBloc.add(RequestPermissionEvent());
   }
 
+  Future<void> checkWalkthrough() async {
+    bool isDone = await PreferencesUtils.getWalkthroughDone();
+
+    if (!isDone) {
+      _initTargets();
+      _showTutorial();
+    }
+  }
+
+  void _initTargets() {
+    targets = [
+      TargetFocus(
+        identify: "Visualization",
+        keyTarget: keyVisualization,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Text(
+              "(ENGLISH) This card shows sound visualization.\n\n(FILIPINO) Ito ay nagpapakita ng tunog.",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Amplifier",
+        keyTarget: keyAmplifier,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: Text(
+              "(ENGLISH) Here you can amplify or reduce microphone volume with transcription.\n\n(FILIPINO) Dito maaari mong palakasin o hinaan ang volume ng mikropono kasama ang transkripsyon.",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "goToTts",
+        keyTarget: widget.ttsNavKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        enableTargetTab: true,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: Text(
+              "(ENGLISH) Tap here to proceed...\n\n(FILIPINO) Pindutin dito upang magpatuloy...",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  void _showTutorial() {
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black.withOpacity(0.8),
+      textSkip: "SKIP",
+      paddingFocus: 8,
+      alignSkip: Alignment.bottomLeft,
+      onSkip: () {
+        PreferencesUtils.storeWalkthroughDone(true);
+        return true;
+      },
+    ).show(context: context);
+
+  }
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -91,11 +176,13 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
             children: [
               SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
               SoundVisualizationCard(
+                key: keyVisualization, 
                 themeProvider: themeProvider,
                 isActive: _micMode == 0 ? false : true,
               ),
               SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 16)),
               SoundAmplifierCard(
+                key: keyAmplifier, 
                 themeProvider: themeProvider,
                 soundEnhancerBloc: widget.soundEnhancerBloc,
                 micMode: _micMode,

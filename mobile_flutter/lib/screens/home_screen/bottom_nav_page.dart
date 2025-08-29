@@ -29,6 +29,11 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   final databaseHelper = DatabaseHelper();
   int _currentIndex = 0;
   late List<Widget> _screens;
+  final GlobalKey ttsNavKey = GlobalKey();
+  final GlobalKey settingsNavKey = GlobalKey();
+  final GlobalKey<TextToSpeechScreenState> ttsScreenKey = GlobalKey();
+  final GlobalKey<SoundEnhancerScreenState> sesScreenKey = GlobalKey(); 
+  final GlobalKey<SettingScreenState> sScreenKey = GlobalKey(); 
 
   @override
   void initState() {
@@ -40,11 +45,11 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
 
     // Initialize screens after BLoCs are created
     _screens = [
-      SoundEnhancerScreen(soundEnhancerBloc: soundEnhancerBloc),
+      SoundEnhancerScreen(key: sesScreenKey, soundEnhancerBloc: soundEnhancerBloc, ttsNavKey: ttsNavKey),
       TextToSpeechScreen(
-        ttsBloc: textToSpeechBloc,
+        key:ttsScreenKey, ttsBloc: textToSpeechBloc, settingsNavKey: settingsNavKey
       ),
-      SettingScreen(themeProvider: widget.themeProvider),
+      SettingScreen(key: sScreenKey, themeProvider: widget.themeProvider),
     ];
   }
 
@@ -69,18 +74,25 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
           setState(() {
             _currentIndex = index;
           });
+          if (index == 1) { // TTS tab
+            ttsScreenKey.currentState?.checkWalkthrough();
+          } else if(index == 0) {
+            sesScreenKey.currentState?.checkWalkthrough();
+          } else if(index == 2) {
+            sScreenKey.currentState?.checkWalkthrough();
+          }
         },
-        items: const [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.graphic_eq),
             label: 'Sound Enhancer',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.record_voice_over),
+            icon: Icon(Icons.record_voice_over, key: ttsNavKey),
             label: 'Text to Speech',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
+            icon: Icon(Icons.settings, key: settingsNavKey),
             label: 'Settings',
           ),
         ],

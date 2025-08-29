@@ -18,23 +18,32 @@ import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/global_widgets/app_bar.dart';
 import 'package:komunika/widgets/text_to_speech_widgets/text_area_card.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class TextToSpeechScreen extends StatefulWidget {
   final TextToSpeechBloc ttsBloc;
+  final GlobalKey? settingsNavKey;
+
   const TextToSpeechScreen({
     super.key,
-    required this.ttsBloc,
+    required this.ttsBloc, 
+    this.settingsNavKey
   });
 
   @override
-  State<TextToSpeechScreen> createState() => _TextToSpeechScreenState();
+  State<TextToSpeechScreen> createState() => TextToSpeechScreenState();
 }
 
-class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
+class TextToSpeechScreenState extends State<TextToSpeechScreen> {
   final TextEditingController _textController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final FlutterTts flutterTts = FlutterTts();
   final ImagePicker _imagePicker = ImagePicker();
+  GlobalKey keyTextArea = GlobalKey();
+  GlobalKey keyVoicePlayX = GlobalKey();
+  GlobalKey keyImagePicker = GlobalKey();
+
+  List<TargetFocus> ttsTargets = [];
 
   // TTS Control Variables
   double rate = 0.5;
@@ -93,6 +102,95 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
     super.initState();
     _initialize();
     _initTts();
+  }
+
+  Future<void> checkWalkthrough() async {
+    bool isDone = await PreferencesUtils.getWalkthroughDone();
+
+    if (!isDone) {
+      _initTargets();
+      _showTutorial();
+    }
+  }
+
+  void _initTargets() {
+    ttsTargets = [
+      TargetFocus(
+        identify: "TextArea",
+        keyTarget: keyTextArea,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Text(
+              "(ENGLISH) Type your message here to convert it into speech.\n\n(FILIPINO) I-type ang iyong mensahe dito upang gawing pananalita.",
+              style: TextStyle(color: Colors.white, fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "VoiceSelector",
+        keyTarget: keyVoicePlayX,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: Text(
+              "(ENGLISH) Choose voice, play audio, and adjust speed here.\n\n(FILIPINO) Pumili ng boses, patugtugin ang audio, at ayusin ang bilis dito.",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "PlayButton",
+        keyTarget: keyImagePicker,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: Text(
+              "(ENGLISH) Scan image text from camera or gallery.\n\n(FILIPINO) I-scan ang teksto mula sa kamera o gallery.",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "GoToSettings",
+        keyTarget: widget.settingsNavKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        enableTargetTab: true,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: Text(
+              "(ENGLISH) Tap here to proceed...\n\n(FILIPINO) Pindutin dito upang magpatuloy...",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  void _showTutorial() {
+    TutorialCoachMark(
+      targets: ttsTargets,
+      colorShadow: Colors.black.withOpacity(0.8),
+      textSkip: "SKIP",
+      paddingFocus: 8,
+      onSkip: () {
+        PreferencesUtils.storeWalkthroughDone(true);
+        return true;
+      },
+      alignSkip: Alignment.bottomLeft,
+    ).show(context: context);
   }
 
   Future<void> _initialize() async {
@@ -224,6 +322,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
           //     }),
         ),
         floatingActionButton: FloatingActionButton(
+          key: keyImagePicker, 
           onPressed: () {
             _showImageSourceDialog(themeProvider);
           },
@@ -278,6 +377,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
               margin: EdgeInsets.all(
                   ResponsiveUtils.getResponsiveSize(context, 16)),
               child: TextAreaCard(
+                key: keyTextArea, 
                 themeProvider: themeProvider,
                 ttsBloc: widget.ttsBloc,
                 titleController: _titleController,
@@ -299,6 +399,7 @@ class _TextToSpeechScreenState extends State<TextToSpeechScreen> {
 
   Widget _buildTtsControls(ThemeProvider themeProvider) {
     return Row(
+      key: keyVoicePlayX, 
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Row(
