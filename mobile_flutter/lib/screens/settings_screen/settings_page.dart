@@ -55,7 +55,7 @@ class SettingScreenState extends State<SettingScreen> {
           TargetContent(
             align: ContentAlign.bottom,
             child: Text(
-              "(ENGLISH) Change between Light and Dark themes here.\n\n(FILIPINO) Magpalit sa pagitan ng Liwanag at Madilim na tema dito.",
+              "(ENGLISH) Change between Light and Dark themes here.\n\n(FILIPINO) Pumili sa maliwanag o madilim na tema",
               style: const TextStyle(color: Colors.white, fontSize: 18),
             ),
           ),
