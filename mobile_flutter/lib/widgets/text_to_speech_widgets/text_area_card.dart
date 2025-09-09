@@ -17,6 +17,7 @@ class TextAreaCard extends StatefulWidget {
   final int? maxLines;
   final bool showExpandButton;
   final bool showClearButton;
+  final VoidCallback? onClear;
 
   const TextAreaCard({
     super.key,
@@ -29,6 +30,7 @@ class TextAreaCard extends StatefulWidget {
     this.maxLines = 17,
     this.showExpandButton = true,
     this.showClearButton = true,
+    this.onClear,
   });
 
   @override
@@ -164,31 +166,31 @@ class _TextAreaCardState extends State<TextAreaCard> {
               //     ],
               //   ),
               // ),
-            Positioned(
-              bottom: 8,
-              right: 8,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: ColorsPalette.grey.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(15),
+              Positioned(
+                bottom: 8,
+                right: 8,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: ColorsPalette.grey.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.clear,
+                            size: 15, color: Colors.grey),
+                        onPressed: () {
+                          if (widget.onClear != null) widget.onClear!();
+                        },
+                      ),
                     ),
-                    child: IconButton(
-                      icon:
-                          const Icon(Icons.clear, size: 15, color: Colors.grey),
-                      onPressed: () {
-                        widget.contentController.clear();
-                      },
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),

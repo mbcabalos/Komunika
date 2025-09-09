@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:komunika/screens/home_screen/bottom_nav_page.dart';
-import 'package:komunika/screens/home_screen/home_page.dart';
 import 'package:komunika/screens/splash_screen/splash_screen.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/services/repositories/database_helper.dart';

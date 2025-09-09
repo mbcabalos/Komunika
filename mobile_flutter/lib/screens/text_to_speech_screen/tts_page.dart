@@ -24,11 +24,8 @@ class TextToSpeechScreen extends StatefulWidget {
   final TextToSpeechBloc ttsBloc;
   final GlobalKey? settingsNavKey;
 
-  const TextToSpeechScreen({
-    super.key,
-    required this.ttsBloc, 
-    this.settingsNavKey
-  });
+  const TextToSpeechScreen(
+      {super.key, required this.ttsBloc, this.settingsNavKey});
 
   @override
   State<TextToSpeechScreen> createState() => TextToSpeechScreenState();
@@ -123,7 +120,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: Text(
+            child: const Text(
               "(ENGLISH) Type your message here to convert it into speech.\n\n(FILIPINO) I-type ang iyong mensahe dito upang gawing pananalita.",
               style: TextStyle(color: Colors.white, fontSize: 14),
             ),
@@ -154,7 +151,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
           TargetContent(
             align: ContentAlign.top,
             child: Text(
-              "(ENGLISH) Scan image text from camera or gallery.\n\n(FILIPINO) I-scan ang teksto mula sa kamera o gallery.",
+              "(ENGLISH) Scan text from an image using the camera or gallery.\n\n(FILIPINO) I-scan ang teksto mula sa larawan gamit ang kamera o gallery.",
               style: TextStyle(color: Colors.white, fontSize: 18),
             ),
           ),
@@ -199,6 +196,15 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
 
     selectedVoice = await PreferencesUtils.getTTSVoice();
     rate = await PreferencesUtils.getTTSRate();
+
+    // Set language based on selectedVoice
+    if (selectedVoice != null) {
+      final found = _voiceOptions.firstWhere(
+        (v) => v["voice"] == selectedVoice,
+        orElse: () => {},
+      );
+      language = found["language"];
+    }
   }
 
   Future<void> _initTts() async {
@@ -246,13 +252,15 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
   }
 
   Future<void> _speak() async {
-    List<dynamic> voices = await flutterTts.getVoices;
-    print(voices);
     final text = _textController.text.trim();
     if (text.isEmpty) {
       showCustomSnackBar(context, "Text field is empty!", ColorsPalette.red);
       return;
     }
+
+    setState(() {
+      currentlyPlaying = true; // <-- Immediately set to playing
+    });
 
     await flutterTts.setEngine("com.google.android.tts");
     await flutterTts.setVolume(1.0);
@@ -279,7 +287,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
   Future<void> _pause() async {
     await flutterTts.pause();
     setState(() {
-      currentlyPlaying = false;
+      currentlyPlaying = false; // <-- Immediately set to not playing
     });
   }
 
@@ -322,7 +330,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
           //     }),
         ),
         floatingActionButton: FloatingActionButton(
-          key: keyImagePicker, 
+          key: keyImagePicker,
           onPressed: () {
             _showImageSourceDialog(themeProvider);
           },
@@ -377,13 +385,20 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
               margin: EdgeInsets.all(
                   ResponsiveUtils.getResponsiveSize(context, 16)),
               child: TextAreaCard(
-                key: keyTextArea, 
+                key: keyTextArea,
                 themeProvider: themeProvider,
                 ttsBloc: widget.ttsBloc,
                 titleController: _titleController,
                 contentController: _textController,
                 width: phoneWidth,
                 height: phoneHeight,
+                onClear: () async {
+                  await _stop();
+                  _textController.clear();
+                  setState(() {
+                    currentlyPlaying = false;
+                  });
+                },
               ),
             ),
 
@@ -399,67 +414,74 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
 
   Widget _buildTtsControls(ThemeProvider themeProvider) {
     return Row(
-      key: keyVoicePlayX, 
+      key: keyVoicePlayX,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Row(
           children: [
-            _buildControlButton(
-              label: "Voice",
-              backgroundColor: themeProvider.themeData.cardColor,
-              textColor: themeProvider.themeData.textTheme.bodyMedium?.color,
-              height: 50,
-              width: 100,
-              onPressed: () async {
-                await showDialog(
-                  context: context,
-                  builder: (context) => Dialog(
-                    backgroundColor: themeProvider.themeData.cardColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: MediaQuery.of(context).size.height * 0.6,
-                        maxWidth: 300,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              "Select Voice",
-                              style:
-                                  themeProvider.themeData.textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 12),
-                            Flexible(
-                              child: GridView.builder(
-                                shrinkWrap: true,
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: 1.5,
-                                  crossAxisSpacing: 8,
-                                  mainAxisSpacing: 8,
+            AbsorbPointer(
+              absorbing: currentlyPlaying, // Disable when playing
+              child: Opacity(
+                opacity: currentlyPlaying ? 0.5 : 1.0,
+                child: _buildControlButton(
+                  label: "Voice",
+                  backgroundColor: themeProvider.themeData.cardColor,
+                  textColor:
+                      themeProvider.themeData.textTheme.bodyMedium?.color,
+                  height: 50,
+                  width: 100,
+                  onPressed: () async {
+                    await showDialog(
+                      context: context,
+                      builder: (context) => Dialog(
+                        backgroundColor: themeProvider.themeData.cardColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height * 0.6,
+                            maxWidth: 300,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "Select Voice",
+                                  style: themeProvider
+                                      .themeData.textTheme.titleMedium,
                                 ),
-                                itemCount: _voiceOptions.length,
-                                itemBuilder: (context, index) {
-                                  final option = _voiceOptions[index];
-                                  return _buildVoiceOption(
-                                      option, themeProvider);
-                                },
-                              ),
+                                const SizedBox(height: 12),
+                                Flexible(
+                                  child: GridView.builder(
+                                    shrinkWrap: true,
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      childAspectRatio: 1.5,
+                                      crossAxisSpacing: 8,
+                                      mainAxisSpacing: 8,
+                                    ),
+                                    itemCount: _voiceOptions.length,
+                                    itemBuilder: (context, index) {
+                                      final option = _voiceOptions[index];
+                                      return _buildVoiceOption(
+                                          option, themeProvider);
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              },
-              themeProvider: themeProvider,
+                    );
+                  },
+                  themeProvider: themeProvider,
+                ),
+              ),
             ),
           ],
         ),
@@ -479,60 +501,67 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
 
         SizedBox(width: ResponsiveUtils.getResponsiveSize(context, 20)),
 
-        _buildControlButton(
-          label: "${(rate + 0.50).toStringAsFixed(2)}x",
-          backgroundColor: themeProvider.themeData.cardColor,
-          textColor: themeProvider.themeData.textTheme.bodyMedium?.color,
-          height: 50,
-          width: 100,
-          onPressed: () async {
-            await showDialog(
-              context: context,
-              builder: (context) => Dialog(
-                backgroundColor: themeProvider.themeData.cardColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Container(
-                  width: 100,
-                  height: 200,
-                  padding: const EdgeInsets.all(8),
-                  child: ListView.builder(
-                    itemCount: _rateOptions.length,
-                    itemBuilder: (context, index) {
-                      final option = _rateOptions[index];
-                      final isSelected = rate == option;
-                      return ListTile(
-                        title: Text(
-                          "${(option + 0.50).toStringAsFixed(2)}x",
-                          style: TextStyle(
-                            color: isSelected
-                                ? Colors.blue
-                                : themeProvider
-                                    .themeData.textTheme.bodyMedium?.color,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                        tileColor:
-                            isSelected ? Colors.blue.withOpacity(0.15) : null,
-                        selected: isSelected,
-                        onTap: () {
-                          setState(() {
-                            rate = option;
-                          });
-                          PreferencesUtils.storeTTSRate(option);
-                          Navigator.pop(context);
+        AbsorbPointer(
+          absorbing: currentlyPlaying, // Disable when playing
+          child: Opacity(
+            opacity: currentlyPlaying ? 0.5 : 1.0,
+            child: _buildControlButton(
+              label: "${(rate + 0.50).toStringAsFixed(2)}x",
+              backgroundColor: themeProvider.themeData.cardColor,
+              textColor: themeProvider.themeData.textTheme.bodyMedium?.color,
+              height: 50,
+              width: 100,
+              onPressed: () async {
+                await showDialog(
+                  context: context,
+                  builder: (context) => Dialog(
+                    backgroundColor: themeProvider.themeData.cardColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Container(
+                      width: 100,
+                      height: 200,
+                      padding: const EdgeInsets.all(8),
+                      child: ListView.builder(
+                        itemCount: _rateOptions.length,
+                        itemBuilder: (context, index) {
+                          final option = _rateOptions[index];
+                          final isSelected = rate == option;
+                          return ListTile(
+                            title: Text(
+                              "${(option + 0.50).toStringAsFixed(2)}x",
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Colors.blue
+                                    : themeProvider
+                                        .themeData.textTheme.bodyMedium?.color,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            tileColor: isSelected
+                                ? Colors.blue.withOpacity(0.15)
+                                : null,
+                            selected: isSelected,
+                            onTap: () {
+                              setState(() {
+                                rate = option;
+                              });
+                              PreferencesUtils.storeTTSRate(option);
+                              Navigator.pop(context);
+                            },
+                          );
                         },
-                      );
-                    },
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            );
-          },
-          themeProvider: themeProvider,
+                );
+              },
+              themeProvider: themeProvider,
+            ),
+          ),
         ),
       ],
     );

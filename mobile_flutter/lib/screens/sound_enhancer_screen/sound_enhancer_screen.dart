@@ -42,7 +42,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
     super.initState();
     _textController.clear();
     _initialize();
-    PreferencesUtils.resetWalkthrough();
+    // PreferencesUtils.resetWalkthrough();
     checkWalkthrough();
   }
 
@@ -85,8 +85,8 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: Text(
-              "(ENGLISH) Here you can amplify or reduce microphone volume with transcription.\n\n(FILIPINO) Dito maaari mong palakasin o hinaan ang volume ng mikropono kasama ang transkripsyon.",
+            child: Text("(ENGLISH) Here you can amplify, denoisen and modify the audio balance of the audio with transcription.\n\n(FILIPINO) Dito, maaari mong palakasin, linisin, at baguhin ang balanse ng tunog ng mikropono kasama ang transkripsyon.",
+              
               style: TextStyle(color: Colors.white, fontSize: 18),
             ),
           ),
@@ -123,7 +123,6 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
         return true;
       },
     ).show(context: context);
-
   }
   @override
   Widget build(BuildContext context) {

@@ -21,28 +21,13 @@ class _FAQPageState extends State<FAQPage> {
   @override
   void initState() {
     super.initState();
-    faqs = [
-      FAQItem(
-        question: "faq_question1",
-        answer: "faq_answer1",
+    faqs = List.generate(
+      15,
+      (i) => FAQItem(
+        question: "faq_question${i + 1}",
+        answer: "faq_answer${i + 1}",
       ),
-      FAQItem(
-        question: "faq_question2",
-        answer: "faq_answer2",
-      ),
-      FAQItem(
-        question: "faq_question3",
-        answer: "faq_answer3",
-      ),
-      FAQItem(
-        question: "faq_question4",
-        answer: "faq_answer4",
-      ),
-      FAQItem(
-        question: "faq_question5",
-        answer: "faq_answer5",
-      ),
-    ];
+    );
   }
 
   @override
@@ -89,7 +74,7 @@ class _FAQPageState extends State<FAQPage> {
                       headerBuilder: (BuildContext context, bool isExpanded) {
                         return ListTile(
                           title: Text(
-                            context.translate(faq.question), // Translate here
+                            context.translate(faq.question),
                             style: TextStyle(
                               fontSize: ResponsiveUtils.getResponsiveFontSize(
                                   context, 16),
@@ -109,7 +94,7 @@ class _FAQPageState extends State<FAQPage> {
                           ResponsiveUtils.getResponsiveSize(context, 16),
                         ),
                         child: Text(
-                          context.translate(faq.answer), // Translate here
+                          context.translate(faq.answer), 
                           style: TextStyle(
                             fontSize: ResponsiveUtils.getResponsiveFontSize(
                                 context, 14),
