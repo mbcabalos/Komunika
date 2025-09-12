@@ -28,7 +28,6 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
   double _amplifierVolumeLevel = 1.0;
   double _audioBalanceLevel = 0.5;
   bool isNoiseSupressorActive = false;
-  int _noiseReductionPercent = 50;
   bool _isWiredConnected = false;
   bool _isWirelessConnected = false;
   final headsetDetector = HeadsetDetector();
@@ -109,14 +108,19 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
 
   Future<void> _loadEnhancerValues() async {
     try {
+      final isNoiseReductionEnabled =
+          await PreferencesUtils.getNoiseReductionEnabled();
       final volume = await PreferencesUtils.getAmplifierVolume();
-      final level = await PreferencesUtils.getDenoiseLevel();
       if (mounted) {
         setState(() {
           _amplifierVolumeLevel = volume;
-          _noiseReductionPercent =
-              (((-level - 10) / 40) * 90 + 10).round().clamp(10, 100);
+          isNoiseSupressorActive = isNoiseReductionEnabled;
         });
+      }
+      if (isNoiseReductionEnabled) {
+        widget.soundEnhancerBloc.add(StartNoiseSupressor());
+      } else {
+        widget.soundEnhancerBloc.add(StopNoiseSupressor());
       }
     } catch (e) {
       debugPrint('Error loading volume: $e');
@@ -257,7 +261,6 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
                   const SizedBox(height: 8),
 
                   // Noise Reduction Slider
-                  buildNoiseReductionSlider(),
                   const SizedBox(height: 12),
 
                   // Amplifier Level
@@ -329,95 +332,18 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
           ),
           child: Switch(
             value: value,
-            onChanged: onChanged,
+            onChanged: (bool enabled) {
+              setState(() {
+                isNoiseSupressorActive = enabled;
+              });
+              PreferencesUtils.storeNoiseReductionEnabled(enabled);
+              if (enabled) {
+                widget.soundEnhancerBloc.add(StartNoiseSupressor());
+              } else {
+                widget.soundEnhancerBloc.add(StopNoiseSupressor());
+              }
+            },
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget buildNoiseReductionSlider() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              context
-                  .translate("sound_enhancer_amplifier_noise_reduction_level"),
-              style: TextStyle(
-                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
-                color: isNoiseSupressorActive ? null : Colors.grey,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.noise_control_off,
-              size: ResponsiveUtils.getResponsiveSize(context, 18),
-              color: isNoiseSupressorActive ? null : Colors.grey,
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            Text('Low',
-                style: TextStyle(
-                  color: isNoiseSupressorActive ? null : Colors.grey,
-                )),
-            Expanded(
-              child: Theme(
-                  data: Theme.of(context).copyWith(
-                    sliderTheme: SliderTheme.of(context).copyWith(
-                      activeTrackColor: isNoiseSupressorActive
-                          ? widget.themeProvider.themeData.primaryColor
-                          : Colors.grey,
-                      inactiveTrackColor: isNoiseSupressorActive
-                          ? widget.themeProvider.themeData.primaryColor
-                              .withOpacity(0.5)
-                          : Colors.grey.withOpacity(0.3),
-                      thumbColor: isNoiseSupressorActive
-                          ? widget.themeProvider.themeData.primaryColor
-                          : Colors.grey,
-                      trackHeight:
-                          ResponsiveUtils.getResponsiveSize(context, 3),
-                      thumbShape: RoundSliderThumbShape(
-                        enabledThumbRadius:
-                            ResponsiveUtils.getResponsiveSize(context, 10),
-                      ),
-                      overlayShape: RoundSliderOverlayShape(
-                        overlayRadius:
-                            ResponsiveUtils.getResponsiveSize(context, 16),
-                      ),
-                    ),
-                  ),
-                  child: Slider(
-                    value: _noiseReductionPercent.toDouble(),
-                    min: 10,
-                    max: 100,
-                    divisions: 9,
-                    label: '$_noiseReductionPercent%',
-                    onChanged: isNoiseSupressorActive
-                        ? (double value) {
-                            setState(
-                              () {
-                                _noiseReductionPercent = value.round();
-                                final mappedDb =
-                                    -((_noiseReductionPercent / 100) * 40 + 10)
-                                        .round();
-                                widget.soundEnhancerBloc.add(
-                                  SetDenoiseLevelEvent(mappedDb),
-                                );
-                              },
-                            );
-                          }
-                        : null,
-                  )),
-            ),
-            Text('High',
-                style: TextStyle(
-                  color: isNoiseSupressorActive ? null : Colors.grey,
-                )),
-          ],
         ),
       ],
     );

@@ -51,13 +51,6 @@ class SetAudioBalanceLevel extends SoundEnhancerEvent {
   List<Object?> get props => [balance];
 }
 
-class SetDenoiseLevelEvent extends SoundEnhancerEvent {
-  final int level;
-  SetDenoiseLevelEvent(this.level);
-
-  List<Object?> get props => [level];
-}
-
 class StartNoiseSupressor extends SoundEnhancerEvent {}
 
 class StopNoiseSupressor extends SoundEnhancerEvent {}

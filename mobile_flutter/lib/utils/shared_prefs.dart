@@ -116,6 +116,16 @@ class PreferencesUtils {
     };
   }
 
+  static Future<void> storeNoiseReductionEnabled(bool enabled) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool("isNoiseReductionEnabled", enabled);
+}
+
+static Future<bool> getNoiseReductionEnabled() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool("isNoiseReductionEnabled") ?? false;
+}
+
   static Future<void> storeAmplifierVolume(double volume) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('isAmplifierVolume', volume);
@@ -126,19 +136,9 @@ class PreferencesUtils {
     await prefs.setDouble('isAudioBalanceLevel', balance);
   }
 
-  static Future<void> storeDenoiseLevel(int level) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('isDenoiseLevel', level);
-  }
-
   static Future<double> getAmplifierVolume() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getDouble('isAmplifierVolume') ?? 1.0;
-  }
-
-  static Future<int> getDenoiseLevel() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt('isDenoiseLevel') ?? -10;
   }
 
   static Future<void> storeTTSVoice(String voice) async {

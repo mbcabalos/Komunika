@@ -10,7 +10,7 @@ class SpeexDenoiser {
   SpeexDenoiser({
     this.frameSize = 160,
     this.sampleRate = 16000,
-    int noiseSuppressDb = -25,
+    int noiseSuppressDb = -50,
   }) {
     _state = speexPreprocessInit(frameSize, sampleRate);
     if (_state == nullptr) {
@@ -20,7 +20,8 @@ class SpeexDenoiser {
     _setCtlInt(SPEEX_PREPROCESS_SET_DENOISE, 1); // ✅ Enable denoise
     _setCtlInt(
         SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, noiseSuppressDb); // Set level
-    _setCtlInt(SPEEX_PREPROCESS_SET_AGC, 0); // Disable AGC
+    _setCtlInt(SPEEX_PREPROCESS_SET_AGC, 1); // Disable AGC
+    _setCtlInt(SPEEX_PREPROCESS_SET_AGC_LEVEL, 12000);
     _setCtlInt(SPEEX_PREPROCESS_SET_VAD, 0); // Disable VAD
   }
 
@@ -39,6 +40,25 @@ class SpeexDenoiser {
     } else {
       print("✅ Noise suppression updated to $dbLevel dB");
     }
+  }
+
+  void enableAgc({int agcLevel = 8000}) {
+    _setCtlInt(SPEEX_PREPROCESS_SET_AGC, 1);
+    _setCtlInt(SPEEX_PREPROCESS_SET_AGC_LEVEL, agcLevel);
+    print("✅ AGC enabled with level: $agcLevel");
+  }
+
+  void disableAgc() {
+    _setCtlInt(SPEEX_PREPROCESS_SET_AGC, 0);
+    print("✅ AGC disabled");
+  }
+
+  void setAgcLevel(int agcLevel) {
+    if (agcLevel <= 0) {
+      throw ArgumentError("AGC level must be a positive integer");
+    }
+    _setCtlInt(SPEEX_PREPROCESS_SET_AGC_LEVEL, agcLevel);
+    print("✅ AGC level updated to: $agcLevel");
   }
 
   void _setCtlInt(int request, int value) {

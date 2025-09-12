@@ -54,9 +54,9 @@ class SettingScreenState extends State<SettingScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: Text(
+            child: const Text(
               "(ENGLISH) Change between Light and Dark themes here.\n\n(FILIPINO) Pumili sa maliwanag o madilim na tema",
-              style: const TextStyle(color: Colors.white, fontSize: 18),
+              style: TextStyle(color: Colors.white, fontSize: 18),
             ),
           ),
         ],
@@ -69,9 +69,9 @@ class SettingScreenState extends State<SettingScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: Text(
+            child: const Text(
               "(ENGLISH) Select your preferred language here.\n\n(FILIPINO) Piliin ang iyong nais na wika dito.",
-              style: const TextStyle(color: Colors.white, fontSize: 18),
+              style: TextStyle(color: Colors.white, fontSize: 18),
             ),
           ),
         ],
@@ -84,9 +84,9 @@ class SettingScreenState extends State<SettingScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: Text(
+            child: const Text(
               "(ENGLISH) For questions, access FAQ and support here.\n\n (FILIPINO) Para sa mga katanungan, i-access ang FAQ at suporta dito.",
-              style: const TextStyle(color: Colors.white, fontSize: 18),
+              style: TextStyle(color: Colors.white, fontSize: 18),
             ),
           ),
         ],

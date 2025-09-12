@@ -4,6 +4,7 @@ import 'package:komunika/bloc/bloc_sound_enhancer/sound_enhancer_bloc.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/widgets/global_widgets/app_bar.dart';
+import 'package:komunika/widgets/global_widgets/history.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_visualization_card.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_amplifier_card.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
@@ -18,9 +19,7 @@ class SoundEnhancerScreen extends StatefulWidget {
   final GlobalKey? ttsNavKey;
 
   const SoundEnhancerScreen(
-      {super.key,
-      required this.soundEnhancerBloc,
-      this.ttsNavKey});
+      {super.key, required this.soundEnhancerBloc, this.ttsNavKey});
 
   @override
   State<SoundEnhancerScreen> createState() => SoundEnhancerScreenState();
@@ -70,7 +69,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: Text(
+            child: const Text(
               "(ENGLISH) This card shows sound visualization.\n\n(FILIPINO) Ito ay nagpapakita ng tunog.",
               style: TextStyle(color: Colors.white, fontSize: 18),
             ),
@@ -85,8 +84,8 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: Text("(ENGLISH) Here you can amplify, denoisen and modify the audio balance of the audio with transcription.\n\n(FILIPINO) Dito, maaari mong palakasin, linisin, at baguhin ang balanse ng tunog ng mikropono kasama ang transkripsyon.",
-              
+            child: const Text(
+              "(ENGLISH) Here you can amplify, denoisen and modify the audio balance of the audio with transcription.\n\n(FILIPINO) Dito, maaari mong palakasin, linisin, at baguhin ang balanse ng tunog ng mikropono kasama ang transkripsyon.",
               style: TextStyle(color: Colors.white, fontSize: 18),
             ),
           ),
@@ -101,7 +100,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: Text(
+            child: const Text(
               "(ENGLISH) Tap here to proceed...\n\n(FILIPINO) Pindutin dito upang magpatuloy...",
               style: TextStyle(color: Colors.white, fontSize: 18),
             ),
@@ -124,6 +123,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
       },
     ).show(context: context);
   }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -136,6 +136,24 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
           titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
           themeProvider: themeProvider,
           isBackButton: false,
+          customAction: IconButton(
+            icon: Icon(
+              Icons.history_rounded,
+              color: themeProvider.themeData.textTheme.bodyLarge?.color,
+            ),
+            tooltip: context.translate("history_title"),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HistoryPage(
+                    themeProvider: themeProvider,
+                    database: "stt",
+                  ),
+                ),
+              );
+            },
+          ),
         ),
         body: BlocConsumer<SoundEnhancerBloc, SoundEnhancerState>(
           listener: (context, state) {
@@ -175,13 +193,13 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
             children: [
               SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
               SoundVisualizationCard(
-                key: keyVisualization, 
+                key: keyVisualization,
                 themeProvider: themeProvider,
                 isActive: _micMode == 0 ? false : true,
               ),
               SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 16)),
               SoundAmplifierCard(
-                key: keyAmplifier, 
+                key: keyAmplifier,
                 themeProvider: themeProvider,
                 soundEnhancerBloc: widget.soundEnhancerBloc,
                 micMode: _micMode,

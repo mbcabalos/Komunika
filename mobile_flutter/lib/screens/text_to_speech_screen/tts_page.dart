@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,7 +7,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_event.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
-import 'package:komunika/screens/text_to_speech_screen/voice_message_page.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/responsive.dart';
@@ -135,7 +133,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: Text(
+            child: const Text(
               "(ENGLISH) Choose voice, play audio, and adjust speed here.\n\n(FILIPINO) Pumili ng boses, patugtugin ang audio, at ayusin ang bilis dito.",
               style: TextStyle(color: Colors.white, fontSize: 18),
             ),
@@ -150,7 +148,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: Text(
+            child: const Text(
               "(ENGLISH) Scan text from an image using the camera or gallery.\n\n(FILIPINO) I-scan ang teksto mula sa larawan gamit ang kamera o gallery.",
               style: TextStyle(color: Colors.white, fontSize: 18),
             ),
@@ -166,7 +164,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: Text(
+            child: const Text(
               "(ENGLISH) Tap here to proceed...\n\n(FILIPINO) Pindutin dito upang magpatuloy...",
               style: TextStyle(color: Colors.white, fontSize: 18),
             ),
