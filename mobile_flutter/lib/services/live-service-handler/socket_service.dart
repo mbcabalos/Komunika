@@ -44,6 +44,9 @@ class SocketService {
       if (data != null && data["text"] != null) {
         _transcriptionController.add(data["text"]);
       }
+      else{
+        print("Data is empty.");
+      }
     });
 
     socket?.onDisconnect((_) {

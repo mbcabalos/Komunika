@@ -101,21 +101,37 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
         sampleRate: 16000,
         numChannels: 2,
       );
+      // NativeAudioRecorder.audioStream.listen(
+      //   (Uint8List buffer) {
+      //     final amplified = _processAudioChunk(buffer);
+      //     final stereo = _convertToStereo(amplified);
+      //     // print("Audio chunk received, length: ${amplified.length}");
+      //     _handleAudioChunk(amplified);
+
+      //     _player.foodSink?.add(FoodData(stereo));
+      //   },
+      //   onError: (e) {
+      //     developer.log("Native audio stream error: $e");
+      //     emit(SoundEnhancerErrorState(message: "Native stream error: $e"));
+      //   },
+      // );
       NativeAudioRecorder.audioStream.listen(
         (Uint8List buffer) {
-          final amplified = _processAudioChunk(buffer);
-          final stereo = _convertToStereo(amplified);
-          // print("Audio chunk received, length: ${amplified.length}");
-          _handleAudioChunk(stereo);
-
+          // ---- A. Local monitor path (toggleable) ----
+          final monitorBytes =
+              _processAudioChunk(buffer); // respects _enableDenoise
+          final stereo = _convertToStereo(monitorBytes);
           _player.foodSink?.add(FoodData(stereo));
+
+          // ---- B. Backend path (always denoised) ----
+          final backendBytes = _processAudioChunkAlwaysDenoise(buffer);
+          _handleAudioChunk(backendBytes); // always cleaned for transcription
         },
         onError: (e) {
           developer.log("Native audio stream error: $e");
           emit(SoundEnhancerErrorState(message: "Native stream error: $e"));
         },
       );
-
       recording = true;
       developer.log("Native recording started with gain: $_currentGain");
     } catch (e) {
@@ -166,6 +182,35 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     }
 
     return Uint8List.view(stereoBuffer.buffer);
+  }
+
+  Uint8List _processAudioChunkAlwaysDenoise(Uint8List chunk) {
+    if (_denoiser == null) return chunk; // no denoiser yet
+    final byteData = ByteData.sublistView(chunk);
+    final inputShorts = List<int>.generate(
+      chunk.lengthInBytes ~/ 2,
+      (i) => byteData.getInt16(i * 2, Endian.little),
+    );
+
+    final outputSamples = <int>[];
+    _sampleBuffer.addAll(inputShorts);
+
+    while (_sampleBuffer.length >= 160) {
+      final frame = _sampleBuffer.sublist(0, 160);
+      _sampleBuffer = _sampleBuffer.sublist(160);
+      final denoised = _denoiser!.denoise(frame);
+      for (final s in denoised) {
+        final amplified = (s * _currentGain).clamp(-32768, 32767).toInt();
+        outputSamples.add(amplified);
+      }
+    }
+
+    final out = BytesBuilder();
+    for (final s in outputSamples) {
+      out.addByte(s & 0xFF);
+      out.addByte((s >> 8) & 0xFF);
+    }
+    return out.toBytes();
   }
 
   Uint8List _processAudioChunk(Uint8List chunk) {
@@ -257,7 +302,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   Future<void> _onStartNoiseSupressor(
       StartNoiseSupressor event, Emitter<SoundEnhancerState> emit) async {
     _enableDenoise = true;
-    await PreferencesUtils.storeNoiseReductionEnabled(true); 
+    await PreferencesUtils.storeNoiseReductionEnabled(true);
     _denoiser ??= SpeexDenoiser(
       noiseSuppressDb: _denoiseLevel,
     );
@@ -267,7 +312,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   Future<void> _onStoptNoiseSupressor(
       StopNoiseSupressor event, Emitter<SoundEnhancerState> emit) async {
     _enableDenoise = false;
-    await PreferencesUtils.storeNoiseReductionEnabled(false); 
+    await PreferencesUtils.storeNoiseReductionEnabled(false);
     _denoiser?.dispose();
     _denoiser = null;
   }
@@ -279,6 +324,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   // --- Helper Methods ---
 
   void _handleAudioChunk(Uint8List buffer) async {
+    _startNewStream();
     try {
       if (_transcribing) {
         if (socketService.isSocketInitialized) {
@@ -326,6 +372,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
 
   void _onNewTranscription(
       NewTranscriptionEvent event, Emitter<SoundEnhancerState> emit) {
+    print("Transcription recieved");
     emit(TranscriptionUpdatedState("${event.text}\n"));
   }
 
