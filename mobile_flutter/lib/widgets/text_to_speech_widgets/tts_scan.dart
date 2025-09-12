@@ -317,8 +317,6 @@ class TTSScanHelper {
       ),
     );
 
-    String combinedText = textController.text;
-
     ttsBloc.add(
       BatchExtractTextEvent(
         imagePaths: selectedImages.map((e) => e.path).toList(),

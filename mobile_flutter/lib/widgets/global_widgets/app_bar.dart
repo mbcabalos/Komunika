@@ -24,13 +24,11 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
     this.isHistoryButton = false,
     this.database = '',
     this.customAction,
-    this.onBackPressed, // Optional custom back action
+    this.onBackPressed, 
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-
     return AppBar(
       centerTitle: true,
       automaticallyImplyLeading: false,

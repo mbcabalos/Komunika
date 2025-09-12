@@ -3,7 +3,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:komunika/screens/home_screen/bottom_nav_page.dart';
 import 'package:komunika/screens/splash_screen/splash_screen.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
-import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/utils/themes.dart';
@@ -30,11 +29,9 @@ Future<void> main() async {
 }
 
 Future<void> checkDatabaseExistence() async {
-  DatabaseHelper databaseHelper = DatabaseHelper();
   String path = join(await getDatabasesPath(), 'komunika_database.db');
   // await deleteDatabase(path);
   bool exists = await databaseExists(path);
-  bool isWalkthroughDone = await PreferencesUtils.getWalkthrough();
   if (!exists) {
     await openDatabase(path, version: 1, onCreate: (db, version) {
       db.execute(
@@ -43,16 +40,7 @@ Future<void> checkDatabaseExistence() async {
       db.execute(
         'CREATE TABLE speech_to_text_history(id INTEGER PRIMARY KEY, text TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
       );
-      db.execute(
-        'CREATE TABLE auto_caption_history(id INTEGER PRIMARY KEY, text TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
-      );
-      db.execute(
-        'CREATE TABLE sign_transcriber_history(id INTEGER PRIMARY KEY, text TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
-      );
     });
-    if (!isWalkthroughDone) {
-      databaseHelper.moveAudioFiles();
-    }
     print('Database created');
   }
 }
@@ -117,7 +105,9 @@ class _MyAppState extends State<MyApp> {
         initialRoute: '/',
         routes: {
           '/': (context) => const SplashScreen(),
-          '/home': (context) => BottomNavScreen(themeProvider: themeProvider,),
+          '/home': (context) => BottomNavScreen(
+                themeProvider: themeProvider,
+              ),
         },
       ),
     );

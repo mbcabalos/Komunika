@@ -28,7 +28,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   bool _enableDenoise = false;
   double _currentGain = 1.0;
   double _balance = 0.5;
-  int _denoiseLevel = -10;
+  final int _denoiseLevel = -50;
 
   SoundEnhancerBloc(this.socketService, SpeexDenoiser speexDenoiser)
       : super(SoundEnhancerLoadingState()) {
@@ -41,12 +41,12 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     on<StopTranscriptionEvent>(_onStopTranscription);
     on<SetAmplificationEvent>(_onSetAmplification);
     on<SetAudioBalanceLevel>(_onSetAudioBalance);
-    on<SetDenoiseLevelEvent>(_onSetDenoiseLevel);
+    on<StartNoiseSupressor>(_onStartNoiseSupressor);
+    on<StopNoiseSupressor>(_onStoptNoiseSupressor);
+    _loadNoiseReductionPref();
     on<NewTranscriptionEvent>(_onNewTranscription);
     on<LivePreviewTranscriptionEvent>(_onLivePreview);
     on<ClearTextEvent>(_onClearText);
-    on<StartNoiseSupressor>(_onStartNoiseSupressor);
-    on<StopNoiseSupressor>(_onStoptNoiseSupressor);
 
     // Socket listeners
     _setupSocketListeners();
@@ -94,7 +94,6 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
 
     try {
       _currentGain = await PreferencesUtils.getAmplifierVolume();
-      _denoiseLevel = await PreferencesUtils.getDenoiseLevel();
       await _player.openPlayer();
       await NativeAudioRecorder.start();
       await _player.startPlayerFromStream(
@@ -167,22 +166,6 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     }
 
     return Uint8List.view(stereoBuffer.buffer);
-  }
-
-  Future<void> _onStartNoiseSupressor(
-      StartNoiseSupressor event, Emitter<SoundEnhancerState> emit) async {
-    _enableDenoise = true;
-    _denoiser ??= SpeexDenoiser(
-      noiseSuppressDb: _denoiseLevel, // initial value
-    );
-    _denoiser ??= SpeexDenoiser(frameSize: 160, sampleRate: 16000);
-  }
-
-  Future<void> _onStoptNoiseSupressor(
-      StopNoiseSupressor event, Emitter<SoundEnhancerState> emit) async {
-    _enableDenoise = false;
-    _denoiser?.dispose();
-    _denoiser = null;
   }
 
   Uint8List _processAudioChunk(Uint8List chunk) {
@@ -271,21 +254,26 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     }
   }
 
-  Future<void> _onSetDenoiseLevel(
-      SetDenoiseLevelEvent event, Emitter<SoundEnhancerState> emit) async {
-    try {
-      _denoiser ??= SpeexDenoiser(
-        noiseSuppressDb: _denoiseLevel, // initial value
-      );
-      _denoiseLevel = event.level.clamp(-50, -10);
-      print("Calling setNoiseSuppressDb with $_denoiseLevel");
-      print("_denoiser is: $_denoiser");
-      _denoiser?.setNoiseSuppressDb(_denoiseLevel);
-      await PreferencesUtils.storeDenoiseLevel(_denoiseLevel);
-      print("Denoise set to: $_denoiseLevel");
-    } catch (e) {
-      emit(SoundEnhancerErrorState(message: "Failed to set denoise level: $e"));
-    }
+  Future<void> _onStartNoiseSupressor(
+      StartNoiseSupressor event, Emitter<SoundEnhancerState> emit) async {
+    _enableDenoise = true;
+    await PreferencesUtils.storeNoiseReductionEnabled(true); 
+    _denoiser ??= SpeexDenoiser(
+      noiseSuppressDb: _denoiseLevel,
+    );
+    _denoiser ??= SpeexDenoiser(frameSize: 160, sampleRate: 16000);
+  }
+
+  Future<void> _onStoptNoiseSupressor(
+      StopNoiseSupressor event, Emitter<SoundEnhancerState> emit) async {
+    _enableDenoise = false;
+    await PreferencesUtils.storeNoiseReductionEnabled(false); 
+    _denoiser?.dispose();
+    _denoiser = null;
+  }
+
+  Future<void> _loadNoiseReductionPref() async {
+    _enableDenoise = await PreferencesUtils.getNoiseReductionEnabled();
   }
 
   // --- Helper Methods ---
