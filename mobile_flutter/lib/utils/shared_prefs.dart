@@ -1,10 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferencesUtils {
-  static const String _sizeKey = "captionSize";
-  static const String _textColorKey = "captionTextColor";
-  static const String _backgroundColorKey = "captionBackgroundColor";
-  static const String _captionEnableStateKey = 'captionEnableState';
+  // ================== Walkthrough / Tutorial ==================
   static const String _walkthroughDoneKey = 'walkthroughDone';
 
   static Future<void> storeWalkthroughDone(bool isDone) async {
@@ -14,7 +11,7 @@ class PreferencesUtils {
 
   static Future<bool> getWalkthroughDone() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_walkthroughDoneKey) ?? false; // Default to false
+    return prefs.getBool(_walkthroughDoneKey) ?? false;
   }
 
   static Future<void> resetWalkthrough() async {
@@ -22,46 +19,17 @@ class PreferencesUtils {
     await prefs.remove(_walkthroughDoneKey);
   }
 
-  static Future<void> storeCaptionEnableState(bool isEnabled) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_captionEnableStateKey, isEnabled);
-  }
-
-  static Future<bool> getCaptionEnableState() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_captionEnableStateKey) ?? false; // Default to false
-  }
-
-  static Future<void> storeCaptionSize(double size) async {
+  static Future<void> storeWalkthrough(bool walkthrough) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_sizeKey, size);
+    await prefs.setBool('isWalkthrough', walkthrough);
   }
 
-  static Future<double> getCaptionSize() async {
+  static Future<bool> getWalkthrough() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(_sizeKey) ?? 50.0;
+    return prefs.getBool('isWalkthrough') ?? false;
   }
 
-  static Future<void> storeCaptionTextColor(String colorName) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_textColorKey, colorName);
-  }
-
-  static Future<String> getCaptionTextColor() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_textColorKey) ?? "black";
-  }
-
-  static Future<void> storeCaptionBackgroundColor(String colorName) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_backgroundColorKey, colorName);
-  }
-
-  static Future<String> getCaptionBackgroundColor() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_backgroundColorKey) ?? "white";
-  }
-
+  // ================== Settings Screen ==================
   static Future<void> storeTheme(String theme) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('theme', theme);
@@ -84,19 +52,71 @@ class PreferencesUtils {
     return prefs.getString(_languageKey) ?? 'English';
   }
 
-  static Future<void> storeWalkthrough(bool walkthrough) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isWalkthrough', walkthrough);
-  }
-
-  static Future<bool> getWalkthrough() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('isWalkthrough') ?? false;
-  }
-
   static Future<String> getThemeAndWalkthrough() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('theme').toString();
+  }
+
+  // ================== Sound Enhancer Screen ==================
+  static Future<void> storeNoiseReductionEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("isNoiseReductionEnabled", enabled);
+  }
+
+  static Future<bool> getNoiseReductionEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool("isNoiseReductionEnabled") ?? false;
+  }
+
+  static Future<void> storeAGCEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("isAGCEnabled", enabled);
+  }
+
+  static Future<bool> getAGCEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool("isAGCEnabled") ?? false;
+  }
+
+  static Future<void> storeAmplifierVolume(double volume) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('isAmplifierVolume', volume);
+  }
+
+  static Future<double> getAmplifierVolume() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble('isAmplifierVolume') ?? 1.0;
+  }
+
+  static Future<void> storeAudioBalanceLevel(double balance) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('isAudioBalanceLevel', balance);
+  }
+
+  static Future<double> getAudioBalanceLevel() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble('isAudioBalanceLevel') ?? 0.0;
+  }
+
+  // ================== Text to Speech (TTS) Screen ==================
+  static Future<void> storeTTSVoice(String voice) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("TTS_selectedVoice", voice);
+  }
+
+  static Future<String> getTTSVoice() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString("TTS_selectedVoice") ?? "fil-ph-x-fie-local";
+  }
+
+  static Future<void> storeTTSRate(double rate) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble("TTS_selectedRate", rate);
+  }
+
+  static Future<double> getTTSRate() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble("TTS_selectedRate") ?? 0.5;
   }
 
   static Future<void> storeTTSSettings(String language, String voice) async {
@@ -114,51 +134,5 @@ class PreferencesUtils {
       "language": language ?? "en-US",
       "voice": voice ?? "fil-ph-x-fie-local",
     };
-  }
-
-  static Future<void> storeNoiseReductionEnabled(bool enabled) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool("isNoiseReductionEnabled", enabled);
-}
-
-static Future<bool> getNoiseReductionEnabled() async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool("isNoiseReductionEnabled") ?? false;
-}
-
-  static Future<void> storeAmplifierVolume(double volume) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('isAmplifierVolume', volume);
-  }
-
-  static Future<void> storeAudioBalanceLevel(double balance) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('isAudioBalanceLevel', balance);
-  }
-
-  static Future<double> getAmplifierVolume() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble('isAmplifierVolume') ?? 1.0;
-  }
-
-  static Future<void> storeTTSVoice(String voice) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString("TTS_selectedVoice", voice);
-  }
-
-  static Future<String> getTTSVoice() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString("TTS_selectedVoice") ??
-        "fil-ph-x-fie-local"; // default voice
-  }
-
-  static Future<void> storeTTSRate(double rate) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble("TTS_selectedRate", rate);
-  }
-
-  static Future<double> getTTSRate() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble("TTS_selectedRate") ?? 0.5; // default rate
   }
 }

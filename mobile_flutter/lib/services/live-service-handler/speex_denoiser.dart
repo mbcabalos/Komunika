@@ -10,7 +10,7 @@ class SpeexDenoiser {
   SpeexDenoiser({
     this.frameSize = 160,
     this.sampleRate = 16000,
-    int noiseSuppressDb = -50,
+    int noiseSuppressDb = -25,
   }) {
     _state = speexPreprocessInit(frameSize, sampleRate);
     if (_state == nullptr) {

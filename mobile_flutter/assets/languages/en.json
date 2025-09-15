@@ -20,7 +20,15 @@
   "home_quick_speech": "Quick Speech",
   "home_no_quick_speech": "No quick speech items available",
 
-  "history_title": "History",
+  "transcription_history_title": "Transcription History",
+  "transcription_history_no_title": "No Title",
+  "transcription_history_no_transcription_history": "No transcription history found.",
+  "transcription_history_edit_title": "Edit Title",
+  "transcription_history_enter_new_title": "Enter new title",
+  "transcription_history_cancel": "Cancel",
+  "transcription_history_save": "Save",
+  "transcription_history_edit": "Edit",
+  "transcription_history_delete": "Delete",
 
   "sound_enhancer_title": "Sound Enhancer",
   "sound_enhancer_visualization": "Sound Visualization",
@@ -89,7 +97,7 @@
   "faq_answer4": "You can get latest updates by following our Facebook page Komunika.",
   "faq_question5": "How do I contribute to the growing Komunika project?",
   "faq_answer5": "You can contribute to the project by forking the GitHub repository, creating a new branch, making changes, and submitting a pull request for review.",
-  
+
   "faq_question6": "What is the Sound Enhancer feature?",
   "faq_answer6": "The Sound Enhancer improves the clarity and quality of audio input from your microphone or Headphones. It helps amplify sound and reduce background noise for better listening or speech assistance.",
   "faq_question7": "How do I use the Sound Enhancer?",

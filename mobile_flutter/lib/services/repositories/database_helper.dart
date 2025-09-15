@@ -46,17 +46,16 @@ class DatabaseHelper {
 
         // Create the history tables
         await db.execute(
-          'CREATE TABLE speech_to_text_history(id INTEGER PRIMARY KEY, text TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
-        );
-        await db.execute(
-          'CREATE TABLE auto_caption_history(id INTEGER PRIMARY KEY, text TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
-        );
-        await db.execute(
-          'CREATE TABLE sign_transcriber_history(id INTEGER PRIMARY KEY, text TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
+          'CREATE TABLE speech_to_text_history(id INTEGER PRIMARY KEY, title TEXT, content TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
         );
 
         await moveAudioFiles();
         await insertAudioItems(audioItems);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        await db.execute(
+          'CREATE TABLE IF NOT EXISTS speech_to_text_history(id INTEGER PRIMARY KEY, title TEXT, content TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
+        );
       },
       version: 1,
     );
@@ -222,15 +221,22 @@ class DatabaseHelper {
   // Speech-to-Text History Methods
   // =============================================
 
-  Future<void> saveSpeechToTextHistory(String text) async {
+  Future<void> saveSpeechToTextHistory(String content) async {
     try {
       final db = await database;
+      final words = content.trim().split(RegExp(r'\s+'));
+      final title =
+          words.length >= 3 ? words.sublist(0, 3).join(' ') : words.join(' ');
       await db.insert(
         'speech_to_text_history',
-        {'text': text},
+        {
+          'title': title,
+          'content': content,
+          'timestamp': DateTime.now().toIso8601String(),
+        },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-      print('Speech-to-Text history saved: $text');
+      print('Speech-to-Text history saved: $title');
     } catch (e) {
       print('Error saving Speech-to-Text history: $e');
     }
@@ -250,17 +256,18 @@ class DatabaseHelper {
   }
 
   Future<void> deleteSpeechToTextHistory(int id) async {
-    try {
-      final db = await database;
-      await db.delete(
-        'speech_to_text_history',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
-      print('Speech-to-Text history deleted: $id');
-    } catch (e) {
-      print('Error deleting Speech-to-Text history: $e');
-    }
+    final db = await database;
+    await db.delete('speech_to_text_history', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> updateSpeechToTextHistoryTitle(int id, String newTitle) async {
+    final db = await database;
+    await db.update(
+      'speech_to_text_history',
+      {'title': newTitle},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<void> clearSpeechToTextHistory() async {
@@ -270,116 +277,6 @@ class DatabaseHelper {
       print('All Speech-to-Text history cleared.');
     } catch (e) {
       print('Error clearing Speech-to-Text history: $e');
-    }
-  }
-
-  // =============================================
-  // Auto Caption History Methods
-  // =============================================
-
-  Future<void> saveAutoCaptionHistory(String text) async {
-    try {
-      final db = await database;
-      await db.insert(
-        'auto_caption_history',
-        {'text': text},
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-      print('Auto Caption history saved: $text');
-    } catch (e) {
-      print('Error saving Auto Caption history: $e');
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> getAutoCaptionHistory() async {
-    try {
-      final db = await database;
-      return await db.query(
-        'auto_caption_history',
-        orderBy: 'timestamp DESC',
-      );
-    } catch (e) {
-      print('Error retrieving Auto Caption history: $e');
-      return [];
-    }
-  }
-
-  Future<void> deleteAutoCaptionHistory(int id) async {
-    try {
-      final db = await database;
-      await db.delete(
-        'auto_caption_history',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
-      print('Auto Caption history deleted: $id');
-    } catch (e) {
-      print('Error deleting Auto Caption history: $e');
-    }
-  }
-
-  Future<void> clearAutoCaptionHistory() async {
-    try {
-      final db = await database;
-      await db.delete('auto_caption_history');
-      print('All Auto Caption history cleared.');
-    } catch (e) {
-      print('Error clearing Auto Caption history: $e');
-    }
-  }
-
-  // =============================================
-  // Sign Transcriber History Methods
-  // =============================================
-
-  Future<void> saveSignTranscriberHistory(String text) async {
-    try {
-      final db = await database;
-      await db.insert(
-        'sign_transcriber_history',
-        {'text': text},
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-      print('Sign Transcriber history saved: $text');
-    } catch (e) {
-      print('Error saving Sign Transcriber history: $e');
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> getSignTranscriberHistory() async {
-    try {
-      final db = await database;
-      return await db.query(
-        'sign_transcriber_history',
-        orderBy: 'timestamp DESC',
-      );
-    } catch (e) {
-      print('Error retrieving Sign Transcriber history: $e');
-      return [];
-    }
-  }
-
-  Future<void> deleteSignTranscriberHistory(int id) async {
-    try {
-      final db = await database;
-      await db.delete(
-        'sign_transcriber_history',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
-      print('Sign Transcriber history deleted: $id');
-    } catch (e) {
-      print('Error deleting Sign Transcriber history: $e');
-    }
-  }
-
-  Future<void> clearSignTranscriberHistory() async {
-    try {
-      final db = await database;
-      await db.delete('sign_transcriber_history');
-      print('All Sign Transcriber history cleared.');
-    } catch (e) {
-      print('Error clearing Sign Transcriber history: $e');
     }
   }
 }

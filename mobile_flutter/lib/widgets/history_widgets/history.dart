@@ -37,18 +37,6 @@ class HistoryPageState extends State<HistoryPage> {
           _historyEntries = history;
         });
         break;
-      case "sign_transcriber":
-        history = await _dbHelper.getSignTranscriberHistory();
-        setState(() {
-          _historyEntries = history;
-        });
-        break;
-      case "auto_caption":
-        history = await _dbHelper.getAutoCaptionHistory();
-        setState(() {
-          _historyEntries = history;
-        });
-        break;
       default:
     }
   }
@@ -57,12 +45,6 @@ class HistoryPageState extends State<HistoryPage> {
     switch (widget.database) {
       case "stt":
         await _dbHelper.clearSpeechToTextHistory();
-        break;
-      case "sign_transcriber":
-        await _dbHelper.clearSignTranscriberHistory();
-        break;
-      case "auto_caption":
-        await _dbHelper.clearAutoCaptionHistory();
         break;
       default:
         print("Unknown database type");
@@ -73,12 +55,6 @@ class HistoryPageState extends State<HistoryPage> {
     switch (widget.database) {
       case "stt":
         await _dbHelper.deleteSpeechToTextHistory(entryId);
-        break;
-      case "sign_transcriber":
-        await _dbHelper.deleteSignTranscriberHistory(entryId);
-        break;
-      case "auto_caption":
-        await _dbHelper.deleteAutoCaptionHistory(entryId);
         break;
       default:
         print("Unknown database type");
