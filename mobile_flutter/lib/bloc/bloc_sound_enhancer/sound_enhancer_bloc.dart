@@ -43,12 +43,12 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     on<SetAudioBalanceLevel>(_onSetAudioBalance);
     on<StartNoiseSupressor>(_onStartNoiseSupressor);
     on<StopNoiseSupressor>(_onStoptNoiseSupressor);
-    _loadNoiseReductionPref();
     on<NewTranscriptionEvent>(_onNewTranscription);
     on<LivePreviewTranscriptionEvent>(_onLivePreview);
     on<ClearTextEvent>(_onClearText);
 
     // Socket listeners
+    _loadNoiseReductionPref();
     _setupSocketListeners();
   }
 
