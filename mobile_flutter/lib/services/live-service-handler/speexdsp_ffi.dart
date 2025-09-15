@@ -31,9 +31,9 @@ typedef PreprocessCtlDart = int Function(Pointer<Void>, int, Pointer<Void>);
 
 const int SPEEX_PREPROCESS_SET_DENOISE = 0;
 const int SPEEX_PREPROCESS_SET_NOISE_SUPPRESS = 1;
-const int SPEEX_PREPROCESS_SET_AGC = 3;
+const int SPEEX_PREPROCESS_SET_AGC = 2;
 const int SPEEX_PREPROCESS_SET_AGC_LEVEL = 4;
-const int SPEEX_PREPROCESS_SET_VAD = 1;
+const int SPEEX_PREPROCESS_SET_VAD = 6;
 const int SPEEX_PREPROCESS_SET_PROB_START = 8;
 const int SPEEX_PREPROCESS_SET_PROB_CONTINUE = 10;
 
