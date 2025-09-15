@@ -4,7 +4,8 @@ import 'package:komunika/bloc/bloc_sound_enhancer/sound_enhancer_bloc.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/widgets/global_widgets/app_bar.dart';
-import 'package:komunika/widgets/global_widgets/history.dart';
+import 'package:komunika/widgets/history_widgets/history.dart';
+import 'package:komunika/widgets/history_widgets/transcription_history.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_visualization_card.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_amplifier_card.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
@@ -146,9 +147,8 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => HistoryPage(
+                  builder: (context) => TranscriptionHistoryPage(
                     themeProvider: themeProvider,
-                    database: "stt",
                   ),
                 ),
               );

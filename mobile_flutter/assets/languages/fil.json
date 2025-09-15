@@ -22,7 +22,15 @@
   "home_speech_to_text_description": "I-tap dito upang subukan ang pagsasalita sa teksto na kakayahan",
   "home_text_to_speech_description": "I-tap dito upang subukan ang teksto sa pagsasalita na kakayahan",
 
-  "history_title": "Kasaysayan",
+  "transcription_history_title": "Kasaysayan ng Transkripsyon",
+  "transcription_history_no_title": "Walang Pamagat",
+  "transcription_history_no_transcription_history": "Walang kasaysayan ng transkripsyon.",
+  "transcription_history_edit_title": "I-edit ang Pamagat",
+  "transcription_history_enter_new_title": "Ilagay ang bagong pamagat",
+  "transcription_history_cancel": "Kanselahin",
+  "transcription_history_save": "I-save",
+  "transcription_history_edit": "I-edit",
+  "transcription_history_delete": "Tanggalin",
 
   "sound_enhancer_title": "Pampalinaw ng Tunog",
   "sound_enhancer_visualization": "Pagpapakita ng Tunog",

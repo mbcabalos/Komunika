@@ -37,6 +37,14 @@ class LivePreviewTranscriptionEvent extends SoundEnhancerEvent {
   List<Object> get props => [text];
 }
 
+class StartNoiseSupressorEvent extends SoundEnhancerEvent {}
+
+class StopNoiseSupressorEvent extends SoundEnhancerEvent {}
+
+class StartAGCEvent extends SoundEnhancerEvent {}
+
+class StopAGCEvent extends SoundEnhancerEvent {}
+
 class SetAmplificationEvent extends SoundEnhancerEvent {
   final double gain;
   SetAmplificationEvent(this.gain);
@@ -51,6 +59,6 @@ class SetAudioBalanceLevel extends SoundEnhancerEvent {
   List<Object?> get props => [balance];
 }
 
-class StartNoiseSupressor extends SoundEnhancerEvent {}
 
-class StopNoiseSupressor extends SoundEnhancerEvent {}
+
+

@@ -38,7 +38,7 @@ Future<void> checkDatabaseExistence() async {
           'CREATE TABLE audio_items(id INTEGER PRIMARY KEY, audioName TEXT, favorites INTEGER DEFAULT 0)');
       // Create the history tables
       db.execute(
-        'CREATE TABLE speech_to_text_history(id INTEGER PRIMARY KEY, text TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
+        'CREATE TABLE speech_to_text_history(id INTEGER PRIMARY KEY, title TEXT, content TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
       );
     });
     print('Database created');

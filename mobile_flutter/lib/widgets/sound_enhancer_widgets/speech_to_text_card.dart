@@ -60,10 +60,10 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
               widget.onTranscriptionToggle(enabled);
               if (enabled) {
                 widget.soundEnhancerBloc.add(StartTranscriptionEvent());
-                setState(() => _isCollapsed = false); 
+                setState(() => _isCollapsed = false);
               } else {
                 widget.soundEnhancerBloc.add(StopTranscriptionEvent());
-                setState(() => _isCollapsed = true); 
+                setState(() => _isCollapsed = true);
               }
             },
           ),
@@ -112,7 +112,8 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                context.translate("sound_enhancer_transcription_translated_text"),
+                context
+                    .translate("sound_enhancer_transcription_translated_text"),
                 style: TextStyle(
                   color: widget
                       .themeProvider.themeData.textTheme.bodyMedium?.color,
@@ -156,7 +157,8 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
                             ResponsiveUtils.getResponsiveFontSize(context, 16),
                       ),
                       decoration: InputDecoration(
-                        hintText: context.translate("sound_enhancer_transcription_hint"),
+                        hintText: context
+                            .translate("sound_enhancer_transcription_hint"),
                         border: InputBorder.none,
                         fillColor: Colors.transparent,
                         filled: true,
@@ -187,8 +189,12 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
                       icon:
                           const Icon(Icons.clear, size: 16, color: Colors.grey),
                       onPressed: () {
-                        dbHelper.saveSpeechToTextHistory(
-                            widget.textController.text);
+                        if (widget.textController.text.isNotEmpty) {
+                          _lastTranscription = "";
+                          dbHelper.saveSpeechToTextHistory(
+                              widget.textController.text);
+                        }
+
                         widget.textController.clear();
                         widget.soundEnhancerBloc.add(ClearTextEvent());
                       },

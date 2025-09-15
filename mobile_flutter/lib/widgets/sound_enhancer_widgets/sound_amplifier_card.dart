@@ -28,6 +28,7 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
   double _amplifierVolumeLevel = 1.0;
   double _audioBalanceLevel = 0.5;
   bool isNoiseSupressorActive = false;
+  bool isAGCActive = false;
   bool _isWiredConnected = false;
   bool _isWirelessConnected = false;
   final headsetDetector = HeadsetDetector();
@@ -37,7 +38,7 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
   void initState() {
     super.initState();
     _initHeadsetDetection();
-    _loadEnhancerValues();
+    _loadEnhancerSharedPrefValues();
   }
 
   Future<void> _initHeadsetDetection() async {
@@ -106,24 +107,30 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
     );
   }
 
-  Future<void> _loadEnhancerValues() async {
+  Future<void> _loadEnhancerSharedPrefValues() async {
     try {
-      final isNoiseReductionEnabled =
-          await PreferencesUtils.getNoiseReductionEnabled();
-      final volume = await PreferencesUtils.getAmplifierVolume();
+      final prefs = await Future.wait([
+        PreferencesUtils.getNoiseReductionEnabled(),
+        PreferencesUtils.getAGCEnabled(),
+        PreferencesUtils.getAmplifierVolume(),
+      ]);
       if (mounted) {
         setState(() {
-          _amplifierVolumeLevel = volume;
-          isNoiseSupressorActive = isNoiseReductionEnabled;
+          isNoiseSupressorActive = prefs[0] as bool;
+          isAGCActive = prefs[1] as bool;
+          _amplifierVolumeLevel = prefs[2] as double;
         });
       }
-      if (isNoiseReductionEnabled) {
-        widget.soundEnhancerBloc.add(StartNoiseSupressor());
-      } else {
-        widget.soundEnhancerBloc.add(StopNoiseSupressor());
-      }
+      widget.soundEnhancerBloc.add(
+        prefs[0] as bool
+            ? StartNoiseSupressorEvent()
+            : StopNoiseSupressorEvent(),
+      );
+      widget.soundEnhancerBloc.add(
+        prefs[1] as bool ? StartAGCEvent() : StopAGCEvent(),
+      );
     } catch (e) {
-      debugPrint('Error loading volume: $e');
+      debugPrint('Error loading enhancer values: $e');
     }
   }
 
@@ -225,10 +232,10 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
                         ),
                       ],
                       onPressed: (index) async {
-                        // if (index == 1 && !_isAnyHeadsetConnected) {
-                        //   _showHeadsetDialog();
-                        //   return;
-                        // }
+                        if (index == 1 && !_isAnyHeadsetConnected) {
+                          _showHeadsetDialog();
+                          return;
+                        }
                         widget.onMicModeChanged(index);
                         if (index == 0) {
                           widget.soundEnhancerBloc.add(StopRecordingEvent());
@@ -252,15 +259,30 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
                         isNoiseSupressorActive = enabled;
                       });
                       if (enabled) {
-                        widget.soundEnhancerBloc.add(StartNoiseSupressor());
+                        widget.soundEnhancerBloc
+                            .add(StartNoiseSupressorEvent());
                       } else {
-                        widget.soundEnhancerBloc.add(StopNoiseSupressor());
+                        widget.soundEnhancerBloc.add(StopNoiseSupressorEvent());
                       }
                     },
                   ),
-                  const SizedBox(height: 8),
 
-                  // Noise Reduction Slider
+                  // AGC Toggle
+                  const SizedBox(height: 8),
+                  buildSwitchRow(
+                    context.translate("AGC (Automatic Gain Control)"),
+                    isAGCActive,
+                    onChanged: (bool enabled) {
+                      setState(() {
+                        isAGCActive = enabled;
+                      });
+                      if (enabled) {
+                        widget.soundEnhancerBloc.add(StartAGCEvent());
+                      } else {
+                        widget.soundEnhancerBloc.add(StopAGCEvent());
+                      }
+                    },
+                  ),
                   const SizedBox(height: 12),
 
                   // Amplifier Level
@@ -332,17 +354,7 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
           ),
           child: Switch(
             value: value,
-            onChanged: (bool enabled) {
-              setState(() {
-                isNoiseSupressorActive = enabled;
-              });
-              PreferencesUtils.storeNoiseReductionEnabled(enabled);
-              if (enabled) {
-                widget.soundEnhancerBloc.add(StartNoiseSupressor());
-              } else {
-                widget.soundEnhancerBloc.add(StopNoiseSupressor());
-              }
-            },
+            onChanged: onChanged
           ),
         ),
       ],

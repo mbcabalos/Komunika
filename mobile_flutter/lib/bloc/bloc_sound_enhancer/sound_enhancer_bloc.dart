@@ -28,7 +28,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   bool _enableDenoise = false;
   double _currentGain = 1.0;
   double _balance = 0.5;
-  final int _denoiseLevel = -50;
+  final int _denoiseLevel = -25;
 
   SoundEnhancerBloc(this.socketService, SpeexDenoiser speexDenoiser)
       : super(SoundEnhancerLoadingState()) {
@@ -41,13 +41,15 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     on<StopTranscriptionEvent>(_onStopTranscription);
     on<SetAmplificationEvent>(_onSetAmplification);
     on<SetAudioBalanceLevel>(_onSetAudioBalance);
-    on<StartNoiseSupressor>(_onStartNoiseSupressor);
-    on<StopNoiseSupressor>(_onStoptNoiseSupressor);
+    on<StartNoiseSupressorEvent>(_onStartNoiseSupressor);
+    on<StopNoiseSupressorEvent>(_onStopNoiseSupressor);
+    on<StartAGCEvent>(_onStartAGC);
+    on<StopAGCEvent>(_onStopAGC);
     on<NewTranscriptionEvent>(_onNewTranscription);
     on<LivePreviewTranscriptionEvent>(_onLivePreview);
     on<ClearTextEvent>(_onClearText);
 
-    // Socket listeners
+    // Initializations
     _loadNoiseReductionPref();
     _setupSocketListeners();
   }
@@ -101,20 +103,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
         sampleRate: 16000,
         numChannels: 2,
       );
-      // NativeAudioRecorder.audioStream.listen(
-      //   (Uint8List buffer) {
-      //     final amplified = _processAudioChunk(buffer);
-      //     final stereo = _convertToStereo(amplified);
-      //     // print("Audio chunk received, length: ${amplified.length}");
-      //     _handleAudioChunk(amplified);
 
-      //     _player.foodSink?.add(FoodData(stereo));
-      //   },
-      //   onError: (e) {
-      //     developer.log("Native audio stream error: $e");
-      //     emit(SoundEnhancerErrorState(message: "Native stream error: $e"));
-      //   },
-      // );
       NativeAudioRecorder.audioStream.listen(
         (Uint8List buffer) {
           // ---- A. Local monitor path (toggleable) ----
@@ -154,19 +143,6 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
 
     return output.toBytes();
   }
-
-  // Uint8List _convertToStereo(Uint8List monoBytes) {
-  //   final monoBuffer = Int16List.view(monoBytes.buffer);
-  //   final stereoBuffer = Int16List(monoBuffer.length * 2);
-
-  //   for (int i = 0; i < monoBuffer.length; i++) {
-  //     final sample = monoBuffer[i];
-  //     stereoBuffer[i * 2] = sample; // Left channel
-  //     stereoBuffer[i * 2 + 1] = sample; // Right channel
-  //   }
-
-  //   return Uint8List.view(stereoBuffer.buffer);
-  // }
 
   Uint8List _convertToStereo(Uint8List monoBytes) {
     final monoBuffer = Int16List.view(monoBytes.buffer);
@@ -300,7 +276,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   }
 
   Future<void> _onStartNoiseSupressor(
-      StartNoiseSupressor event, Emitter<SoundEnhancerState> emit) async {
+      StartNoiseSupressorEvent event, Emitter<SoundEnhancerState> emit) async {
     _enableDenoise = true;
     await PreferencesUtils.storeNoiseReductionEnabled(true);
     _denoiser ??= SpeexDenoiser(
@@ -309,12 +285,29 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     _denoiser ??= SpeexDenoiser(frameSize: 160, sampleRate: 16000);
   }
 
-  Future<void> _onStoptNoiseSupressor(
-      StopNoiseSupressor event, Emitter<SoundEnhancerState> emit) async {
+  Future<void> _onStopNoiseSupressor(
+      StopNoiseSupressorEvent event, Emitter<SoundEnhancerState> emit) async {
     _enableDenoise = false;
     await PreferencesUtils.storeNoiseReductionEnabled(false);
     _denoiser?.dispose();
     _denoiser = null;
+  }
+
+  Future<void> _onStartAGC(
+      StartAGCEvent event, Emitter<SoundEnhancerState> emit) async {
+    await PreferencesUtils.storeAGCEnabled(true);
+    _denoiser ??= SpeexDenoiser(
+      noiseSuppressDb: _denoiseLevel,
+    );
+    _denoiser!.enableAgc(agcLevel: 30.0); 
+  }
+
+  Future<void> _onStopAGC(
+      StopAGCEvent event, Emitter<SoundEnhancerState> emit) async {
+    await PreferencesUtils.storeAGCEnabled(false);
+    if (_denoiser != null) {
+      _denoiser!.disableAgc();
+    }
   }
 
   Future<void> _loadNoiseReductionPref() async {
