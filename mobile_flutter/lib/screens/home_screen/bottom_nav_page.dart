@@ -7,7 +7,7 @@ import 'package:komunika/screens/sound_enhancer_screen/sound_enhancer_screen.dar
 import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
-import 'package:komunika/services/live-service-handler/speex_denoiser.dart';
+import 'package:komunika/services/live-service-handler/speexdsp_helper.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/themes.dart';
 
@@ -24,7 +24,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   late SoundEnhancerBloc soundEnhancerBloc;
   late TextToSpeechBloc textToSpeechBloc;
   final socketService = SocketService();
-  final speexDenoiser = SpeexDenoiser();
+  final speexDenoiser = SpeexDSP();
   final globalService = GlobalRepositoryImpl();
   final databaseHelper = DatabaseHelper();
   int _currentIndex = 0;
@@ -32,8 +32,8 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   final GlobalKey ttsNavKey = GlobalKey();
   final GlobalKey settingsNavKey = GlobalKey();
   final GlobalKey<TextToSpeechScreenState> ttsScreenKey = GlobalKey();
-  final GlobalKey<SoundEnhancerScreenState> sesScreenKey = GlobalKey(); 
-  final GlobalKey<SettingScreenState> sScreenKey = GlobalKey(); 
+  final GlobalKey<SoundEnhancerScreenState> sesScreenKey = GlobalKey();
+  final GlobalKey<SettingScreenState> sScreenKey = GlobalKey();
 
   @override
   void initState() {
@@ -45,10 +45,14 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
 
     // Initialize screens after BLoCs are created
     _screens = [
-      SoundEnhancerScreen(key: sesScreenKey, soundEnhancerBloc: soundEnhancerBloc, ttsNavKey: ttsNavKey),
+      SoundEnhancerScreen(
+          key: sesScreenKey,
+          soundEnhancerBloc: soundEnhancerBloc,
+          ttsNavKey: ttsNavKey),
       TextToSpeechScreen(
-        key:ttsScreenKey, ttsBloc: textToSpeechBloc, settingsNavKey: settingsNavKey
-      ),
+          key: ttsScreenKey,
+          ttsBloc: textToSpeechBloc,
+          settingsNavKey: settingsNavKey),
       SettingScreen(key: sScreenKey, themeProvider: widget.themeProvider),
     ];
   }
@@ -74,11 +78,12 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
           setState(() {
             _currentIndex = index;
           });
-          if (index == 1) { // TTS tab
+          if (index == 1) {
+            // TTS tab
             ttsScreenKey.currentState?.checkWalkthrough();
-          } else if(index == 0) {
+          } else if (index == 0) {
             sesScreenKey.currentState?.checkWalkthrough();
-          } else if(index == 2) {
+          } else if (index == 2) {
             sScreenKey.currentState?.checkWalkthrough();
           }
         },

@@ -232,10 +232,10 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
                         ),
                       ],
                       onPressed: (index) async {
-                        if (index == 1 && !_isAnyHeadsetConnected) {
-                          _showHeadsetDialog();
-                          return;
-                        }
+                        // if (index == 1 && !_isAnyHeadsetConnected) {
+                        //   _showHeadsetDialog();
+                        //   return;
+                        // }
                         widget.onMicModeChanged(index);
                         if (index == 0) {
                           widget.soundEnhancerBloc.add(StopRecordingEvent());
@@ -352,10 +352,7 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
               ),
             ),
           ),
-          child: Switch(
-            value: value,
-            onChanged: onChanged
-          ),
+          child: Switch(value: value, onChanged: onChanged),
         ),
       ],
     );
