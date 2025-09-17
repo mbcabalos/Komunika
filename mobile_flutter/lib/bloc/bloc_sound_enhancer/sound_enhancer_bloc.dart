@@ -6,7 +6,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
-import 'package:komunika/services/live-service-handler/speex_denoiser.dart';
+import 'package:komunika/services/live-service-handler/speexdsp_helper.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:komunika/services/live-service-handler/native_audio_recorder.dart';
@@ -21,7 +21,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   final StreamController<String> _transcriptionController =
       StreamController<String>();
   final SocketService socketService;
-  SpeexDenoiser? _denoiser;
+  SpeexDSP? _denoiser;
 
   bool recording = false;
   bool _transcribing = false;
@@ -29,8 +29,9 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   double _currentGain = 1.0;
   double _balance = 0.5;
   final int _denoiseLevel = -25;
+  List<int> _monitorBuffer = [];
 
-  SoundEnhancerBloc(this.socketService, SpeexDenoiser speexDenoiser)
+  SoundEnhancerBloc(this.socketService, SpeexDSP speexDenoiser)
       : super(SoundEnhancerLoadingState()) {
     // Event handlers
     on<SoundEnhancerLoadingEvent>(_onLoadingEvent);
@@ -50,11 +51,10 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     on<ClearTextEvent>(_onClearText);
 
     // Initializations
+    _denoiser = SpeexDSP();
     _loadNoiseReductionPref();
     _setupSocketListeners();
   }
-
-  List<int> _sampleBuffer = [];
 
   void _setupSocketListeners() {
     socketService.socket?.on("transcription_result", (data) {
@@ -106,21 +106,20 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
 
       NativeAudioRecorder.audioStream.listen(
         (Uint8List buffer) {
-          // ---- A. Local monitor path (toggleable) ----
-          final monitorBytes =
-              _processAudioChunk(buffer); // respects _enableDenoise
-          final stereo = _convertToStereo(monitorBytes);
-          _player.foodSink?.add(FoodData(stereo));
+          // ---- Local monitor path (toggleable) ----
+          if (_denoiser == null) return;
 
-          // ---- B. Backend path (always denoised) ----
-          final backendBytes = _processAudioChunkAlwaysDenoise(buffer);
-          _handleAudioChunk(backendBytes); // always cleaned for transcription
+          final processedBytes = _processAudioChunk(buffer);
+          final stereoBytes = _convertToStereo(processedBytes);
+          _player.foodSink?.add(FoodData(stereoBytes));
+          _handleAudioChunk(buffer);
         },
         onError: (e) {
           developer.log("Native audio stream error: $e");
           emit(SoundEnhancerErrorState(message: "Native stream error: $e"));
         },
       );
+
       recording = true;
       developer.log("Native recording started with gain: $_currentGain");
     } catch (e) {
@@ -160,73 +159,43 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     return Uint8List.view(stereoBuffer.buffer);
   }
 
-  Uint8List _processAudioChunkAlwaysDenoise(Uint8List chunk) {
-    if (_denoiser == null) return chunk; // no denoiser yet
+  Uint8List _processAudioChunk(Uint8List chunk) {
+    if (_denoiser == null) {
+      return _amplifyPCM(chunk, _currentGain);
+    }
+
+    if (chunk.isEmpty) return Uint8List(0);
+
+    final frameSize = _denoiser!.frameSize;
     final byteData = ByteData.sublistView(chunk);
     final inputShorts = List<int>.generate(
       chunk.lengthInBytes ~/ 2,
       (i) => byteData.getInt16(i * 2, Endian.little),
     );
 
+    _monitorBuffer.addAll(inputShorts);
     final outputSamples = <int>[];
-    _sampleBuffer.addAll(inputShorts);
 
-    while (_sampleBuffer.length >= 160) {
-      final frame = _sampleBuffer.sublist(0, 160);
-      _sampleBuffer = _sampleBuffer.sublist(160);
-      final denoised = _denoiser!.denoise(frame);
-      for (final s in denoised) {
-        final amplified = (s * _currentGain).clamp(-32768, 32767).toInt();
-        outputSamples.add(amplified);
+    while (_monitorBuffer.length >= frameSize) {
+      final frame = _monitorBuffer.sublist(0, frameSize);
+
+      _monitorBuffer = _monitorBuffer.sublist(frameSize);
+
+      final processedFrame = _denoiser!.processFrame(frame);
+
+      for (final s in processedFrame) {
+        outputSamples.add((s * _currentGain).clamp(-32768, 32767).toInt());
       }
     }
 
+    // Convert back to bytes
     final out = BytesBuilder();
     for (final s in outputSamples) {
       out.addByte(s & 0xFF);
       out.addByte((s >> 8) & 0xFF);
     }
+
     return out.toBytes();
-  }
-
-  Uint8List _processAudioChunk(Uint8List chunk) {
-    if (_enableDenoise && _denoiser != null) {
-      final byteData = ByteData.sublistView(chunk);
-      final inputShorts = List<int>.generate(
-        chunk.lengthInBytes ~/ 2,
-        (i) => byteData.getInt16(i * 2, Endian.little),
-      );
-
-      // Buffer for denoising
-      _sampleBuffer.addAll(inputShorts);
-
-      final outputSamples = <int>[];
-
-      while (_sampleBuffer.length >= 160) {
-        final frame = _sampleBuffer.sublist(0, 160);
-        _sampleBuffer = _sampleBuffer.sublist(160);
-
-        final denoised = _denoiser!.denoise(frame);
-
-        for (final s in denoised) {
-          final amplified = (s * _currentGain).clamp(-32768, 32767).toInt();
-          // print("Amplifier gain: $_currentGain");
-          outputSamples.add(amplified);
-        }
-      }
-
-      // Convert to Uint8List using ByteData (ensures endian correctness)
-      final outputBytes = BytesBuilder();
-      for (final sample in outputSamples) {
-        outputBytes.addByte(sample & 0xFF); // little endian low byte
-        outputBytes.addByte((sample >> 8) & 0xFF); // high byte
-      }
-
-      return outputBytes.toBytes();
-    }
-
-    // If denoise disabled, fallback to old working amplifier
-    return _amplifyPCM(chunk, _currentGain);
   }
 
   Future<void> _onStopRecording(
@@ -279,35 +248,26 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       StartNoiseSupressorEvent event, Emitter<SoundEnhancerState> emit) async {
     _enableDenoise = true;
     await PreferencesUtils.storeNoiseReductionEnabled(true);
-    _denoiser ??= SpeexDenoiser(
-      noiseSuppressDb: _denoiseLevel,
-    );
-    _denoiser ??= SpeexDenoiser(frameSize: 160, sampleRate: 16000);
+    _denoiser?.enableNoiseSuppress();
   }
 
   Future<void> _onStopNoiseSupressor(
       StopNoiseSupressorEvent event, Emitter<SoundEnhancerState> emit) async {
     _enableDenoise = false;
     await PreferencesUtils.storeNoiseReductionEnabled(false);
-    _denoiser?.dispose();
-    _denoiser = null;
+    _denoiser?.disableNoiseSuppress();
   }
 
   Future<void> _onStartAGC(
       StartAGCEvent event, Emitter<SoundEnhancerState> emit) async {
     await PreferencesUtils.storeAGCEnabled(true);
-    _denoiser ??= SpeexDenoiser(
-      noiseSuppressDb: _denoiseLevel,
-    );
-    _denoiser!.enableAgc(agcLevel: 30.0); 
+    _denoiser?.enableAgc(); // just enable
   }
 
   Future<void> _onStopAGC(
       StopAGCEvent event, Emitter<SoundEnhancerState> emit) async {
     await PreferencesUtils.storeAGCEnabled(false);
-    if (_denoiser != null) {
-      _denoiser!.disableAgc();
-    }
+    _denoiser?.disableAgc(); // just disable
   }
 
   Future<void> _loadNoiseReductionPref() async {
@@ -317,20 +277,22 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   // --- Helper Methods ---
 
   void _handleAudioChunk(Uint8List buffer) async {
-    _startNewStream();
     try {
-      if (_transcribing) {
-        if (socketService.isSocketInitialized) {
-          socketService.sendAudio(buffer);
-        } else {
-          developer.log("WebSocket not connected, attempting reconnect...");
-          await socketService.reconnect();
-          if (socketService.isSocketInitialized) {
-            socketService.sendAudio(buffer);
-          }
-        }
+      if (!_transcribing) return;
+
+      // Ensure socket is initialized
+      if (!socketService.isSocketInitialized) {
+        developer.log("WebSocket not connected, attempting reconnect...");
+        await socketService.reconnect();
       }
-      // If not transcribing, do nothing!
+
+      if (socketService.isSocketInitialized) {
+        // ✅ Send audio chunk
+        socketService.sendAudio(buffer);
+      } else {
+        developer.log(
+            "WebSocket not connected after reconnect, audio chunk dropped.");
+      }
     } catch (e) {
       developer.log("Error handling audio chunk: $e");
     }
@@ -365,7 +327,6 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
 
   void _onNewTranscription(
       NewTranscriptionEvent event, Emitter<SoundEnhancerState> emit) {
-    print("Transcription recieved");
     emit(TranscriptionUpdatedState("${event.text}\n"));
   }
 

@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
-
-import 'speex_denoiser.dart';
+import 'package:komunika/services/live-service-handler/speexdsp_helper.dart';
 
 class DenoiseArgs {
   final List<int> samples;
@@ -19,11 +18,11 @@ Future<List<int>> runDenoiseInIsolate(DenoiseArgs args) async {
 }
 
 List<int> _denoiseWorker(DenoiseArgs args) {
-  final denoiser = SpeexDenoiser(
+  final denoiser = SpeexDSP(
     frameSize: args.frameSize,
     sampleRate: args.sampleRate,
   );
-  final output = denoiser.denoise(args.samples);
+  final output = denoiser.processFrame(args.samples);
   denoiser.dispose();
   return output;
 }
