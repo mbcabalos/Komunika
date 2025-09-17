@@ -57,6 +57,26 @@ class PreferencesUtils {
     return prefs.getString('theme').toString();
   }
 
+  static Future<void> storeSTTHistoryMode(String mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("stt_history_mode", mode);
+  }
+
+  static Future<String> getSTTHistoryMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString("stt_history_mode") ?? "Auto";
+  }
+
+  static Future<void> storeTTSHistoryMode(String mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("tts_history_mode", mode);
+  }
+
+  static Future<String> getTTSHistoryMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString("tts_history_mode") ?? "Auto";
+  }
+
   // ================== Sound Enhancer Screen ==================
   static Future<void> storeNoiseReductionEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
@@ -109,6 +129,16 @@ class PreferencesUtils {
     return prefs.getString("TTS_selectedVoice") ?? "fil-ph-x-fie-local";
   }
 
+  static Future<void> storeTTSLanguage(String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("TTS_selectedLanguage", language);
+  }
+
+  static Future<String> getTTSLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString("TTS_selectedLanguage") ?? "PH";
+  }
+
   static Future<void> storeTTSRate(double rate) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble("TTS_selectedRate", rate);
@@ -117,22 +147,5 @@ class PreferencesUtils {
   static Future<double> getTTSRate() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getDouble("TTS_selectedRate") ?? 0.5;
-  }
-
-  static Future<void> storeTTSSettings(String language, String voice) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString("TTS_language", language);
-    await prefs.setString("TTS_voice", voice);
-  }
-
-  static Future<Map<String, String>> getTTSSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? language = prefs.getString("TTS_language");
-    final String? voice = prefs.getString("TTS_voice");
-
-    return {
-      "language": language ?? "en-US",
-      "voice": voice ?? "fil-ph-x-fie-local",
-    };
   }
 }

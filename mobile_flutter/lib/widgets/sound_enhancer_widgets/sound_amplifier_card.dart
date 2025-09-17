@@ -329,7 +329,13 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: const TextStyle(fontSize: 16)),
+        Text(
+          title,
+          style: TextStyle(
+              fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+              color:
+                  widget.themeProvider.themeData.textTheme.bodyMedium?.color),
+        ),
         Theme(
           data: ThemeData(
             switchTheme: SwitchThemeData(
