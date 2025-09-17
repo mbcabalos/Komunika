@@ -2,11 +2,12 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_event.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_state.dart';
+import 'package:komunika/screens/history_screen/history_screen.dart';
+import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/responsive.dart';
@@ -17,6 +18,7 @@ import 'package:komunika/widgets/global_widgets/app_bar.dart';
 import 'package:komunika/widgets/text_to_speech_widgets/text_area_card.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:komunika/utils/flutter_tts.dart';
 
 class TextToSpeechScreen extends StatefulWidget {
   final TextToSpeechBloc ttsBloc;
@@ -32,12 +34,11 @@ class TextToSpeechScreen extends StatefulWidget {
 class TextToSpeechScreenState extends State<TextToSpeechScreen> {
   final TextEditingController _textController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
-  final FlutterTts flutterTts = FlutterTts();
+  final dbHelper = DatabaseHelper();
   final ImagePicker _imagePicker = ImagePicker();
   GlobalKey keyTextArea = GlobalKey();
   GlobalKey keyVoicePlayX = GlobalKey();
   GlobalKey keyImagePicker = GlobalKey();
-
   List<TargetFocus> ttsTargets = [];
 
   // TTS Control Variables
@@ -49,8 +50,9 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
 
   List<XFile> _selectedImages = [];
   int _currentProcessingIndex = 0;
-  String? language;
+  String? selectedlanguage;
   String? selectedVoice;
+  String? historyMode;
   final List<Map<String, String>> _voiceOptions = [
     {
       "image": "assets/flags/us_male.png",
@@ -92,11 +94,23 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
 
   final List<double> _rateOptions = [0.5, 0.75, 1.0];
 
+  late TtsHelper ttsHelper;
+
   @override
   void initState() {
     super.initState();
+    ttsHelper = TtsHelper();
+    ttsHelper.setupHandlers(
+      () => setState(() => currentlyPlaying = true),
+      () => setState(() => currentlyPlaying = false),
+      () => setState(() => currentlyPlaying = false),
+      (msg) {
+        setState(() => currentlyPlaying = false);
+        showCustomSnackBar(context, "TTS Error: $msg", ColorsPalette.red);
+      },
+    );
     _initialize();
-    _initTts();
+    checkWalkthrough();
   }
 
   Future<void> checkWalkthrough() async {
@@ -190,63 +204,10 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
 
   Future<void> _initialize() async {
     widget.ttsBloc.add(TextToSpeechLoadingEvent());
-    ttsSettings = await PreferencesUtils.getTTSSettings();
-
     selectedVoice = await PreferencesUtils.getTTSVoice();
+    selectedlanguage = await PreferencesUtils.getTTSLanguage();
     rate = await PreferencesUtils.getTTSRate();
-
-    // Set language based on selectedVoice
-    if (selectedVoice != null) {
-      final found = _voiceOptions.firstWhere(
-        (v) => v["voice"] == selectedVoice,
-        orElse: () => {},
-      );
-      language = found["language"];
-    }
-  }
-
-  Future<void> _initTts() async {
-    _setAwaitOptions();
-
-    if (isAndroid) {
-      _getDefaultVoice();
-    }
-
-    flutterTts.setStartHandler(() {
-      setState(() {
-        currentlyPlaying = true;
-      });
-    });
-
-    flutterTts.setCompletionHandler(() {
-      setState(() {
-        currentlyPlaying = false;
-      });
-    });
-
-    flutterTts.setCancelHandler(() {
-      setState(() {
-        currentlyPlaying = false;
-      });
-    });
-
-    flutterTts.setErrorHandler((msg) {
-      setState(() {
-        currentlyPlaying = false;
-      });
-      showCustomSnackBar(context, "TTS Error: $msg", ColorsPalette.red);
-    });
-  }
-
-  Future<void> _getDefaultVoice() async {
-    var voice = await flutterTts.getDefaultVoice;
-    if (voice != null) {
-      print(voice);
-    }
-  }
-
-  Future<void> _setAwaitOptions() async {
-    await flutterTts.awaitSpeakCompletion(true);
+    historyMode = await PreferencesUtils.getTTSHistoryMode();
   }
 
   Future<void> _speak() async {
@@ -257,43 +218,46 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
     }
 
     setState(() {
-      currentlyPlaying = true; // <-- Immediately set to playing
+      currentlyPlaying = true;
     });
 
-    await flutterTts.setEngine("com.google.android.tts");
-    await flutterTts.setVolume(1.0);
-    await flutterTts.setSpeechRate(rate);
-    await flutterTts.setPitch(1.0);
-
-    if (language != null) {
-      await flutterTts.setLanguage(language!);
-    }
-    if (selectedVoice != null) {
-      await flutterTts.setVoice({"name": selectedVoice!, "locale": language!});
-    }
-
-    await flutterTts.speak(text);
+    await ttsHelper.speak(
+      text: text,
+      language: selectedlanguage,
+      voice: selectedVoice,
+      rate: rate,
+      pitch: 1.0,
+      volume: 1.0,
+    );
   }
 
   Future<void> _stop() async {
-    await flutterTts.stop();
+    await ttsHelper.stop();
     setState(() {
       currentlyPlaying = false;
     });
   }
 
   Future<void> _pause() async {
-    await flutterTts.pause();
+    await ttsHelper.pause();
     setState(() {
-      currentlyPlaying = false; // <-- Immediately set to not playing
+      currentlyPlaying = false;
     });
   }
 
   bool get isAndroid => !kIsWeb && Platform.isAndroid;
 
+  void refresh() {
+    if (mounted) {
+      setState(() {
+        _initialize();
+      });
+    }
+  }
+
   @override
   void dispose() {
-    flutterTts.stop();
+    ttsHelper.stop();
     super.dispose();
   }
 
@@ -309,23 +273,24 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
           titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
           themeProvider: themeProvider,
           isBackButton: false,
-          // customAction: IconButton(
-          //     tooltip: context.translate("tts_image_processing_title"),
-          //     icon: Icon(
-          //       Icons.storage_rounded,
-          //       color: themeProvider.themeData.textTheme.bodySmall?.color,
-          //     ),
-          //     onPressed: () {
-          //       Navigator.push(
-          //         context,
-          //         MaterialPageRoute(
-          //           builder: (context) => VoiceMessagePage(
-          //             themeProvider: themeProvider,
-          //             textToSpeechBloc: widget.ttsBloc,
-          //           ),
-          //         ),
-          //       );
-          //     }),
+          customAction: IconButton(
+            icon: Icon(
+              Icons.history_rounded,
+              color: themeProvider.themeData.textTheme.bodyLarge?.color,
+            ),
+            tooltip: context.translate("history_title"),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HistoryScreen(
+                    themeProvider: themeProvider,
+                    database: 'tts_history.db',
+                  ),
+                ),
+              );
+            },
+          ),
         ),
         floatingActionButton: FloatingActionButton(
           key: keyImagePicker,
@@ -386,10 +351,11 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                 key: keyTextArea,
                 themeProvider: themeProvider,
                 ttsBloc: widget.ttsBloc,
-                titleController: _titleController,
+                dbHelper: dbHelper,
                 contentController: _textController,
                 width: phoneWidth,
                 height: phoneHeight,
+                historyMode: historyMode.toString(),
                 onClear: () async {
                   await _stop();
                   _textController.clear();
@@ -418,7 +384,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         Row(
           children: [
             AbsorbPointer(
-              absorbing: currentlyPlaying, // Disable when playing
+              absorbing: currentlyPlaying,
               child: Opacity(
                 opacity: currentlyPlaying ? 0.5 : 1.0,
                 child: _buildControlButton(
@@ -500,7 +466,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         SizedBox(width: ResponsiveUtils.getResponsiveSize(context, 20)),
 
         AbsorbPointer(
-          absorbing: currentlyPlaying, // Disable when playing
+          absorbing: currentlyPlaying,
           child: Opacity(
             opacity: currentlyPlaying ? 0.5 : 1.0,
             child: _buildControlButton(
@@ -571,12 +537,11 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
     return GestureDetector(
       onTap: () async {
         setState(() {
-          language = option["language"];
+          selectedlanguage = option["language"];
           selectedVoice = option["voice"];
         });
         await PreferencesUtils.storeTTSVoice(option["voice"]!);
-        await flutterTts.setLanguage(option["language"]!);
-        await flutterTts.setVoice({"name": option["voice"]!});
+        await PreferencesUtils.storeTTSLanguage(option["language"]!);
         Navigator.pop(context);
       },
       child: Column(
@@ -597,7 +562,6 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
           ),
           const SizedBox(height: 6),
           Flexible(
-            // prevent text overflow
             child: Text(
               option["label"]!,
               maxLines: 2,
@@ -629,7 +593,6 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
     required VoidCallback onPressed,
     required ThemeProvider themeProvider,
   }) {
-    // Calculate font size if not provided
     final calculatedFontSize =
         fontSize ?? ResponsiveUtils.getResponsiveFontSize(context, 14);
 

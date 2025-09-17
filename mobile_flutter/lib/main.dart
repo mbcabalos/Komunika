@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:komunika/screens/home_screen/bottom_nav_page.dart';
+import 'package:komunika/screens/home_screen/bottom_nav_screen.dart';
 import 'package:komunika/screens/splash_screen/splash_screen.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/utils/app_localization.dart';
@@ -34,11 +34,13 @@ Future<void> checkDatabaseExistence() async {
   bool exists = await databaseExists(path);
   if (!exists) {
     await openDatabase(path, version: 1, onCreate: (db, version) {
-      db.execute(
-          'CREATE TABLE audio_items(id INTEGER PRIMARY KEY, audioName TEXT, favorites INTEGER DEFAULT 0)');
-      // Create the history tables
+      // Create the speech to text history tables
       db.execute(
         'CREATE TABLE speech_to_text_history(id INTEGER PRIMARY KEY, title TEXT, content TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
+      );
+      // Create the text to speech history tables
+      db.execute(
+        'CREATE TABLE text_to_speech_history(id INTEGER PRIMARY KEY, title TEXT, content TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)',
       );
     });
     print('Database created');
@@ -83,8 +85,8 @@ class _MyAppState extends State<MyApp> {
         debugShowCheckedModeBanner: false,
         title: 'Komunika',
         supportedLocales: const [
-          Locale('en', 'US'), // English
-          Locale('fil', 'PH'), // Filipino
+          Locale('en', 'US'), 
+          Locale('fil', 'PH'), 
         ],
         localizationsDelegates: const [
           AppLocalizations.delegate,

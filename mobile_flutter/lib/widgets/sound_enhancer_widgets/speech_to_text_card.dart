@@ -3,24 +3,27 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_sound_enhancer/sound_enhancer_bloc.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
+import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 
 class SpeechToTextCard extends StatefulWidget {
   final ThemeProvider themeProvider;
   final SoundEnhancerBloc soundEnhancerBloc;
-  final TextEditingController textController;
+  final TextEditingController contentController;
   final bool isTranscriptionEnabled;
   final int micMode;
+  final String historyMode;
   final Function(bool) onTranscriptionToggle;
 
   const SpeechToTextCard({
     super.key,
     required this.themeProvider,
     required this.soundEnhancerBloc,
-    required this.textController,
-    required this.isTranscriptionEnabled,
+    required this.contentController,
     required this.micMode,
+    required this.historyMode,
+    required this.isTranscriptionEnabled,
     required this.onTranscriptionToggle,
   });
 
@@ -133,23 +136,24 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
                 BlocBuilder<SoundEnhancerBloc, SoundEnhancerState>(
                   builder: (context, state) {
                     if (state is LivePreviewTranscriptionState) {
-                      widget.textController.text =
+                      widget.contentController.text =
                           _lastTranscription + state.text;
-                      widget.textController.selection =
+                      widget.contentController.selection =
                           TextSelection.fromPosition(
-                        TextPosition(offset: widget.textController.text.length),
+                        TextPosition(
+                            offset: widget.contentController.text.length),
                       );
                     }
                     if (state is TranscriptionUpdatedState) {
-                      widget.textController.text =
+                      widget.contentController.text =
                           _lastTranscription + state.text;
-                      _lastTranscription = widget.textController.text;
+                      _lastTranscription = widget.contentController.text;
                       widget.soundEnhancerBloc.add(ClearTextEvent());
                     }
 
                     return TextField(
                       readOnly: true,
-                      controller: widget.textController,
+                      controller: widget.contentController,
                       style: TextStyle(
                         color: widget.themeProvider.themeData.textTheme
                             .bodyMedium?.color,
@@ -175,27 +179,56 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
                     );
                   },
                 ),
+
+                // History mode buttons
+                if (widget.historyMode == 'Manual')
+                  Positioned(
+                    bottom: 8,
+                    right: 8,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: ColorsPalette.grey.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.check,
+                                size: 15, color: Colors.grey),
+                            onPressed: () {
+                              _showSaveConfirmationDialog();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 Positioned(
                   bottom: 8,
-                  right: 8,
+                  right: 8 + (widget.historyMode == 'Manual' ? 37 : 0),
                   child: Container(
                     width: 30,
                     height: 30,
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.2),
+                      color: ColorsPalette.grey.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: IconButton(
                       icon:
-                          const Icon(Icons.clear, size: 16, color: Colors.grey),
+                          const Icon(Icons.clear, size: 15, color: Colors.grey),
                       onPressed: () {
-                        if (widget.textController.text.isNotEmpty) {
+                        if (widget.historyMode == 'Auto' &&
+                            widget.contentController.text.isNotEmpty) {
                           _lastTranscription = "";
                           dbHelper.saveSpeechToTextHistory(
-                              widget.textController.text);
+                              widget.contentController.text);
                         }
-
-                        widget.textController.clear();
+                        widget.contentController.clear();
                         widget.soundEnhancerBloc.add(ClearTextEvent());
                       },
                     ),
@@ -226,14 +259,61 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
               fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
             ),
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeColor: widget.themeProvider.themeData.primaryColor,
-            inactiveTrackColor: Colors.grey,
+          Theme(
+            data: ThemeData(
+              switchTheme: SwitchThemeData(
+                thumbColor: WidgetStateProperty.resolveWith<Color>(
+                  (Set<WidgetState> states) {
+                    if (value) {
+                      return widget.themeProvider.themeData.primaryColor;
+                    }
+                    return Colors.grey;
+                  },
+                ),
+                trackColor: WidgetStateProperty.resolveWith<Color>(
+                  (Set<WidgetState> states) {
+                    if (value) {
+                      return widget.themeProvider.themeData.primaryColor
+                          .withOpacity(0.5);
+                    }
+                    return Colors.grey.withOpacity(0.5);
+                  },
+                ),
+              ),
+            ),
+            child: Switch(value: value, onChanged: onChanged),
           ),
         ],
       ),
+    );
+  }
+
+  void _showSaveConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(context.translate('save_confirmation_title')),
+          content: Text(context.translate('save_confirmation_message')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.translate('cancel')),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (widget.contentController.text.isNotEmpty) {
+                  dbHelper
+                      .saveSpeechToTextHistory(widget.contentController.text);
+                }
+                widget.contentController.clear();
+                Navigator.pop(context);
+              },
+              child: Text(context.translate('save')),
+            ),
+          ],
+        );
+      },
     );
   }
 }

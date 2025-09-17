@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:komunika/bloc/bloc_home/home_bloc.dart';
 import 'package:komunika/bloc/bloc_sound_enhancer/sound_enhancer_bloc.dart';
 import 'package:komunika/bloc/bloc_text_to_speech/text_to_speech_bloc.dart';
-import 'package:komunika/screens/settings_screen/settings_page.dart';
+import 'package:komunika/screens/settings_screen/settings_screen.dart';
 import 'package:komunika/screens/sound_enhancer_screen/sound_enhancer_screen.dart';
-import 'package:komunika/screens/text_to_speech_screen/tts_page.dart';
+import 'package:komunika/screens/text_to_speech_screen/tts_screen.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/services/live-service-handler/speexdsp_helper.dart';
@@ -38,9 +38,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   @override
   void initState() {
     super.initState();
-    homeBloc = HomeBloc(databaseHelper);
+    homeBloc = HomeBloc();
     soundEnhancerBloc = SoundEnhancerBloc(socketService, speexDenoiser);
-    textToSpeechBloc = TextToSpeechBloc(globalService, databaseHelper);
+    textToSpeechBloc = TextToSpeechBloc();
     homeBloc.add(HomeLoadingEvent());
 
     // Initialize screens after BLoCs are created
@@ -65,6 +65,19 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     super.dispose();
   }
 
+  void _refreshCurrentScreen(int index) {
+    switch (index) {
+      case 0:
+        sesScreenKey.currentState?.refresh();
+        break;
+      case 1:
+        ttsScreenKey.currentState?.refresh();
+        break;
+      case 2:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,6 +91,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
           setState(() {
             _currentIndex = index;
           });
+          _refreshCurrentScreen(index);
           if (index == 1) {
             // TTS tab
             ttsScreenKey.currentState?.checkWalkthrough();

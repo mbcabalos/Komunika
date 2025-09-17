@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komunika/bloc/bloc_sound_enhancer/sound_enhancer_bloc.dart';
+import 'package:komunika/screens/history_screen/history_screen.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/widgets/global_widgets/app_bar.dart';
-import 'package:komunika/widgets/history_widgets/history.dart';
-import 'package:komunika/widgets/history_widgets/transcription_history.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_visualization_card.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_amplifier_card.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
@@ -36,19 +35,20 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
   final dbHelper = DatabaseHelper();
   int _micMode = 0; // 0: Off, 1: On
   bool _isTranscriptionEnabled = false;
+  String? historyMode;
 
   @override
   void initState() {
     super.initState();
     _textController.clear();
     _initialize();
-    // PreferencesUtils.resetWalkthrough();
     checkWalkthrough();
   }
 
   Future<void> _initialize() async {
     widget.soundEnhancerBloc.add(SoundEnhancerLoadingEvent());
     widget.soundEnhancerBloc.add(RequestPermissionEvent());
+    historyMode = await PreferencesUtils.getSTTHistoryMode();
   }
 
   Future<void> checkWalkthrough() async {
@@ -125,6 +125,14 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
     ).show(context: context);
   }
 
+  void refresh() {
+    if (mounted) {
+      setState(() {
+        _initialize();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -147,8 +155,9 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => TranscriptionHistoryPage(
+                  builder: (context) => HistoryScreen(
                     themeProvider: themeProvider,
+                    database: 'stt_history.db',
                   ),
                 ),
               );
@@ -180,48 +189,46 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
   }
 
   Widget _buildContent(ThemeProvider themeProvider) {
-    return RefreshIndicator.adaptive(
-      onRefresh: _initialize,
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(
-            ResponsiveUtils.getResponsiveSize(context, 16),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
-              SoundVisualizationCard(
-                key: keyVisualization,
-                themeProvider: themeProvider,
-                isActive: _micMode == 0 ? false : true,
-              ),
-              SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 16)),
-              SoundAmplifierCard(
-                key: keyAmplifier,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.all(
+          ResponsiveUtils.getResponsiveSize(context, 8),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
+            SoundVisualizationCard(
+              key: keyVisualization,
+              themeProvider: themeProvider,
+              isActive: _micMode == 0 ? false : true,
+            ),
+            SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 16)),
+            SoundAmplifierCard(
+              key: keyAmplifier,
+              themeProvider: themeProvider,
+              soundEnhancerBloc: widget.soundEnhancerBloc,
+              micMode: _micMode,
+              onMicModeChanged: (int newMode) {
+                setState(() {
+                  _micMode = newMode;
+                });
+              },
+            ),
+            if (_micMode != 0)
+              SpeechToTextCard(
                 themeProvider: themeProvider,
                 soundEnhancerBloc: widget.soundEnhancerBloc,
+                contentController: _textController,
                 micMode: _micMode,
-                onMicModeChanged: (int newMode) {
-                  setState(() {
-                    _micMode = newMode;
-                  });
+                historyMode: historyMode.toString(),
+                isTranscriptionEnabled: _isTranscriptionEnabled,
+                onTranscriptionToggle: (enabled) {
+                  setState(() => _isTranscriptionEnabled = enabled);
                 },
               ),
-              if (_micMode != 0)
-                SpeechToTextCard(
-                  themeProvider: themeProvider,
-                  soundEnhancerBloc: widget.soundEnhancerBloc,
-                  textController: _textController,
-                  micMode: _micMode,
-                  isTranscriptionEnabled: _isTranscriptionEnabled,
-                  onTranscriptionToggle: (enabled) {
-                    setState(() => _isTranscriptionEnabled = enabled);
-                  },
-                ),
-            ],
-          ),
+          ],
         ),
       ),
     );

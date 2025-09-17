@@ -60,7 +60,7 @@ class _SoundVisualizationCardState extends State<SoundVisualizationCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 4,
+      elevation: 2,
       color: widget.themeProvider.themeData.cardColor,
       margin: EdgeInsets.symmetric(
         horizontal: ResponsiveUtils.getResponsiveSize(context, 8),

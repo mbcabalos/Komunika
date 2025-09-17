@@ -7,17 +7,19 @@ import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/widgets/global_widgets/app_bar.dart';
+import 'package:komunika/widgets/history_widgets/history_detail_page.dart';
 
-class TranscriptionHistoryPage extends StatefulWidget {
+class HistoryScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
-  const TranscriptionHistoryPage({super.key, required this.themeProvider});
+  final String database;
+  const HistoryScreen(
+      {super.key, required this.themeProvider, required this.database});
 
   @override
-  State<TranscriptionHistoryPage> createState() =>
-      _TranscriptionHistoryPageState();
+  State<HistoryScreen> createState() => _HistoryScreenState();
 }
 
-class _TranscriptionHistoryPageState extends State<TranscriptionHistoryPage> {
+class _HistoryScreenState extends State<HistoryScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   List<Map<String, dynamic>> _historyEntries = [];
 
@@ -28,7 +30,12 @@ class _TranscriptionHistoryPageState extends State<TranscriptionHistoryPage> {
   }
 
   Future<void> _loadHistory() async {
-    final historyRaw = await _dbHelper.getSpeechToTextHistory();
+    List<Map<String, dynamic>> historyRaw = [];
+    if (widget.database == "stt_history.db") {
+      historyRaw = await _dbHelper.getSpeechToTextHistory();
+    } else if (widget.database == "tts_history.db") {
+      historyRaw = await _dbHelper.getTextToSpeechHistory();
+    }
     final history = List<Map<String, dynamic>>.from(historyRaw);
     history.sort((a, b) => DateTime.parse(b['timestamp'])
         .compareTo(DateTime.parse(a['timestamp'])));
@@ -38,7 +45,11 @@ class _TranscriptionHistoryPageState extends State<TranscriptionHistoryPage> {
   }
 
   Future<void> _deleteEntry(int id) async {
-    await _dbHelper.deleteSpeechToTextHistory(id);
+    if (widget.database == "stt_history.db") {
+      await _dbHelper.deleteSpeechToTextHistory(id);
+    } else if (widget.database == "tts_history.db") {
+      await _dbHelper.deleteTextToSpeechHistory(id);
+    }
     await _loadHistory();
   }
 
@@ -58,7 +69,7 @@ class _TranscriptionHistoryPageState extends State<TranscriptionHistoryPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                context.translate('transcription_history_edit_title'),
+                context.translate('history_edit_title'),
                 style: TextStyle(
                   color: themeProvider.themeData.textTheme.bodySmall?.color,
                   fontWeight: FontWeight.bold,
@@ -69,8 +80,7 @@ class _TranscriptionHistoryPageState extends State<TranscriptionHistoryPage> {
               TextField(
                 controller: controller,
                 decoration: InputDecoration(
-                  hintText: context
-                      .translate('transcription_history_enter_new_title'),
+                  hintText: context.translate('history_enter_new_title'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -97,7 +107,7 @@ class _TranscriptionHistoryPageState extends State<TranscriptionHistoryPage> {
                           horizontal: 8, vertical: 8),
                     ),
                     child: Text(
-                      context.translate('transcription_history_cancel'),
+                      context.translate('history_cancel'),
                       style: TextStyle(
                         color:
                             themeProvider.themeData.textTheme.bodySmall?.color,
@@ -119,7 +129,7 @@ class _TranscriptionHistoryPageState extends State<TranscriptionHistoryPage> {
                           horizontal: 8, vertical: 8),
                     ),
                     child: Text(
-                      context.translate('transcription_history_save'),
+                      context.translate('history_save'),
                       style: TextStyle(
                         color:
                             themeProvider.themeData.textTheme.bodySmall?.color,
@@ -136,7 +146,11 @@ class _TranscriptionHistoryPageState extends State<TranscriptionHistoryPage> {
       ),
     );
     if (result != null && result.isNotEmpty) {
-      await _dbHelper.updateSpeechToTextHistoryTitle(entry['id'], result);
+      if (widget.database == "stt_history.db") {
+        await _dbHelper.updateSpeechToTextHistoryTitle(entry['id'], result);
+      } else if (widget.database == "tts_history.db") {
+        await _dbHelper.updateTextToSpeechHistoryTitle(entry['id'], result);
+      }
       await _loadHistory();
     }
   }
@@ -145,7 +159,9 @@ class _TranscriptionHistoryPageState extends State<TranscriptionHistoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBarWidget(
-        title: context.translate('transcription_history_title'),
+        title: widget.database == "stt_history.db"
+            ? context.translate("history_stt_title")
+            : context.translate("history_tts_title"),
         titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
         themeProvider: widget.themeProvider,
         isBackButton: true,
@@ -160,10 +176,10 @@ class _TranscriptionHistoryPageState extends State<TranscriptionHistoryPage> {
                     size: 64,
                     color: Colors.grey[400],
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(
+                      height: ResponsiveUtils.getResponsiveSize(context, 16)),
                   Text(
-                    context.translate(
-                        'transcription_history_no_transcription_history'),
+                    context.translate('history_no_history'),
                     style: TextStyle(
                       fontSize:
                           ResponsiveUtils.getResponsiveFontSize(context, 18),
@@ -180,8 +196,8 @@ class _TranscriptionHistoryPageState extends State<TranscriptionHistoryPage> {
               itemCount: _historyEntries.length,
               itemBuilder: (context, index) {
                 final entry = _historyEntries[index];
-                final title = entry['title'] ??
-                    context.translate('transcription_history_no_title');
+                final title =
+                    entry['title'] ?? context.translate('history_no_title');
                 final content = entry['content'] ?? '';
                 final timestamp =
                     entry['timestamp'] ?? DateTime.now().toIso8601String();
@@ -239,9 +255,10 @@ class _TranscriptionHistoryPageState extends State<TranscriptionHistoryPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => TranscriptionDetailPage(
+                              builder: (_) => HistoryDetailPage(
                                 themeProvider: widget.themeProvider,
-                                entry: {
+                                database: widget.database,
+                                data: {
                                   'title': title,
                                   'content': content,
                                   'timestamp': timestamp,
@@ -312,100 +329,6 @@ class _TranscriptionHistoryPageState extends State<TranscriptionHistoryPage> {
                 );
               },
             ),
-    );
-  }
-}
-
-class TranscriptionDetailPage extends StatelessWidget {
-  final ThemeProvider themeProvider;
-  final Map<String, dynamic> entry;
-  const TranscriptionDetailPage(
-      {super.key, required this.themeProvider, required this.entry});
-
-  @override
-  Widget build(BuildContext context) {
-    final timestamp = entry['timestamp'] ?? DateTime.now().toIso8601String();
-    final dateTime = DateTime.tryParse(timestamp)?.toLocal() ?? DateTime.now();
-    final formattedDate = DateFormat('MMMM d, yyyy').format(dateTime);
-    final formattedTime = DateFormat('h:mm a').format(dateTime);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(entry['title'] ??
-            context.translate('transcription_history_no_title')),
-        backgroundColor: themeProvider.themeData.primaryColor,
-        elevation: 0,
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(ResponsiveUtils.getResponsiveSize(context, 16)),
-        child: Card(
-          elevation: 4,
-          color: themeProvider.themeData.cardColor,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding:
-                EdgeInsets.all(ResponsiveUtils.getResponsiveSize(context, 20)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        entry['title'] ??
-                            context.translate('transcription_history_no_title'),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: ResponsiveUtils.getResponsiveFontSize(
-                              context, 20),
-                          color: themeProvider
-                              .themeData.textTheme.bodyMedium?.color,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                    height: ResponsiveUtils.getResponsiveSize(context, 12)),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.access_time,
-                      size: 16,
-                      color: Colors.grey[600],
-                    ),
-                    SizedBox(width: 6),
-                    Text(
-                      '$formattedDate • $formattedTime',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize:
-                            ResponsiveUtils.getResponsiveFontSize(context, 14),
-                      ),
-                    ),
-                  ],
-                ),
-                Divider(height: ResponsiveUtils.getResponsiveSize(context, 24)),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Text(
-                      entry['content'] ?? '',
-                      style: TextStyle(
-                        fontSize:
-                            ResponsiveUtils.getResponsiveFontSize(context, 16),
-                        height: 1.5,
-                        color:
-                            themeProvider.themeData.textTheme.bodyMedium?.color,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

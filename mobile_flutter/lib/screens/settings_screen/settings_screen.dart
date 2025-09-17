@@ -23,6 +23,11 @@ class SettingScreen extends StatefulWidget {
 class SettingScreenState extends State<SettingScreen> {
   String selectedTheme = 'Light';
   String selectedLanguage = 'English';
+  bool sttEnabled = false;
+  bool ttsEnabled = false;
+  String sttHistoryMode = "Auto";
+  String ttsHistoryMode = "Auto";
+  final List<String> historyModes = ["Auto", "Manual", "None"];
   GlobalKey keyTheme = GlobalKey();
   GlobalKey keyLanguage = GlobalKey();
   GlobalKey keyHelpSupport = GlobalKey();
@@ -33,6 +38,13 @@ class SettingScreenState extends State<SettingScreen> {
   void initState() {
     super.initState();
     _loadSettings();
+    _loadHistoryModes();
+  }
+
+  Future<void> _loadHistoryModes() async {
+    sttHistoryMode = await PreferencesUtils.getSTTHistoryMode();
+    ttsHistoryMode = await PreferencesUtils.getTTSHistoryMode();
+    setState(() {});
   }
 
   Future<void> checkWalkthrough() async {
@@ -94,22 +106,22 @@ class SettingScreenState extends State<SettingScreen> {
     ];
   }
 
-void _showTutorial() {
-  TutorialCoachMark(
-    targets: settingsTargets,
-    colorShadow: Colors.black.withOpacity(0.8),
-    textSkip: "SKIP",
-    paddingFocus: 8,
-    alignSkip: Alignment.bottomLeft,
-    onFinish: () {
-      PreferencesUtils.storeWalkthroughDone(true);
-    },
-    onSkip: () {
-      PreferencesUtils.storeWalkthroughDone(true);
-      return true;
-    },
-  ).show(context: context);
-}
+  void _showTutorial() {
+    TutorialCoachMark(
+      targets: settingsTargets,
+      colorShadow: Colors.black.withOpacity(0.8),
+      textSkip: "SKIP",
+      paddingFocus: 8,
+      alignSkip: Alignment.bottomLeft,
+      onFinish: () {
+        PreferencesUtils.storeWalkthroughDone(true);
+      },
+      onSkip: () {
+        PreferencesUtils.storeWalkthroughDone(true);
+        return true;
+      },
+    ).show(context: context);
+  }
 
   void _loadSettings() async {
     String storedLanguage = await PreferencesUtils.getLanguage();
@@ -133,13 +145,13 @@ void _showTutorial() {
           ),
           body: SingleChildScrollView(
             padding: EdgeInsets.all(
-              ResponsiveUtils.getResponsiveSize(context, 20),
+              ResponsiveUtils.getResponsiveSize(context, 16),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildSectionHeader(
-                    context.translate('settings_appearance'), themeProvider),
+                    context.translate('settings_customization'), themeProvider),
                 _buildSettingItem(
                   key: keyTheme,
                   themeProvider: themeProvider,
@@ -172,9 +184,6 @@ void _showTutorial() {
                     underline: Container(),
                   ),
                 ),
-                _buildSectionHeader(
-                    context.translate('settings_language_region'),
-                    themeProvider),
                 _buildSettingItem(
                   key: keyLanguage,
                   themeProvider: themeProvider,
@@ -212,40 +221,102 @@ void _showTutorial() {
                   ),
                 ),
                 _buildSectionHeader(
+                    context.translate('settings_history'), themeProvider),
+                _buildSettingItem(
+                  themeProvider: themeProvider,
+                  icon: Icons.mic,
+                  title: context.translate('settings_speech_to_text'),
+                  trailing: DropdownButton<String>(
+                    value: sttHistoryMode,
+                    onChanged: (String? newValue) async {
+                      sttHistoryMode = newValue!;
+                      await PreferencesUtils.storeSTTHistoryMode(
+                          sttHistoryMode);
+                      setState(() {});
+                    },
+                    items: historyModes
+                        .map((mode) => DropdownMenuItem<String>(
+                              value: mode,
+                              child: Text(
+                                context.translate(mode),
+                                style: TextStyle(
+                                  fontSize:
+                                      ResponsiveUtils.getResponsiveFontSize(
+                                          context, 14),
+                                  color: themeProvider
+                                      .themeData.textTheme.bodyMedium?.color,
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                    underline: Container(),
+                  ),
+                ),
+                _buildSettingItem(
+                  themeProvider: themeProvider,
+                  icon: Icons.volume_down,
+                  title: context.translate('settings_text_to_speech'),
+                  trailing: DropdownButton<String>(
+                    value: ttsHistoryMode,
+                    onChanged: (String? newValue) async {
+                      ttsHistoryMode = newValue!;
+                      await PreferencesUtils.storeTTSHistoryMode(
+                          ttsHistoryMode);
+                      setState(() {});
+                    },
+                    items: historyModes
+                        .map((mode) => DropdownMenuItem<String>(
+                              value: mode,
+                              child: Text(
+                                context.translate(mode),
+                                style: TextStyle(
+                                  fontSize:
+                                      ResponsiveUtils.getResponsiveFontSize(
+                                          context, 14),
+                                  color: themeProvider
+                                      .themeData.textTheme.bodyMedium?.color,
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                    underline: Container(),
+                  ),
+                ),
+                _buildSectionHeader(
                     context.translate('settings_help_support'), themeProvider),
                 Column(
                   key: keyHelpSupport,
                   children: [
                     _buildSettingItem(
-                    themeProvider: themeProvider,
-                    icon: Icons.help_outline,
-                    title: context.translate('settings_faq'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FAQPage(
-                            themeProvider: themeProvider,
+                      themeProvider: themeProvider,
+                      icon: Icons.help_outline,
+                      title: context.translate('settings_faq'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FAQPage(
+                              themeProvider: themeProvider,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildSettingItem(
-                    themeProvider: themeProvider,
-                    icon: Icons.info_outline,
-                    title: context.translate('settings_about'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AboutPage(
-                            themeProvider: themeProvider,
+                        );
+                      },
+                    ),
+                    _buildSettingItem(
+                      themeProvider: themeProvider,
+                      icon: Icons.info_outline,
+                      title: context.translate('settings_about'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AboutPage(
+                              themeProvider: themeProvider,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
                   ],
                 )
               ],
@@ -285,13 +356,14 @@ void _showTutorial() {
     return Card(
       key: key,
       color: themeProvider.themeData.cardColor,
-      elevation: 0,
+      elevation: 2,
       margin: EdgeInsets.only(
         bottom: ResponsiveUtils.getResponsiveSize(context, 10),
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: ColorsPalette.grey.withOpacity(0.2), width: 1),
+        borderRadius: BorderRadius.circular(
+          ResponsiveUtils.getResponsiveSize(context, 12),
+        ),
       ),
       child: ListTile(
         leading: Icon(icon, color: themeProvider.themeData.iconTheme.color),
