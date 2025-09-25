@@ -28,7 +28,6 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   bool _enableDenoise = false;
   double _currentGain = 1.0;
   double _balance = 0.5;
-  final int _denoiseLevel = -25;
   List<int> _monitorBuffer = [];
 
   SoundEnhancerBloc(this.socketService, SpeexDSP speexDenoiser)

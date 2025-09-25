@@ -50,9 +50,10 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
           soundEnhancerBloc: soundEnhancerBloc,
           ttsNavKey: ttsNavKey),
       TextToSpeechScreen(
-          key: ttsScreenKey,
-          ttsBloc: textToSpeechBloc,
-          settingsNavKey: settingsNavKey),
+        key: ttsScreenKey,
+        ttsBloc: textToSpeechBloc,
+        settingsNavKey: settingsNavKey,
+      ),
       SettingScreen(key: sScreenKey, themeProvider: widget.themeProvider),
     ];
   }
@@ -92,11 +93,10 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
             _currentIndex = index;
           });
           _refreshCurrentScreen(index);
-          if (index == 1) {
-            // TTS tab
-            ttsScreenKey.currentState?.checkWalkthrough();
-          } else if (index == 0) {
+          if (index == 0) {
             sesScreenKey.currentState?.checkWalkthrough();
+          } else if (index == 1) {
+            ttsScreenKey.currentState?.checkWalkthrough();
           } else if (index == 2) {
             sScreenKey.currentState?.checkWalkthrough();
           }

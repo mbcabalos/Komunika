@@ -95,14 +95,14 @@ class _SoundVisualizationCardState extends State<SoundVisualizationCard> {
             ),
             const SizedBox(height: 12),
             Container(
-              height: 120,
+              height: ResponsiveUtils.getResponsiveSize(context, 80),
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(8),
               ),
               child: AudioWaveforms(
                 size: Size(ResponsiveUtils.getResponsiveSize(context, 300),
-                    ResponsiveUtils.getResponsiveSize(context, 120)),
+                    ResponsiveUtils.getResponsiveSize(context, 60)),
                 recorderController: recorderController,
                 waveStyle: WaveStyle(
                   extendWaveform: true,

@@ -32,103 +32,119 @@ class AboutPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SizedBox(height: MediaQuery.of(context).size.height * 0.05),
-                // App Logo
+
+                /// App Logo with gradient circle
                 Container(
-                  width: ResponsiveUtils.getResponsiveSize(context, 150),
-                  height: ResponsiveUtils.getResponsiveSize(context, 150),
+                  width: ResponsiveUtils.getResponsiveSize(context, 140),
+                  height: ResponsiveUtils.getResponsiveSize(context, 140),
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(
-                      ResponsiveUtils.getResponsiveSize(context, 100),
+                    gradient: LinearGradient(
+                      colors: [
+                        ColorsPalette.white.withOpacity(0.9),
+                        ColorsPalette.white.withOpacity(0.6),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                  alignment: Alignment.center,
-                  child: ClipRRect(
+                  child: ClipOval(
                     child: Image.asset(
                       'assets/icons/app_logo.png',
-                      width: ResponsiveUtils.getResponsiveSize(context, 500),
-                      height: ResponsiveUtils.getResponsiveSize(context, 500),
-                      fit: BoxFit.fill,
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 20),
 
-                // App Title
+                /// App Title
                 Text(
                   "Komunika",
                   style: TextStyle(
                     fontSize:
-                        ResponsiveUtils.getResponsiveFontSize(context, 24),
+                        ResponsiveUtils.getResponsiveFontSize(context, 26),
                     fontFamily: Fonts.main,
                     fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
                     color: themeProvider.themeData.textTheme.bodyMedium?.color,
                   ),
                 ),
-                const SizedBox(height: 10),
 
-                // App Version
+                const SizedBox(height: 8),
+
+                /// App Version
                 Text(
                   "${context.translate("about_version")} 1.0.0",
                   style: TextStyle(
                     fontSize:
-                        ResponsiveUtils.getResponsiveFontSize(context, 16),
+                        ResponsiveUtils.getResponsiveFontSize(context, 15),
                     fontFamily: Fonts.main,
                     color: ColorsPalette.grey,
                   ),
                 ),
+
                 const SizedBox(height: 30),
 
-                // Authors Section
+                /// Authors Section
                 _buildSectionHeader(
                     context.translate("about_project_team"),
                     ResponsiveUtils.getResponsiveFontSize(context, 18),
                     themeProvider),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.015),
+
+                const SizedBox(height: 15),
+
                 _buildAuthorCard(
                   name: "Mark Benedict Abalos",
                   role: "Project Manager",
-                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 15),
                   themeProvider: themeProvider,
                 ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.005),
                 _buildAuthorCard(
                   name: "Kobe Roca",
                   role: "UI/UX Designer",
-                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 15),
                   themeProvider: themeProvider,
                 ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.005),
                 _buildAuthorCard(
                   name: "Sweet Lana Sison",
                   role: "Frontend Developer",
-                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 15),
                   themeProvider: themeProvider,
                 ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.005),
                 _buildAuthorCard(
                   name: "Marvin John Macam",
                   role: "Backend Developer",
-                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 15),
                   themeProvider: themeProvider,
                 ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.005),
                 _buildAuthorCard(
                   name: "David Aldrin Mondero",
                   role: "Full Stack Developer",
-                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 15),
                   themeProvider: themeProvider,
                 ),
+
                 const SizedBox(height: 30),
 
-                // Social Media Links
+                /// Social Media
                 _buildSectionHeader(
                     context.translate("about_follow_us"),
                     ResponsiveUtils.getResponsiveFontSize(context, 18),
                     themeProvider),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+
+                const SizedBox(height: 15),
+
+                Wrap(
+                  spacing: 20,
+                  alignment: WrapAlignment.center,
                   children: [
                     _buildSocialMediaButton(
                       assetPath: 'assets/icons/communication.png',
@@ -137,9 +153,8 @@ class AboutPage extends StatelessWidget {
                         launchUrl(Uri.parse(
                             'https://web.facebook.com/profile.php?id=61573900271206'));
                       },
-                      size: ResponsiveUtils.getResponsiveSize(context, 25),
+                      size: ResponsiveUtils.getResponsiveSize(context, 30),
                     ),
-                    const SizedBox(width: 20),
                     _buildSocialMediaButton(
                       assetPath: 'assets/icons/github.png',
                       themeProvider: themeProvider,
@@ -147,9 +162,8 @@ class AboutPage extends StatelessWidget {
                         launchUrl(
                             Uri.parse('https://github.com/Yakage/Komunika'));
                       },
-                      size: ResponsiveUtils.getResponsiveSize(context, 25),
+                      size: ResponsiveUtils.getResponsiveSize(context, 30),
                     ),
-                    const SizedBox(width: 20),
                     _buildSocialMediaButton(
                       assetPath: 'assets/icons/mail.png',
                       themeProvider: themeProvider,
@@ -157,13 +171,10 @@ class AboutPage extends StatelessWidget {
                         final Uri emailUri = Uri(
                           scheme: 'mailto',
                           path: 'komunika.up@gmail.com',
-                          // queryParameters: {
-                          //   'subject': 'Inquiry about Komunika App'
-                          // },
                         );
                         launchUrl(emailUri);
                       },
-                      size: ResponsiveUtils.getResponsiveSize(context, 25),
+                      size: ResponsiveUtils.getResponsiveSize(context, 30),
                     ),
                   ],
                 ),
@@ -175,7 +186,6 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-  // Helper method to build section headers
   Widget _buildSectionHeader(
       String title, double fontSize, ThemeProvider themeProvider) {
     return Text(
@@ -184,12 +194,12 @@ class AboutPage extends StatelessWidget {
         fontSize: fontSize,
         fontFamily: Fonts.main,
         fontWeight: FontWeight.bold,
+        letterSpacing: 0.5,
         color: themeProvider.themeData.textTheme.bodyMedium?.color,
       ),
     );
   }
 
-  // Helper method to build author cards
   Widget _buildAuthorCard({
     required String name,
     required double fontSize,
@@ -197,14 +207,15 @@ class AboutPage extends StatelessWidget {
     required ThemeProvider themeProvider,
   }) {
     return Card(
-      color: themeProvider.themeData.scaffoldBackgroundColor,
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 10),
+      elevation: 2,
+      color: themeProvider.themeData.cardColor,
+      margin: const EdgeInsets.symmetric(vertical: 6),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: ColorsPalette.grey.withOpacity(0.2), width: 1),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: ListTile(
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
         title: Center(
           child: Text(
             name,
@@ -220,7 +231,7 @@ class AboutPage extends StatelessWidget {
           child: Text(
             role,
             style: TextStyle(
-              fontSize: fontSize,
+              fontSize: fontSize * 0.9,
               fontFamily: Fonts.main,
               color: ColorsPalette.grey,
             ),
@@ -230,21 +241,34 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-  // Helper method to build social media buttons
   _buildSocialMediaButton({
     required String assetPath,
     required double size,
     required ThemeProvider themeProvider,
     required VoidCallback onPressed,
   }) {
-    return IconButton(
-      color: themeProvider.themeData.iconTheme.color,
-      onPressed: onPressed,
-      icon: Image.asset(
-        assetPath,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
+    return InkWell(
+      borderRadius: BorderRadius.circular(50),
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: themeProvider.themeData.cardColor.withOpacity(0.9),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Image.asset(
+          assetPath,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }

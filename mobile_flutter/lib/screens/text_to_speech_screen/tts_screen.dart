@@ -33,7 +33,6 @@ class TextToSpeechScreen extends StatefulWidget {
 
 class TextToSpeechScreenState extends State<TextToSpeechScreen> {
   final TextEditingController _textController = TextEditingController();
-  final TextEditingController _titleController = TextEditingController();
   final dbHelper = DatabaseHelper();
   final ImagePicker _imagePicker = ImagePicker();
   GlobalKey keyTextArea = GlobalKey();
@@ -110,7 +109,14 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
       },
     );
     _initialize();
-    checkWalkthrough();
+  }
+
+  Future<void> _initialize() async {
+    widget.ttsBloc.add(TextToSpeechLoadingEvent());
+    selectedVoice = await PreferencesUtils.getTTSVoice();
+    selectedlanguage = await PreferencesUtils.getTTSLanguage();
+    rate = await PreferencesUtils.getTTSRate();
+    historyMode = await PreferencesUtils.getTTSHistoryMode();
   }
 
   Future<void> checkWalkthrough() async {
@@ -132,9 +138,26 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: const Text(
-              "(ENGLISH) Type your message here to convert it into speech.\n\n(FILIPINO) I-type ang iyong mensahe dito upang gawing pananalita.",
-              style: TextStyle(color: Colors.white, fontSize: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "(ENGLISH) Type your message here to convert it into speech.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  ),
+                ),
+                SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
+                Text(
+                  "(FILIPINO) I-type ang iyong mensahe dito upang gawing pananalita.",
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 16)),
+                ),
+              ],
             ),
           ),
         ],
@@ -147,9 +170,26 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: const Text(
-              "(ENGLISH) Choose voice, play audio, and adjust speed here.\n\n(FILIPINO) Pumili ng boses, patugtugin ang audio, at ayusin ang bilis dito.",
-              style: TextStyle(color: Colors.white, fontSize: 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "(ENGLISH) Choose voice, play audio, and adjust speed here.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  ),
+                ),
+                SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
+                Text(
+                  "(FILIPINO) Pumili ng boses, patugtugin ang audio, at ayusin ang bilis dito.",
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 16)),
+                ),
+              ],
             ),
           ),
         ],
@@ -162,9 +202,26 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: const Text(
-              "(ENGLISH) Scan text from an image using the camera or gallery.\n\n(FILIPINO) I-scan ang teksto mula sa larawan gamit ang kamera o gallery.",
-              style: TextStyle(color: Colors.white, fontSize: 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "(ENGLISH) Scan text from an image using the camera or gallery.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  ),
+                ),
+                SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
+                Text(
+                  "(FILIPINO) I-scan ang teksto mula sa larawan gamit ang kamera o gallery.",
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 16)),
+                ),
+              ],
             ),
           ),
         ],
@@ -178,9 +235,26 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: const Text(
-              "(ENGLISH) Tap here to proceed...\n\n(FILIPINO) Pindutin dito upang magpatuloy...",
-              style: TextStyle(color: Colors.white, fontSize: 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "(ENGLISH) Tap here to proceed...",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  ),
+                ),
+                SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
+                Text(
+                  "((FILIPINO) Pindutin dito upang magpatuloy...",
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 16)),
+                ),
+              ],
             ),
           ),
         ],
@@ -200,14 +274,6 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
       },
       alignSkip: Alignment.bottomLeft,
     ).show(context: context);
-  }
-
-  Future<void> _initialize() async {
-    widget.ttsBloc.add(TextToSpeechLoadingEvent());
-    selectedVoice = await PreferencesUtils.getTTSVoice();
-    selectedlanguage = await PreferencesUtils.getTTSLanguage();
-    rate = await PreferencesUtils.getTTSRate();
-    historyMode = await PreferencesUtils.getTTSHistoryMode();
   }
 
   Future<void> _speak() async {
