@@ -160,8 +160,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       appBar: AppBarWidget(
         title: widget.database == "stt_history.db"
-            ? context.translate("history_stt_title")
-            : context.translate("history_tts_title"),
+            ? context.translate("history_speech_to_text_title")
+            : context.translate("history_text_to_speech_title"),
         titleSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
         themeProvider: widget.themeProvider,
         isBackButton: true,

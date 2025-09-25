@@ -42,6 +42,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
     super.initState();
     _textController.clear();
     _initialize();
+    // PreferencesUtils.resetWalkthrough();
     checkWalkthrough();
   }
 
@@ -70,9 +71,26 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: const Text(
-              "(ENGLISH) This card shows sound visualization.\n\n(FILIPINO) Ito ay nagpapakita ng tunog.",
-              style: TextStyle(color: Colors.white, fontSize: 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "(ENGLISH) This card shows sound visualization.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  ),
+                ),
+                SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
+                Text(
+                  "(FILIPINO) Ito ay nagpapakita ng tunog.",
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 16)),
+                ),
+              ],
             ),
           ),
         ],
@@ -84,10 +102,27 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
         radius: 12,
         contents: [
           TargetContent(
-            align: ContentAlign.top,
-            child: const Text(
-              "(ENGLISH) Here you can amplify, denoisen and modify the audio balance of the audio with transcription.\n\n(FILIPINO) Dito, maaari mong palakasin, linisin, at baguhin ang balanse ng tunog ng mikropono kasama ang transkripsyon.",
-              style: TextStyle(color: Colors.white, fontSize: 18),
+            align: ContentAlign.bottom,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "(ENGLISH) Here you can amplify, denoise and modify the audio balance of the audio with transcription.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  ),
+                ),
+                SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
+                Text(
+                  "(FILIPINO) Dito, maaari mong palakasin, linisan, at baguhin ang balanse ng tunog ng mikropono kasama ang transkripsyon.",
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 16)),
+                ),
+              ],
             ),
           ),
         ],
@@ -101,9 +136,26 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: const Text(
-              "(ENGLISH) Tap here to proceed...\n\n(FILIPINO) Pindutin dito upang magpatuloy...",
-              style: TextStyle(color: Colors.white, fontSize: 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "(ENGLISH) Tap here to proceed...",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  ),
+                ),
+                SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
+                Text(
+                  "(FILIPINO) Pindutin dito upang magpatuloy...",
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 16)),
+                ),
+              ],
             ),
           ),
         ],

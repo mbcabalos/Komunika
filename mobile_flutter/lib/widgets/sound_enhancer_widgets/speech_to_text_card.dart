@@ -288,32 +288,103 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
     );
   }
 
-  void _showSaveConfirmationDialog() {
-    showDialog(
+  Future<void> _showSaveConfirmationDialog() async {
+    bool confirmSave = false;
+    final themeProvider = widget.themeProvider;
+
+    await showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(context.translate('save_confirmation_title')),
-          content: Text(context.translate('save_confirmation_message')),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(context.translate('cancel')),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (widget.contentController.text.isNotEmpty) {
-                  dbHelper
-                      .saveSpeechToTextHistory(widget.contentController.text);
-                }
-                widget.contentController.clear();
-                Navigator.pop(context);
-              },
-              child: Text(context.translate('save')),
-            ),
-          ],
-        );
-      },
+      builder: (context) => Dialog(
+        backgroundColor: themeProvider.themeData.primaryColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.translate('save_confirmation_title'),
+                style: TextStyle(
+                  color: themeProvider.themeData.textTheme.bodySmall?.color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                context.translate('save_confirmation_message'),
+                style: TextStyle(
+                  color: themeProvider.themeData.textTheme.bodySmall?.color,
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 14),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: ColorsPalette.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 8),
+                    ),
+                    child: Text(
+                      context.translate('cancel'),
+                      style: TextStyle(
+                        color:
+                            themeProvider.themeData.textTheme.bodySmall?.color,
+                        fontSize:
+                            ResponsiveUtils.getResponsiveFontSize(context, 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: () {
+                      confirmSave = true;
+                      Navigator.pop(context);
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: ColorsPalette.green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 8),
+                    ),
+                    child: Text(
+                      context.translate('save'),
+                      style: TextStyle(
+                        color:
+                            themeProvider.themeData.textTheme.bodySmall?.color,
+                        fontSize:
+                            ResponsiveUtils.getResponsiveFontSize(context, 14),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
+
+    if (confirmSave && mounted) {
+      if (widget.contentController.text.isNotEmpty) {
+        dbHelper.saveSpeechToTextHistory(widget.contentController.text);
+      }
+      widget.contentController.clear();
+      Navigator.pop(context);
+    }
   }
 }

@@ -12,7 +12,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final bool isHistoryButton;
   final String database;
   final Widget? customAction;
-  final VoidCallback? onBackPressed; // Custom back button callback
+  final VoidCallback? onBackPressed; 
 
   const AppBarWidget({
     super.key,

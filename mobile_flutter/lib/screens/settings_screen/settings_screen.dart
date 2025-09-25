@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:komunika/main.dart';
-import 'package:komunika/screens/settings_screen/settings_FAQ_page.dart';
-import 'package:komunika/screens/settings_screen/settings_about_page.dart';
+import 'package:komunika/widgets/setting_widgets/settings_FAQ_page.dart';
+import 'package:komunika/widgets/setting_widgets/settings_about_page.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/shared_prefs.dart';
+import 'package:komunika/widgets/setting_widgets/settings_terms_condition_page.dart';
 import 'package:provider/provider.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
@@ -28,9 +29,9 @@ class SettingScreenState extends State<SettingScreen> {
   String sttHistoryMode = "Auto";
   String ttsHistoryMode = "Auto";
   final List<String> historyModes = ["Auto", "Manual", "None"];
-  GlobalKey keyTheme = GlobalKey();
-  GlobalKey keyLanguage = GlobalKey();
-  GlobalKey keyHelpSupport = GlobalKey();
+  GlobalKey customizationKey = GlobalKey();
+  GlobalKey historyKey = GlobalKey();
+  GlobalKey helpSupportKey = GlobalKey();
 
   List<TargetFocus> settingsTargets = [];
 
@@ -59,46 +60,97 @@ class SettingScreenState extends State<SettingScreen> {
   void _initTargets() {
     settingsTargets = [
       TargetFocus(
-        identify: "Theme",
-        keyTarget: keyTheme,
+        identify: "customization",
+        keyTarget: customizationKey,
         shape: ShapeLightFocus.RRect,
         radius: 12,
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: const Text(
-              "(ENGLISH) Change between Light and Dark themes here.\n\n(FILIPINO) Pumili sa maliwanag o madilim na tema",
-              style: TextStyle(color: Colors.white, fontSize: 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "(ENGLISH) Customization allows you to personalize the application according to your preferences. Here, you can change the visual theme for a comfortable viewing experience and select your preferred language for easier navigation.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  ),
+                ),
+                SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
+                Text(
+                  "(FILIPINO) Sa seksyong Customization, maaari mong i-personalize ang application ayon sa iyong kagustuhan. Maaari mong baguhin ang tema para sa mas komportableng paggamit at pumili ng wika para sa mas madaling pag-navigate.",
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 16)),
+                ),
+              ],
             ),
           ),
         ],
       ),
       TargetFocus(
-        identify: "Language",
-        keyTarget: keyLanguage,
+        identify: "history",
+        keyTarget: historyKey,
         shape: ShapeLightFocus.RRect,
         radius: 12,
         contents: [
           TargetContent(
-            align: ContentAlign.top,
-            child: const Text(
-              "(ENGLISH) Select your preferred language here.\n\n(FILIPINO) Piliin ang iyong nais na wika dito.",
-              style: TextStyle(color: Colors.white, fontSize: 18),
+            align: ContentAlign.bottom,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "(ENGLISH) In the History Section, you can choose whether you want to manually, automatically, or not save the history of your speech interactions.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  ),
+                ),
+                SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
+                Text(
+                  "(FILIPINO) Sa seksyong Historya, maaari mong piliin kung nais mong mano-mano, awtomatiko, o hindi na lang i-save ang historya ng iyong mga speech interaction.",
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 16)),
+                ),
+              ],
             ),
           ),
         ],
       ),
       TargetFocus(
-        identify: "Help",
-        keyTarget: keyHelpSupport,
+        identify: "helpSupport",
+        keyTarget: helpSupportKey,
         shape: ShapeLightFocus.RRect,
         radius: 12,
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: const Text(
-              "(ENGLISH) For questions, access FAQ and support here.\n\n (FILIPINO) Para sa mga katanungan, i-access ang FAQ at suporta dito.",
-              style: TextStyle(color: Colors.white, fontSize: 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "(ENGLISH) In the Help section, you can access Frequently Asked Questions for quick solutions or visit the About page to learn more about the application, its purpose, and its developers.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  ),
+                ),
+                SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
+                Text(
+                  "(FILIPINO) Sa seksyong Help, maaari mong puntahan ang Frequently Asked Questions para sa mabilis na solusyon o bisitahin ang About page upang mas makilala ang application, ang layunin nito, at ang mga developer.",
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 16)),
+                ),
+              ],
             ),
           ),
         ],
@@ -144,149 +196,180 @@ class SettingScreenState extends State<SettingScreen> {
             isBackButton: false,
           ),
           body: SingleChildScrollView(
-            padding: EdgeInsets.all(
-              ResponsiveUtils.getResponsiveSize(context, 16),
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveUtils.getResponsiveSize(context, 16),
+              vertical: ResponsiveUtils.getResponsiveSize(context, 8),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionHeader(
-                    context.translate('settings_customization'), themeProvider),
-                _buildSettingItem(
-                  key: keyTheme,
-                  themeProvider: themeProvider,
-                  icon: Icons.color_lens,
-                  title: context.translate('settings_theme'),
-                  trailing: DropdownButton<String>(
-                    value: selectedTheme,
-                    onChanged: (String? newValue) async {
-                      setState(() {
-                        selectedTheme = newValue!;
-                      });
-                      themeProvider.setTheme(newValue.toString());
-                      await PreferencesUtils.storeTheme(newValue.toString());
-                    },
-                    items: <String>['Light', 'Dark']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(
-                          value,
-                          style: TextStyle(
-                            fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                context, 14),
-                            color: themeProvider
-                                .themeData.textTheme.bodyMedium?.color,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                    underline: Container(),
-                  ),
-                ),
-                _buildSettingItem(
-                  key: keyLanguage,
-                  themeProvider: themeProvider,
-                  icon: Icons.language,
-                  title: context.translate('settings_language'),
-                  trailing: DropdownButton<String>(
-                    value: selectedLanguage,
-                    onChanged: (String? newValue) async {
-                      setState(() {
-                        selectedLanguage = newValue!;
-                      });
-                      await PreferencesUtils.storeLanguage(newValue.toString());
-                      Locale newLocale = newValue == 'Filipino'
-                          ? const Locale('fil', 'PH')
-                          : const Locale('en', 'US');
-                      MyApp.setLocale(context, newLocale);
-                    },
-                    items: <String>['English', 'Filipino']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(
-                          value,
-                          style: TextStyle(
-                            fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                context, 14),
-                            fontFamily: Fonts.main,
-                            color: themeProvider
-                                .themeData.textTheme.bodyMedium?.color,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                    underline: Container(),
-                  ),
-                ),
-                _buildSectionHeader(
-                    context.translate('settings_history'), themeProvider),
-                _buildSettingItem(
-                  themeProvider: themeProvider,
-                  icon: Icons.mic,
-                  title: context.translate('settings_speech_to_text'),
-                  trailing: DropdownButton<String>(
-                    value: sttHistoryMode,
-                    onChanged: (String? newValue) async {
-                      sttHistoryMode = newValue!;
-                      await PreferencesUtils.storeSTTHistoryMode(
-                          sttHistoryMode);
-                      setState(() {});
-                    },
-                    items: historyModes
-                        .map((mode) => DropdownMenuItem<String>(
-                              value: mode,
-                              child: Text(
-                                context.translate(mode),
-                                style: TextStyle(
-                                  fontSize:
-                                      ResponsiveUtils.getResponsiveFontSize(
-                                          context, 14),
-                                  color: themeProvider
-                                      .themeData.textTheme.bodyMedium?.color,
-                                ),
-                              ),
-                            ))
-                        .toList(),
-                    underline: Container(),
-                  ),
-                ),
-                _buildSettingItem(
-                  themeProvider: themeProvider,
-                  icon: Icons.volume_down,
-                  title: context.translate('settings_text_to_speech'),
-                  trailing: DropdownButton<String>(
-                    value: ttsHistoryMode,
-                    onChanged: (String? newValue) async {
-                      ttsHistoryMode = newValue!;
-                      await PreferencesUtils.storeTTSHistoryMode(
-                          ttsHistoryMode);
-                      setState(() {});
-                    },
-                    items: historyModes
-                        .map((mode) => DropdownMenuItem<String>(
-                              value: mode,
-                              child: Text(
-                                context.translate(mode),
-                                style: TextStyle(
-                                  fontSize:
-                                      ResponsiveUtils.getResponsiveFontSize(
-                                          context, 14),
-                                  color: themeProvider
-                                      .themeData.textTheme.bodyMedium?.color,
-                                ),
-                              ),
-                            ))
-                        .toList(),
-                    underline: Container(),
-                  ),
-                ),
-                _buildSectionHeader(
-                    context.translate('settings_help_support'), themeProvider),
                 Column(
-                  key: keyHelpSupport,
+                  key: customizationKey,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _buildSectionHeader(
+                        context.translate('settings_customization'),
+                        themeProvider),
+                    _buildSettingItem(
+                      themeProvider: themeProvider,
+                      icon: Icons.color_lens,
+                      title: context.translate('settings_theme'),
+                      trailing: DropdownButton<String>(
+                        value: selectedTheme,
+                        onChanged: (String? newValue) async {
+                          setState(() {
+                            selectedTheme = newValue!;
+                          });
+                          themeProvider.setTheme(newValue.toString());
+                          await PreferencesUtils.storeTheme(
+                              newValue.toString());
+                        },
+                        items: <String>['System','Light', 'Dark']
+                            .map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(
+                              value,
+                              style: TextStyle(
+                                fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                    context, 14),
+                                color: themeProvider
+                                    .themeData.textTheme.bodyMedium?.color,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        underline: Container(),
+                      ),
+                    ),
+                    _buildSettingItem(
+                      themeProvider: themeProvider,
+                      icon: Icons.language,
+                      title: context.translate('settings_language'),
+                      trailing: DropdownButton<String>(
+                        value: selectedLanguage,
+                        onChanged: (String? newValue) async {
+                          setState(() {
+                            selectedLanguage = newValue!;
+                          });
+                          await PreferencesUtils.storeLanguage(
+                              newValue.toString());
+                          Locale newLocale = newValue == 'Filipino'
+                              ? const Locale('fil', 'PH')
+                              : const Locale('en', 'US');
+                          MyApp.setLocale(context, newLocale);
+                        },
+                        items: <String>['English', 'Filipino']
+                            .map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(
+                              value,
+                              style: TextStyle(
+                                fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                    context, 14),
+                                fontFamily: Fonts.main,
+                                color: themeProvider
+                                    .themeData.textTheme.bodyMedium?.color,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        underline: Container(),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  key: historyKey,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader(
+                        context.translate('settings_history'), themeProvider),
+                    _buildSettingItem(
+                      themeProvider: themeProvider,
+                      icon: Icons.mic,
+                      title: context.translate('settings_speech_to_text'),
+                      trailing: DropdownButton<String>(
+                        value: sttHistoryMode,
+                        onChanged: (String? newValue) async {
+                          sttHistoryMode = newValue!;
+                          await PreferencesUtils.storeSTTHistoryMode(
+                              sttHistoryMode);
+                          setState(() {});
+                        },
+                        items: historyModes
+                            .map((mode) => DropdownMenuItem<String>(
+                                  value: mode,
+                                  child: Text(
+                                    context.translate(mode),
+                                    style: TextStyle(
+                                      fontSize:
+                                          ResponsiveUtils.getResponsiveFontSize(
+                                              context, 14),
+                                      color: themeProvider.themeData.textTheme
+                                          .bodyMedium?.color,
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
+                        underline: Container(),
+                      ),
+                    ),
+                    _buildSettingItem(
+                      themeProvider: themeProvider,
+                      icon: Icons.volume_down,
+                      title: context.translate('settings_text_to_speech'),
+                      trailing: DropdownButton<String>(
+                        value: ttsHistoryMode,
+                        onChanged: (String? newValue) async {
+                          ttsHistoryMode = newValue!;
+                          await PreferencesUtils.storeTTSHistoryMode(
+                              ttsHistoryMode);
+                          setState(() {});
+                        },
+                        items: historyModes
+                            .map((mode) => DropdownMenuItem<String>(
+                                  value: mode,
+                                  child: Text(
+                                    context.translate(mode),
+                                    style: TextStyle(
+                                      fontSize:
+                                          ResponsiveUtils.getResponsiveFontSize(
+                                              context, 14),
+                                      color: themeProvider.themeData.textTheme
+                                          .bodyMedium?.color,
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
+                        underline: Container(),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  key: helpSupportKey,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader(
+                        context.translate('settings_help_support'),
+                        themeProvider),
+                    _buildSettingItem(
+                      themeProvider: themeProvider,
+                      icon: Icons.description_outlined,
+                      title: context.translate('settings_terms_and_conditions'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TermsAndConditionsPage(
+                              themeProvider: themeProvider,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                     _buildSettingItem(
                       themeProvider: themeProvider,
                       icon: Icons.help_outline,

@@ -103,7 +103,9 @@ class _MyAppState extends State<MyApp> {
           }
           return supportedLocales.first;
         },
+        themeMode: themeProvider.themeMode,
         theme: themeProvider.themeData,
+        darkTheme: themeProvider.themeData,
         initialRoute: '/',
         routes: {
           '/': (context) => const SplashScreen(),

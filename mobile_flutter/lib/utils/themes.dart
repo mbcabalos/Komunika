@@ -1,38 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Your ColorsPalette
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ThemeProvider extends ChangeNotifier {
-  // Default theme (Light)
+class ThemeProvider extends ChangeNotifier with WidgetsBindingObserver {
   String _selectedTheme = 'Light';
   String get selectedTheme => _selectedTheme;
 
   ThemeProvider() {
-    loadTheme(); // Load the theme when ThemeProvider is created
+    loadTheme();
+    WidgetsBinding.instance.addObserver(this); // 👀 Listen for system changes
   }
 
-  // Set the theme
-  void setTheme(String theme) {
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // Called when system brightness changes
+  @override
+  void didChangePlatformBrightness() {
+    if (_selectedTheme == 'System') {
+      notifyListeners(); // 🔥 Refresh UI
+    }
+  }
+
+  void setTheme(String theme) async {
     _selectedTheme = theme;
-    notifyListeners(); // Notify listeners to update the theme
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('theme', theme);
+    notifyListeners();
   }
 
-  // Load theme from SharedPreferences
   Future<void> loadTheme() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String storedTheme = prefs.getString('theme') ?? 'Light'; // Default to Light if not found
-    _selectedTheme = storedTheme;
-    notifyListeners(); // Notify listeners if theme is changed
+    final prefs = await SharedPreferences.getInstance();
+    _selectedTheme = prefs.getString('theme') ?? 'Light';
+    notifyListeners();
   }
 
-  // Theme function to return ThemeData based on selected theme
+  ThemeMode get themeMode {
+    switch (_selectedTheme) {
+      case 'Dark':
+        return ThemeMode.dark;
+      case 'Light':
+        return ThemeMode.light;
+      case 'System':
+      default:
+        return ThemeMode.system;
+    }
+  }
+
   ThemeData get themeData {
     switch (_selectedTheme) {
       case 'Dark':
         return _buildDarkTheme();
-      default:
+      case 'Light':
         return _buildLightTheme();
+      default:
+        // When System → detect current device brightness
+        final brightness = WidgetsBinding.instance.window.platformBrightness;
+        return brightness == Brightness.dark
+            ? _buildDarkTheme()
+            : _buildLightTheme();
     }
   }
 
@@ -54,9 +84,10 @@ class ThemeProvider extends ChangeNotifier {
         ),
       ),
       textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: ColorsPalette.white),
-          bodyMedium: TextStyle(color: ColorsPalette.black),
-          bodySmall: TextStyle(color: ColorsPalette.white)),
+        bodyLarge: TextStyle(color: ColorsPalette.white),
+        bodyMedium: TextStyle(color: ColorsPalette.black),
+        bodySmall: TextStyle(color: ColorsPalette.white),
+      ),
       iconTheme: const IconThemeData(color: Colors.black),
     );
   }
@@ -79,10 +110,11 @@ class ThemeProvider extends ChangeNotifier {
         ),
       ),
       textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: DarkModeColors.textPrimary),
-          bodyMedium: TextStyle(color: DarkModeColors.textPrimary),
-          bodySmall: TextStyle(color: DarkModeColors.textPrimary)),
-      iconTheme: const IconThemeData(color: DarkModeColors.textPrimary),    
+        bodyLarge: TextStyle(color: DarkModeColors.textPrimary),
+        bodyMedium: TextStyle(color: DarkModeColors.textPrimary),
+        bodySmall: TextStyle(color: DarkModeColors.textPrimary),
+      ),
+      iconTheme: const IconThemeData(color: DarkModeColors.textPrimary),
     );
   }
 }
