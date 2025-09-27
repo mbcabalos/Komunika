@@ -1,4 +1,4 @@
-package com.example.komunika
+package com.komunika.app
 
 import android.content.Intent
 import android.media.AudioFormat
@@ -23,7 +23,7 @@ import android.media.*
 import io.flutter.plugin.common.EventChannel
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.example.komunika/recorder"
+    private val CHANNEL = "com.komunika.app/recorder"
     private lateinit var mediaProjectionManager: MediaProjectionManager
     private var mediaProjection: MediaProjection? = null
     private var audioRecord: AudioRecord? = null
@@ -312,7 +312,7 @@ private fun startNativeRecording() {
         println("Received updated text: $updatedText")
 
         // Send the updated text via local broadcast
-        val intent = Intent("com.example.komunika.UPDATE_TEXT")
+        val intent = Intent("com.komunika.app.UPDATE_TEXT")
         intent.putExtra("transcribedText", updatedText)
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }

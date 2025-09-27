@@ -1,4 +1,4 @@
-package com.example.komunika
+package com.komunika.app
 
 import android.app.Notification
 import android.app.NotificationChannel

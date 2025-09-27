@@ -116,37 +116,35 @@
   "about_follow_us": "Follow Us",
 
   "faq_title": "FAQs",
-  "faq_description": "Frequently Asked Questions",
+  "faq_description": "Frequently Asked Questions about Komunika",
+
   "faq_question1": "What is Komunika?",
-  "faq_answer1": "Komunika is a communication app designed to help users with hearing disabilities to connect and share information seamlessly.",
-  "faq_question2": "How to use the app?",
-  "faq_answer2": "Explore the features for communication, announcements, and more.",
-  "faq_question3": "How do I contact support?",
-  "faq_answer3": "You can contact support by sending an email to komunika.up@gmail.com",
-  "faq_question4": "How do I get latest updates?",
-  "faq_answer4": "You can get latest updates by following our Facebook page Komunika.",
-  "faq_question5": "How do I contribute to the growing Komunika project?",
-  "faq_answer5": "You can contribute to the project by forking the GitHub repository, creating a new branch, making changes, and submitting a pull request for review.",
+  "faq_answer1": "Komunika is a mobile app designed to support people with hearing disabilities by providing features such as Sound Enhancer, Speech-to-Text, and Text-to-Speech.",
 
-  "faq_question6": "What is the Sound Enhancer feature?",
-  "faq_answer6": "The Sound Enhancer improves the clarity and quality of audio input from your microphone or Headphones. It helps amplify sound and reduce background noise for better listening or speech assistance.",
-  "faq_question7": "How do I use the Sound Enhancer?",
-  "faq_answer7": "Open the Sound Enhancer feature, select your preferred microphone mode (Headphones), and speak into the microphone to see the sound visualization on screen.",
-  "faq_question8": "Can I turn the Sound Enhancer off?",
-  "faq_answer8": "Yes. Simply toggle the feature to Off if you don’t want to use sound enhancement.",
-  "faq_question9": "What does the 'Sound Visualization' do?",
-  "faq_answer9": "The sound visualization displays real-time audio levels, allowing you to see how strong or weak the captured sound is.",
-  "faq_question10": "Do I need headphones to use this feature?",
-  "faq_answer10": "No, but using a Headphones can improve accuracy and sound quality since it reduces external noise.",
+  "faq_question2": "How do I use Komunika?",
+  "faq_answer2": "Simply open the app and choose from its core features: use Sound Enhancer for clearer hearing, Speech-to-Text for real-time transcription, or Text-to-Speech to have text read aloud.",
 
-  "faq_question11": "What is the Text to Speech feature?",
-  "faq_answer11": "Text to Speech (TTS) converts written text into spoken words. It allows you to type or paste text and have it read aloud by the app.",
-  "faq_question12": "How do I use the Text to Speech feature?",
-  "faq_answer12": "Open the Text to Speech feature, type or paste your text in the input box, and tap the Play button to hear the spoken version of the text.",
-  "faq_question13": "Can I save the generated speech?",
-  "faq_answer13": "Yes. Tap the Download button to save the speech as an audio file for later use.",
-  "faq_question14": "What languages are supported?",
-  "faq_answer14": "The app supports multiple languages (depending on your device settings and TTS engine installed). You can switch the language in your phone’s settings.",
-  "faq_question15": "Can I adjust the voice or speed?",
-  "faq_answer15": "Yes. You may customize the voice type (male/female, robotic/natural) and playback speed in the settings, if supported by your device’s TTS engine."
+  "faq_question3": "Does Komunika require internet?",
+  "faq_answer3": "Not always. Features like Sound Enhancer and Text-to-Speech work offline, but Speech-to-Text required internet connection.",
+
+  "faq_question4": "What is the Sound Enhancer feature?",
+  "faq_answer4": "The Sound Enhancer improves sound clarity and reduces background noise. You can also adjust audio balance, amplifier level, and noise reduction settings.",
+
+  "faq_question5": "What is Speech-to-Text?",
+  "faq_answer5": "Speech-to-Text converts spoken words into written text. This is useful for real-time communication or note-taking.",
+
+  "faq_question6": "What is Text-to-Speech?",
+  "faq_answer6": "Text-to-Speech reads your text aloud. You can type or paste a message, and the app will read it out using a voice.",
+
+  "faq_question7": "Can I save my transcriptions or texts?",
+  "faq_answer7": "Yes. You can save both speech-to-text and text-to-speech history within the app for later use.",
+
+  "faq_question8": "Can I change the theme and language?",
+  "faq_answer8": "Yes. Komunika supports Light Mode, Dark Mode, and System Theme. You can also switch between English and Filipino languages.",
+
+  "faq_question9": "Is my data safe?",
+  "faq_answer9": "Yes. Komunika does not sell or share your personal data with third parties. Your input is only processed for app functionality.",
+
+  "faq_question10": "How can I contact support?",
+  "faq_answer10": "You can reach us at komunika.up@gmail.com for questions, feedback, or support."
 }

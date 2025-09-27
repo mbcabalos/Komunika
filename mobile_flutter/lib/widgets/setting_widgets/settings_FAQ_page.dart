@@ -22,7 +22,7 @@ class _FAQPageState extends State<FAQPage> {
   void initState() {
     super.initState();
     faqs = List.generate(
-      15,
+      10,
       (i) => FAQItem(
         question: "faq_question${i + 1}",
         answer: "faq_answer${i + 1}",
