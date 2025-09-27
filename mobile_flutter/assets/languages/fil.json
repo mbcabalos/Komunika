@@ -118,37 +118,35 @@
   "about_follow_us": "Sundan Kami",
 
   "faq_title": "Mga Madalas Itanong",
-  "faq_description": "Mga Madalas Itanong",
+  "faq_description": "Mga Madalas na Katanungan tungkol sa Komunika",
+
   "faq_question1": "Ano ang Komunika?",
-  "faq_answer1": "Ang Komunika ay isang app para sa komunikasyon na idinisenyo upang matulungan ang mga taong may kapansanan sa pandinig na makipag-ugnayan at magbahagi ng impormasyon nang madali.",
-  "faq_question2": "Paano gamitin ang app?",
-  "faq_answer2": "I-explore ang mga tampok para sa komunikasyon, anunsyo, at iba pa.",
-  "faq_question3": "Paano ako makakaugnay sa suporta?",
-  "faq_answer3": "Maaari kang makipag-ugnayan sa suporta sa pamamagitan ng pagpapadala ng email sa komunika.up@gmail.com",
-  "faq_question4": "Paano ako makakakuha ng pinakabagong update?",
-  "faq_answer4": "Maaari mong makuha ang pinakabagong update sa pamamagitan ng pagsubaybay sa aming Facebook page Komunika.",
-  "faq_question5": "Paano ako makakatulong sa lumalaking proyekto ng Komunika?",
-  "faq_answer5": "Maaari kang mag-ambag sa proyekto sa pamamagitan ng pag-fork ng GitHub repository, paggawa ng bagong branch, paggawa ng mga pagbabago, at pagsusumite ng pull request para sa pagsusuri.",
+  "faq_answer1": "Ang Komunika ay isang mobile app na tumutulong sa mga taong may kapansanan sa pandinig sa pamamagitan ng mga tampok gaya ng Sound Enhancer, Speech-to-Text, at Text-to-Speech.",
 
-  "faq_question6": "Ano ang tampok na Sound Enhancer?",
-  "faq_answer6": "Pinapabuti ng Sound Enhancer ang kalinawan at kalidad ng tunog mula sa iyong mikropono o Headphones. Nakakatulong ito sa pagpapalakas ng boses at pagbawas ng ingay sa paligid para sa mas malinaw na pakikinig o pagsasalita.",
-  "faq_question7": "Paano gamitin ang Sound Enhancer?",
-  "faq_answer7": "Buksan ang Sound Enhancer, piliin ang nais mong mode ng mikropono (Headphones), at magsalita sa mikropono upang makita ang biswal na representasyon ng tunog sa screen.",
-  "faq_question8": "Maaari ko bang i-off ang Sound Enhancer?",
-  "faq_answer8": "Oo. Maaari mo itong i-toggle sa Off kung ayaw mong gamitin ang sound enhancement.",
-  "faq_question9": "Ano ang ginagawa ng 'Sound Visualization'?",
-  "faq_answer9": "Ipinapakita ng Sound Visualization ang real-time na antas ng tunog, kaya makikita mo kung gaano kalakas o kahina ang nakukuhang tunog.",
-  "faq_question10": "Kailangan ko bang gumamit ng Headphones para dito?",
-  "faq_answer10": "Hindi naman, ngunit mas nakakatulong ang paggamit ng Headphones para sa mas malinaw at tumpak na tunog dahil nababawasan ang ingay mula sa paligid.",
+  "faq_question2": "Paano gamitin ang Komunika?",
+  "faq_answer2": "Buksan ang app at pumili mula sa mga pangunahing tampok: gamitin ang Sound Enhancer para mas malinaw na marinig, Speech-to-Text para sa real-time na transkripsyon, o Text-to-Speech para ipabasa ang iyong teksto.",
 
-  "faq_question11": "Ano ang tampok na Text to Speech?",
-  "faq_answer11": "Ang Text to Speech (TTS) ay nagko-convert ng nakasulat na teksto upang maging sinasalitang salita. Maaari kang mag-type o mag-paste ng teksto at babasahin ito ng app.",
-  "faq_question12": "Paano gamitin ang Text to Speech?",
-  "faq_answer12": "Buksan ang Text to Speech, mag-type o mag-paste ng iyong teksto sa input box, at pindutin ang Play button para marinig ang binigkas na bersyon ng teksto.",
-  "faq_question13": "Maaari ko bang i-save ang nalikhang boses?",
-  "faq_answer13": "Oo. Pindutin ang Download button upang mai-save ang boses bilang audio file para magamit muli sa hinaharap.",
-  "faq_question14": "Anong mga wika ang suportado?",
-  "faq_answer14": "Sumusuporta ang app ng maraming wika (depende sa settings ng iyong device at naka-install na TTS engine). Maaari mong palitan ang wika sa settings ng iyong telepono.",
-  "faq_question15": "Maaari ko bang baguhin ang boses o bilis ng pagsasalita?",
-  "faq_answer15": "Oo. Maaari mong i-customize ang uri ng boses (lalaki/babae, robotic/natural) at bilis ng pagsasalita sa settings kung ito ay sinusuportahan ng TTS engine ng iyong device."
+  "faq_question3": "Kailangan ba ng internet para gumana ang Komunika?",
+  "faq_answer3": "Hindi lahat. Ang ilang tampok tulad ng Sound Enhancer at Text-to-Speech ay gumagana offline, ngunit ang ibang bahagi gaya ng Speech-to-Text ay maaaring mangailangan ng internet.",
+
+  "faq_question4": "Ano ang tampok na Sound Enhancer?",
+  "faq_answer4": "Ang Sound Enhancer ay nagpapalinaw ng tunog at binabawasan ang ingay sa paligid. Maaari mong ayusin ang balanse ng audio, antas ng amplifier, at noise reduction.",
+
+  "faq_question5": "Ano ang Speech-to-Text?",
+  "faq_answer5": "Binabago ng Speech-to-Text ang mga sinasalitang salita upang maging nakasulat na teksto. Mainam ito para sa real-time na komunikasyon o pagtatala ng impormasyon.",
+
+  "faq_question6": "Ano ang Text-to-Speech?",
+  "faq_answer6": "Ang Text-to-Speech ay binabasa nang malakas ang iyong teksto. Maaari kang mag-type o mag-paste ng mensahe at ipabasa ito ng app gamit ang boses.",
+
+  "faq_question7": "Maaari bang i-save ang mga transkripsyon o teksto?",
+  "faq_answer7": "Oo. Maaari mong i-save ang mga transkripsyon at text-to-speech history sa app upang madaling balikan.",
+
+  "faq_question8": "Maaari ko bang baguhin ang tema at wika?",
+  "faq_answer8": "Oo. Sinusuportahan ng Komunika ang Light Mode, Dark Mode, at System Theme. Maaari ka ring pumili ng English o Filipino na wika.",
+
+  "faq_question9": "Ligtas ba ang aking data?",
+  "faq_answer9": "Oo. Ang Komunika ay hindi nagbebenta o nagbabahagi ng iyong personal na data sa mga third party. Ang mga input mo ay ginagamit lamang para sa functionality ng app.",
+
+  "faq_question10": "Paano makipag-ugnayan para sa suporta?",
+  "faq_answer10": "Maaari kang magpadala ng email sa komunika.up@gmail.com para sa mga tanong, feedback, o suporta."
 }

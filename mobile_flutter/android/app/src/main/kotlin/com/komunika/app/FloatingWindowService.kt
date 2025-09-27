@@ -1,4 +1,4 @@
-package com.example.komunika
+package com.komunika.app
 
 import android.app.Service
 import android.content.Intent
@@ -97,7 +97,7 @@ class FloatingWindowService : Service() {
         scrollView = floatingView.findViewById(R.id.scroll_view)
         textView = floatingView.findViewById(R.id.text_view)
 
-        val filter = IntentFilter("com.example.komunika.UPDATE_TEXT")
+        val filter = IntentFilter("com.komunika.app.UPDATE_TEXT")
         LocalBroadcastManager.getInstance(this).registerReceiver(textUpdateReceiver, filter)
         // Make the window draggable
         floatingView.setOnTouchListener(object : View.OnTouchListener {

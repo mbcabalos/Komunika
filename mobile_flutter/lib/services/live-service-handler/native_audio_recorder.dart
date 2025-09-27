@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 class NativeAudioRecorder {
   static const MethodChannel _method =
-      MethodChannel('com.example.komunika/recorder');
+      MethodChannel('com.komunika.app/recorder');
   static const EventChannel _event = EventChannel('native_audio_stream');
 
   static Future<void> start() async {
