@@ -1,8 +1,9 @@
 part of 'sound_enhancer_bloc.dart';
 
 abstract class SoundEnhancerState extends Equatable {
+  const SoundEnhancerState();
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 final class SoundEnhancerLoadingState extends SoundEnhancerState {}
@@ -35,4 +36,13 @@ class SoundEnhancerErrorState extends SoundEnhancerState {
   final String message;
 
   SoundEnhancerErrorState({required this.message});
+}
+
+class SoundEnhancerSpectrumState extends SoundEnhancerState {
+  final List<double> spectrum;
+
+  SoundEnhancerSpectrumState(this.spectrum);
+
+  @override
+  List<Object?> get props => [spectrum];
 }

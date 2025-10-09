@@ -43,9 +43,8 @@ class SpeexDSP {
     _agcEnabled = true;
     _setCtlInt(SPEEX_PREPROCESS_SET_AGC, 1);
 
-    // Linear RMS for 16-bit PCM: choose a safe mid-level value (avoid clipping)
     final double linearRms = 12000.0;
-    _setCtlFloat(SPEEX_PREPROCESS_SET_AGC_LEVEL, linearRms);
+    _setCtlFloat(SPEEX_PREPROCESS_SET_AGC_LEVEL, targetDb);
 
     print("✅ AGC enabled with target: $targetDb dB (~$linearRms linear RMS)");
   }
