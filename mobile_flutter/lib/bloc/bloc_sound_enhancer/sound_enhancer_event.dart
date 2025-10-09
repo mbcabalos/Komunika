@@ -59,6 +59,22 @@ class SetAudioBalanceLevel extends SoundEnhancerEvent {
   List<Object?> get props => [balance];
 }
 
+class SoundAmplitudeChangedEvent extends SoundEnhancerEvent {
+  final double amplitude;
+  SoundAmplitudeChangedEvent(this.amplitude);
+}
 
+class SoundFrequencyBarsChangedEvent extends SoundEnhancerEvent {
+  final List<double> bars;
 
+  SoundFrequencyBarsChangedEvent(this.bars);
+
+  @override
+  List<Object> get props => [bars];
+}
+
+class SoundBarsUpdatedEvent extends SoundEnhancerEvent {
+  final List<double> spectrum;
+  SoundBarsUpdatedEvent(this.spectrum);
+}
 

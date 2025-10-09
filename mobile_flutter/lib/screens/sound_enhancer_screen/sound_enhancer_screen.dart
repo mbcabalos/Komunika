@@ -251,12 +251,29 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
-            SoundVisualizationCard(
-              key: keyVisualization,
-              themeProvider: themeProvider,
-              isActive: _micMode == 0 ? false : true,
+
+            // 👇 Wrap visualization in a BlocBuilder to react to amplitude
+            BlocBuilder<SoundEnhancerBloc, SoundEnhancerState>(
+              builder: (context, state) {
+                List<double> bars = List.filled(20, 0.2);
+                bool isActive = false;
+
+                if (state is SoundEnhancerSpectrumState) {
+
+                  bars = state.spectrum;
+                  isActive = true;
+                }
+
+                return SoundVisualizationCard(
+                  themeProvider: themeProvider,
+                  isActive: isActive,
+                  barHeights: bars,
+                );
+              },
             ),
+
             SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 16)),
+
             SoundAmplifierCard(
               key: keyAmplifier,
               themeProvider: themeProvider,
@@ -268,6 +285,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
                 });
               },
             ),
+
             if (_micMode != 0)
               SpeechToTextCard(
                 themeProvider: themeProvider,

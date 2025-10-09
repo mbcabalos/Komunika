@@ -1,15 +1,18 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 import 'dart:developer' as developer;
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:komunika/services/live-service-handler/fft_helper.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
 import 'package:komunika/services/live-service-handler/speexdsp_helper.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:komunika/services/live-service-handler/native_audio_recorder.dart';
+import 'package:complex/complex.dart';
 
 part 'sound_enhancer_event.dart';
 part 'sound_enhancer_state.dart';
@@ -48,7 +51,9 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     on<NewTranscriptionEvent>(_onNewTranscription);
     on<LivePreviewTranscriptionEvent>(_onLivePreview);
     on<ClearTextEvent>(_onClearText);
-
+    on<SoundBarsUpdatedEvent>((event, emit) {
+      emit(SoundEnhancerSpectrumState(event.spectrum));
+    });
     // Initializations
     _denoiser = SpeexDSP();
     _loadNoiseReductionPref();
@@ -111,6 +116,10 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
           final processedBytes = _processAudioChunk(buffer);
           final stereoBytes = _convertToStereo(processedBytes);
           _player.foodSink?.add(FoodData(stereoBytes));
+          print("PCM bytes length recorder: ${buffer.length}");
+
+          _updateSpectrum(processedBytes);
+
           _handleAudioChunk(buffer);
         },
         onError: (e) {
@@ -127,6 +136,75 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   }
 
   // --- Audio Processing Methods ---
+
+  void _updateSpectrum(Uint8List pcmBytes) {
+    try {
+      if (pcmBytes.isEmpty) return;
+      List<double> samples = pcmToDouble(pcmBytes);
+
+      // Ensure we have at least fftSize samples (zero-pad if needed)
+      int fftSize = 1024;
+      if (samples.length < fftSize) {
+        samples = List<double>.from(samples)
+          ..addAll(List.filled(fftSize - samples.length, 0.0));
+      }
+
+      List<double> fftInput = samples.sublist(0, fftSize);
+      List<double> spectrum = computeFFT(fftInput);
+
+      final barHeights = mapSpectrumToBars(spectrum, 20);
+      add(SoundBarsUpdatedEvent(barHeights));
+    } catch (e) {
+      developer.log("FFT computation error: $e");
+    }
+  }
+
+  List<double> mapSpectrumToBars(List<double> spectrum, int numBars) {
+    final barHeights = <double>[];
+    final n = spectrum.length;
+
+    // Ensure indices are within 0..n-1
+    int lowEnd = max(0, (n * 0.04).toInt());
+    int midStart = lowEnd + 1;
+    int midEnd = max(midStart, (n * 0.25).toInt());
+    int highStart = midEnd + 1;
+    int highEnd = n - 1;
+
+    barHeights.addAll(averageBins(spectrum, 0, lowEnd, 6));
+    barHeights.addAll(averageBins(spectrum, midStart, midEnd, 8));
+    barHeights.addAll(averageBins(spectrum, highStart, highEnd, 6));
+
+    return barHeights;
+  }
+
+  /// Computes average amplitude for each chunk of bins
+  List<double> averageBins(
+      List<double> spectrum, int startBin, int endBin, int numBars) {
+    final length = endBin - startBin + 1;
+    final chunkSize = (length / numBars).ceil();
+    final result = <double>[];
+
+    for (int i = 0; i < numBars; i++) {
+      final chunkStart = startBin + i * chunkSize;
+      final chunkEnd = (chunkStart + chunkSize - 1).clamp(startBin, endBin);
+      double sum = 0;
+      for (int j = chunkStart; j <= chunkEnd; j++) {
+        sum += spectrum[j].abs();
+      }
+      result.add(sum / (chunkEnd - chunkStart + 1));
+    }
+
+    return result;
+  }
+
+// Helper to convert PCM16 bytes to normalized doubles (-1.0 to 1.0)
+  List<double> pcmToDouble(Uint8List buffer) {
+    final byteData = ByteData.sublistView(buffer);
+    return List<double>.generate(
+      buffer.lengthInBytes ~/ 2,
+      (i) => byteData.getInt16(i * 2, Endian.little) / 32768.0,
+    );
+  }
 
   Uint8List _amplifyPCM(Uint8List input, double gain) {
     final output = BytesBuilder();
@@ -204,6 +282,9 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       await _player.stopPlayer();
       await _audioStreamController?.close();
       recording = false;
+
+      // Emit zero bars to reset visualizer
+      emit(SoundEnhancerSpectrumState(List.filled(20, 0.0)));
     } catch (e) {
       emit(SoundEnhancerErrorState(message: "Stopping failed: $e"));
     }

@@ -1,75 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 
-class SoundVisualizationCard extends StatefulWidget {
+class SoundVisualizationCard extends StatelessWidget {
   final ThemeProvider themeProvider;
   final bool isActive;
+  final List<double> barHeights; // <-- updated
 
   const SoundVisualizationCard({
     super.key,
     required this.themeProvider,
     required this.isActive,
+    required this.barHeights,
   });
 
   @override
-  State<SoundVisualizationCard> createState() => _SoundVisualizationCardState();
-}
-
-class _SoundVisualizationCardState extends State<SoundVisualizationCard> {
-  late final RecorderController recorderController;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeController();
-  }
-
-  void _initializeController() async {
-    recorderController = RecorderController()
-      ..androidEncoder = AndroidEncoder.aac
-      ..androidOutputFormat = AndroidOutputFormat.mpeg4
-      ..iosEncoder = IosEncoder.kAudioFormatMPEG4AAC
-      ..sampleRate = 44100;
-
-    if (widget.isActive) {
-      await recorderController.record();
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant SoundVisualizationCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isActive != oldWidget.isActive) {
-      if (widget.isActive) {
-        recorderController.record();
-      } else {
-        recorderController.stop();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    recorderController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final theme = themeProvider.themeData;
+
     return Card(
       elevation: 2,
-      color: widget.themeProvider.themeData.cardColor,
-      margin: EdgeInsets.symmetric(
-        horizontal: ResponsiveUtils.getResponsiveSize(context, 8),
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(
-          ResponsiveUtils.getResponsiveSize(context, 12),
-        ),
-      ),
+      color: theme.cardColor,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -78,57 +32,50 @@ class _SoundVisualizationCardState extends State<SoundVisualizationCard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  context.translate("sound_enhancer_visualization"),
-                  style: TextStyle(
-                    fontSize:
-                        ResponsiveUtils.getResponsiveFontSize(context, 16),
-                  ),
-                ),
+                const Text("Sound Visualization"),
                 Icon(
-                  widget.isActive ? Icons.mic : Icons.mic_off,
-                  color: widget.isActive
-                      ? Theme.of(context).primaryColor
-                      : Colors.grey,
+                  isActive ? Icons.mic : Icons.mic_off,
+                  color:
+                      isActive ? Theme.of(context).primaryColor : Colors.grey,
                 ),
               ],
             ),
             const SizedBox(height: 12),
             Container(
-              height: ResponsiveUtils.getResponsiveSize(context, 80),
+              height: 80,
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: AudioWaveforms(
-                size: Size(ResponsiveUtils.getResponsiveSize(context, 300),
-                    ResponsiveUtils.getResponsiveSize(context, 60)),
-                recorderController: recorderController,
-                waveStyle: WaveStyle(
-                  extendWaveform: true,
-                  showMiddleLine: false,
-                  waveColor: Theme.of(context).primaryColor,
-                  gradient: _createGradient(context),
-                ),
-                padding: const EdgeInsets.only(top: 12, bottom: 12),
-                margin: const EdgeInsets.symmetric(horizontal: 8),
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(barHeights.length, (index) {
+                  final scaledHeight =
+                      barHeights[index] * 25; // temporarily scale higher
+                  final height = scaledHeight.clamp(
+                      2.0, 70.0); // min 2, max container height
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 100),
+                      width: 10,
+                      height: height,
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? Theme.of(context).primaryColor
+                            : Colors.grey,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  );
+                }),
               ),
             ),
-            const SizedBox(height: 8),
           ],
         ),
       ),
     );
-  }
-
-  Shader _createGradient(BuildContext context) {
-    return LinearGradient(
-      colors: [
-        Theme.of(context).primaryColor.withOpacity(0.8),
-        Theme.of(context).primaryColor,
-      ],
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-    ).createShader(const Rect.fromLTWH(0, 0, 300, 100));
   }
 }
