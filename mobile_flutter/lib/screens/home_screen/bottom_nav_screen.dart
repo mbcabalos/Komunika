@@ -89,6 +89,10 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
+          if (_currentIndex == 1 && index != 1) {
+            ttsScreenKey.currentState?.stopTtsOnTabChange();
+          }
+
           setState(() {
             _currentIndex = index;
           });

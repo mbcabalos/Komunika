@@ -60,7 +60,7 @@ dependencies:
   tflite_flutter: ^0.10.1 # Run TensorFlow Lite models
   image: ^4.0.15 # Image processing
   audio_waveforms: ^1.3.0 # Visualize audio waveforms
-  flutter_headset_detector: ^3.1.0 # Detect headset connection changes
+  headset_connection_event: ^4.0.2 # Detect headset connection changes
 
   # File Handling & Storage
   path_provider: # Access to filesystem directories

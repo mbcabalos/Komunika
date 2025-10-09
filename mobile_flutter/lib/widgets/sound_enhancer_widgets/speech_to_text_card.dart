@@ -183,8 +183,8 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
                 // History mode buttons
                 if (widget.historyMode == 'Manual')
                   Positioned(
-                    bottom: 8,
-                    right: 8,
+                    bottom: 0,
+                    right: 0,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -209,8 +209,8 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
                   ),
 
                 Positioned(
-                  bottom: 8,
-                  right: 8 + (widget.historyMode == 'Manual' ? 37 : 0),
+                  bottom: 0,
+                  right: 0 + (widget.historyMode == 'Manual' ? 37 : 0),
                   child: Container(
                     width: 30,
                     height: 30,

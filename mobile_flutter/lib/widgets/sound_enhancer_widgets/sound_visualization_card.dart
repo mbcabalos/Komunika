@@ -6,7 +6,7 @@ import 'package:komunika/utils/themes.dart';
 class SoundVisualizationCard extends StatelessWidget {
   final ThemeProvider themeProvider;
   final bool isActive;
-  final List<double> barHeights; // <-- updated
+  final List<double> barHeights;
 
   const SoundVisualizationCard({
     super.key,
@@ -22,17 +22,21 @@ class SoundVisualizationCard extends StatelessWidget {
     return Card(
       elevation: 2,
       color: theme.cardColor,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: EdgeInsets.symmetric(
+          horizontal: ResponsiveUtils.getResponsiveSize(context, 8)),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(
+              ResponsiveUtils.getResponsiveSize(context, 12))),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(ResponsiveUtils.getResponsiveSize(context, 16)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Sound Visualization"),
+                Text(context.translate('sound_visualization'),
+                    style: theme.textTheme.titleMedium),
                 Icon(
                   isActive ? Icons.mic : Icons.mic_off,
                   color:
@@ -40,7 +44,7 @@ class SoundVisualizationCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 12)),
             Container(
               height: 80,
               decoration: BoxDecoration(
@@ -57,7 +61,9 @@ class SoundVisualizationCard extends StatelessWidget {
                       2.0, 70.0); // min 2, max container height
 
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    padding: EdgeInsets.symmetric(
+                        horizontal:
+                            ResponsiveUtils.getResponsiveSize(context, 2)),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 100),
                       width: 10,
@@ -66,7 +72,9 @@ class SoundVisualizationCard extends StatelessWidget {
                         color: isActive
                             ? Theme.of(context).primaryColor
                             : Colors.grey,
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(
+                          ResponsiveUtils.getResponsiveSize(context, 2),
+                        ),
                       ),
                     ),
                   );
