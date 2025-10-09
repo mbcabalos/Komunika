@@ -53,6 +53,24 @@ class MainActivity : FlutterActivity() {
             }
         )
 
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "sound_enhancer_service")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "startService" -> {
+                        val intent = Intent(this, SoundEnhancerService::class.java)
+                        startForegroundService(intent)
+                        result.success(null)
+                    }
+                    "stopService" -> {
+                        val intent = Intent(this, SoundEnhancerService::class.java)
+                        stopService(intent)
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+
+
         platform.setMethodCallHandler { call, result ->
             when (call.method) {
                 "startForegroundService" -> {

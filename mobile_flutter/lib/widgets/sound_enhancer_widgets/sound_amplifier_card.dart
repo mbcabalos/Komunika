@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_headset_detector/flutter_headset_detector.dart';
 import 'package:komunika/bloc/bloc_sound_enhancer/sound_enhancer_bloc.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/utils/shared_prefs.dart';
+import 'package:headset_connection_event/headset_event.dart';
 
 class SoundAmplifierCard extends StatefulWidget {
   final ThemeProvider themeProvider;
@@ -24,62 +24,79 @@ class SoundAmplifierCard extends StatefulWidget {
   State<SoundAmplifierCard> createState() => _SoundAmplifierCardState();
 }
 
-class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
+class _SoundAmplifierCardState extends State<SoundAmplifierCard>
+    with WidgetsBindingObserver {
   double _amplifierVolumeLevel = 1.0;
   double _audioBalanceLevel = 0.5;
   bool isNoiseSupressorActive = false;
   bool isAGCActive = false;
-  bool _isWiredConnected = false;
-  bool _isWirelessConnected = false;
-  final headsetDetector = HeadsetDetector();
-  bool get _isAnyHeadsetConnected => _isWiredConnected || _isWirelessConnected;
+  bool _isHeadsetConnected = false;
+  final _headsetEvent = HeadsetEvent();
+  HeadsetState? _headsetState;
+  bool get _isAnyHeadsetConnected => _isHeadsetConnected;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initHeadsetDetection();
     _loadEnhancerSharedPrefValues();
   }
 
   Future<void> _initHeadsetDetection() async {
-    // Initial state
-    headsetDetector.getCurrentState.then((val) {
+    // Request permission for Android 12+
+    await _headsetEvent.requestPermission();
+
+    // Get initial state
+    final currentState = await _headsetEvent.getCurrentState;
+    setState(() {
+      _headsetState = currentState;
+      _isHeadsetConnected = currentState == HeadsetState.CONNECT;
+    });
+
+    // If disconnected at startup, ensure mic is off
+    if (!_isHeadsetConnected) {
+      widget.onMicModeChanged(0);
+      widget.soundEnhancerBloc.add(StopRecordingEvent());
+    }
+
+    // Listen for headset changes
+    _headsetEvent.setListener((HeadsetState state) {
       setState(() {
-        _isWiredConnected = val[HeadsetType.WIRED] == HeadsetState.CONNECTED;
-        _isWirelessConnected =
-            val[HeadsetType.WIRELESS] == HeadsetState.CONNECTED;
+        _headsetState = state;
+        _isHeadsetConnected = state == HeadsetState.CONNECT;
       });
-      // If both are disconnected at startup, ensure mic is off
-      if (!_isWiredConnected && !_isWirelessConnected) {
+
+      if (_isHeadsetConnected) {
+        if (widget.micMode == 1) {
+          widget.soundEnhancerBloc.add(StopRecordingEvent());
+          Future.delayed(const Duration(milliseconds: 500), () {
+            widget.soundEnhancerBloc.add(StartRecordingEvent());
+          });
+        }
+      } else {
         widget.onMicModeChanged(0);
         widget.soundEnhancerBloc.add(StopRecordingEvent());
       }
     });
+  }
 
-    // Listen for cCard
-    headsetDetector.setListener((val) {
-      setState(() {
-        switch (val) {
-          case HeadsetChangedEvent.WIRED_CONNECTED:
-            _isWiredConnected = true;
-            break;
-          case HeadsetChangedEvent.WIRED_DISCONNECTED:
-            _isWiredConnected = false;
-            break;
-          case HeadsetChangedEvent.WIRELESS_CONNECTED:
-            _isWirelessConnected = true;
-            break;
-          case HeadsetChangedEvent.WIRELESS_DISCONNECTED:
-            _isWirelessConnected = false;
-            break;
-        }
-        // If both are disconnected after a change, turn off mic mode
-        if (!_isWiredConnected && !_isWirelessConnected) {
-          widget.onMicModeChanged(0);
-          widget.soundEnhancerBloc.add(StopRecordingEvent());
-        }
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _headsetEvent.getCurrentState.then((value) {
+        setState(() {
+          _headsetState = value;
+          _isHeadsetConnected = value == HeadsetState.CONNECT;
+        });
       });
-    });
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   void _showHeadsetDialog() {
@@ -232,10 +249,10 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard> {
                         ),
                       ],
                       onPressed: (index) async {
-                        // if (index == 1 && !_isAnyHeadsetConnected) {
-                        //   _showHeadsetDialog();
-                        //   return;
-                        // }
+                        if (index == 1 && !_isAnyHeadsetConnected) {
+                          _showHeadsetDialog();
+                          return;
+                        }
                         widget.onMicModeChanged(index);
                         if (index == 0) {
                           widget.soundEnhancerBloc.add(StopRecordingEvent());

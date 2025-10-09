@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:komunika/services/live-service-handler/fft_helper.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
+import 'package:komunika/services/live-service-handler/sound_enhancer_service.dart';
 import 'package:komunika/services/live-service-handler/speexdsp_helper.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -100,6 +101,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
 
     try {
       _currentGain = await PreferencesUtils.getAmplifierVolume();
+      // await SoundEnhancerService.startService();
       await _player.openPlayer();
       await NativeAudioRecorder.start();
       await _player.startPlayerFromStream(
@@ -278,6 +280,8 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   Future<void> _onStopRecording(
       StopRecordingEvent event, Emitter<SoundEnhancerState> emit) async {
     try {
+      // ✅ Stop Android background service
+      // await SoundEnhancerService.stopService();
       await NativeAudioRecorder.stop();
       await _player.stopPlayer();
       await _audioStreamController?.close();

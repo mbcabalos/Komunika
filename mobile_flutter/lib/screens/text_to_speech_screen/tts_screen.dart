@@ -31,7 +31,8 @@ class TextToSpeechScreen extends StatefulWidget {
   State<TextToSpeechScreen> createState() => TextToSpeechScreenState();
 }
 
-class TextToSpeechScreenState extends State<TextToSpeechScreen> {
+class TextToSpeechScreenState extends State<TextToSpeechScreen>
+    with WidgetsBindingObserver {
   final TextEditingController _textController = TextEditingController();
   final dbHelper = DatabaseHelper();
   final ImagePicker _imagePicker = ImagePicker();
@@ -134,7 +135,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         identify: "TextArea",
         keyTarget: keyTextArea,
         shape: ShapeLightFocus.RRect,
-        radius: 12,
+        radius: ResponsiveUtils.getResponsiveSize(context, 12),
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
@@ -166,7 +167,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         identify: "VoiceSelector",
         keyTarget: keyVoicePlayX,
         shape: ShapeLightFocus.RRect,
-        radius: 12,
+        radius: ResponsiveUtils.getResponsiveSize(context, 12),
         contents: [
           TargetContent(
             align: ContentAlign.top,
@@ -198,7 +199,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         identify: "PlayButton",
         keyTarget: keyImagePicker,
         shape: ShapeLightFocus.RRect,
-        radius: 12,
+        radius: ResponsiveUtils.getResponsiveSize(context, 12),
         contents: [
           TargetContent(
             align: ContentAlign.top,
@@ -230,7 +231,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         identify: "GoToSettings",
         keyTarget: widget.settingsNavKey,
         shape: ShapeLightFocus.RRect,
-        radius: 12,
+        radius: ResponsiveUtils.getResponsiveSize(context, 12),
         enableTargetTab: true,
         contents: [
           TargetContent(
@@ -267,7 +268,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
       targets: ttsTargets,
       colorShadow: Colors.black.withOpacity(0.8),
       textSkip: "SKIP",
-      paddingFocus: 8,
+      paddingFocus: ResponsiveUtils.getResponsiveSize(context, 8),
       onSkip: () {
         PreferencesUtils.storeWalkthroughDone(true);
         return true;
@@ -313,6 +314,20 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
 
   bool get isAndroid => !kIsWeb && Platform.isAndroid;
 
+  void stopTtsOnTabChange() {
+    ttsHelper.stop();
+    setState(() {
+      currentlyPlaying = false;
+    });
+  }
+
+  Future<void> saveTextToHistoryWhenClose() async {
+    final text = _textController.text.trim();
+    if (text.isNotEmpty) {
+      dbHelper.saveTextToSpeechHistory(_textController.text);
+    }
+  }
+
   void refresh() {
     if (mounted) {
       setState(() {
@@ -322,7 +337,17 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Optionally save on inactive/detached too:
+    if (state == AppLifecycleState.detached) {
+      saveTextToHistoryWhenClose();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    saveTextToHistoryWhenClose();
     ttsHelper.stop();
     super.dispose();
   }
@@ -343,6 +368,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
             icon: Icon(
               Icons.history_rounded,
               color: themeProvider.themeData.textTheme.bodyLarge?.color,
+              size: ResponsiveUtils.getResponsiveFontSize(context, 24),
             ),
             tooltip: context.translate("history_title"),
             onPressed: () {
@@ -356,17 +382,6 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                 ),
               );
             },
-          ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          key: keyImagePicker,
-          onPressed: () {
-            _showImageSourceDialog(themeProvider);
-          },
-          backgroundColor: themeProvider.themeData.primaryColor,
-          child: Icon(
-            Icons.document_scanner_rounded,
-            color: themeProvider.themeData.textTheme.bodySmall?.color,
           ),
         ),
         body: BlocConsumer<TextToSpeechBloc, TextToSpeechState>(
@@ -403,39 +418,72 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
   }
 
   Widget _buildContent(ThemeProvider themeProvider) {
-    final double phoneHeight = MediaQuery.of(context).size.height * 0.6;
-    final double phoneWidth = MediaQuery.of(context).size.width * 1.0;
     return RefreshIndicator.adaptive(
       onRefresh: _initialize,
       child: SingleChildScrollView(
-        child: Column(
+        child: Stack(
           children: [
-            Container(
-              margin: EdgeInsets.all(
-                  ResponsiveUtils.getResponsiveSize(context, 16)),
-              child: TextAreaCard(
-                key: keyTextArea,
-                themeProvider: themeProvider,
-                ttsBloc: widget.ttsBloc,
-                dbHelper: dbHelper,
-                contentController: _textController,
-                width: phoneWidth,
-                height: phoneHeight,
-                historyMode: historyMode.toString(),
-                onClear: () async {
-                  await _stop();
-                  _textController.clear();
-                  setState(() {
-                    currentlyPlaying = false;
-                  });
-                },
-              ),
+            Column(
+              children: [
+                Container(
+                  margin: EdgeInsets.all(
+                      ResponsiveUtils.getResponsiveSize(context, 16)),
+                  child: TextAreaCard(
+                    key: keyTextArea,
+                    themeProvider: themeProvider,
+                    ttsBloc: widget.ttsBloc,
+                    dbHelper: dbHelper,
+                    contentController: _textController,
+                    historyMode: historyMode.toString(),
+                    onClear: () async {
+                      await _stop();
+                      _textController.clear();
+                      setState(() {
+                        currentlyPlaying = false;
+                      });
+                    },
+                  ),
+                ),
+
+                // TTS Controls Section
+                _buildTtsControls(themeProvider),
+                SizedBox(
+                    height: ResponsiveUtils.getResponsiveSize(context, 20)),
+              ],
             ),
 
-            // TTS Controls Section
-            _buildTtsControls(themeProvider),
-
-            SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 20)),
+            // Positioned widget for the scanner button
+            Positioned(
+              bottom: ResponsiveUtils.getResponsiveSize(context, 0),
+              right: ResponsiveUtils.getResponsiveSize(context, 16),
+              child: GestureDetector(
+                onTap: () {
+                  _showImageSourceDialog(themeProvider);
+                },
+                child: Container(
+                  width: ResponsiveUtils.getResponsiveSize(context, 56),
+                  height: ResponsiveUtils.getResponsiveSize(context, 56),
+                  decoration: BoxDecoration(
+                    color: themeProvider.themeData.primaryColor,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius:
+                            ResponsiveUtils.getResponsiveSize(context, 8),
+                        offset: Offset(
+                            0, ResponsiveUtils.getResponsiveSize(context, 2)),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.document_scanner_rounded,
+                    color: themeProvider.themeData.textTheme.bodySmall?.color,
+                    size: ResponsiveUtils.getResponsiveFontSize(context, 24),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -458,23 +506,26 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   backgroundColor: themeProvider.themeData.cardColor,
                   textColor:
                       themeProvider.themeData.textTheme.bodyMedium?.color,
-                  height: 50,
-                  width: 100,
+                  height: ResponsiveUtils.getResponsiveSize(context, 50),
+                  width: ResponsiveUtils.getResponsiveSize(context, 100),
                   onPressed: () async {
                     await showDialog(
                       context: context,
                       builder: (context) => Dialog(
                         backgroundColor: themeProvider.themeData.cardColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                              ResponsiveUtils.getResponsiveSize(context, 12)),
                         ),
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
                             maxHeight: MediaQuery.of(context).size.height * 0.6,
-                            maxWidth: 300,
+                            maxWidth:
+                                ResponsiveUtils.getResponsiveSize(context, 300),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: EdgeInsets.all(
+                                ResponsiveUtils.getResponsiveSize(context, 16)),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -483,7 +534,9 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                                   style: themeProvider
                                       .themeData.textTheme.titleMedium,
                                 ),
-                                const SizedBox(height: 12),
+                                SizedBox(
+                                    height: ResponsiveUtils.getResponsiveSize(
+                                        context, 12)),
                                 Flexible(
                                   child: GridView.builder(
                                     shrinkWrap: true,
@@ -523,8 +576,8 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
               ? Icons.pause_outlined
               : Icons.play_arrow_rounded,
           iconSize: ResponsiveUtils.getResponsiveSize(context, 50),
-          height: 80,
-          width: 100,
+          height: ResponsiveUtils.getResponsiveSize(context, 80),
+          width: ResponsiveUtils.getResponsiveSize(context, 100),
           onPressed: currentlyPlaying ? _pause : _speak,
           themeProvider: themeProvider,
         ),
@@ -539,20 +592,22 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
               label: "${(rate + 0.50).toStringAsFixed(2)}x",
               backgroundColor: themeProvider.themeData.cardColor,
               textColor: themeProvider.themeData.textTheme.bodyMedium?.color,
-              height: 50,
-              width: 100,
+              height: ResponsiveUtils.getResponsiveSize(context, 50),
+              width: ResponsiveUtils.getResponsiveSize(context, 100),
               onPressed: () async {
                 await showDialog(
                   context: context,
                   builder: (context) => Dialog(
                     backgroundColor: themeProvider.themeData.cardColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(
+                          ResponsiveUtils.getResponsiveSize(context, 12)),
                     ),
                     child: Container(
-                      width: 100,
-                      height: 200,
-                      padding: const EdgeInsets.all(8),
+                      width: ResponsiveUtils.getResponsiveSize(context, 100),
+                      height: ResponsiveUtils.getResponsiveSize(context, 200),
+                      padding: EdgeInsets.all(
+                          ResponsiveUtils.getResponsiveSize(context, 8)),
                       child: ListView.builder(
                         itemCount: _rateOptions.length,
                         itemBuilder: (context, index) {
@@ -569,6 +624,8 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                                 fontWeight: isSelected
                                     ? FontWeight.bold
                                     : FontWeight.normal,
+                                fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                    context, 14),
                               ),
                             ),
                             tileColor: isSelected
@@ -617,16 +674,16 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
             decoration: BoxDecoration(
               border: Border.all(
                 color: isSelected ? Colors.blue : Colors.transparent,
-                width: 2,
+                width: ResponsiveUtils.getResponsiveSize(context, 2),
               ),
               shape: BoxShape.circle,
             ),
             child: CircleAvatar(
-              radius: 28,
+              radius: ResponsiveUtils.getResponsiveSize(context, 28),
               backgroundImage: AssetImage(option["image"]!),
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 6)),
           Flexible(
             child: Text(
               option["label"]!,
@@ -638,6 +695,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                 color: isSelected
                     ? Colors.blue
                     : themeProvider.themeData.textTheme.bodyMedium?.color,
+                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 12),
               ),
             ),
           ),
@@ -668,8 +726,8 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            spreadRadius: 2,
+            blurRadius: ResponsiveUtils.getResponsiveSize(context, 10),
+            spreadRadius: ResponsiveUtils.getResponsiveSize(context, 2),
           ),
         ],
       ),
@@ -715,10 +773,12 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
       builder: (context) => Dialog(
         backgroundColor: themeProvider.themeData.primaryColor,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(
+              ResponsiveUtils.getResponsiveSize(context, 16)),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding:
+              EdgeInsets.all(ResponsiveUtils.getResponsiveSize(context, 16)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -730,18 +790,20 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 24)),
               ListTile(
                 leading: Icon(
                   Icons.camera_alt_rounded,
                   color: themeProvider.themeData.primaryColor,
+                  size: ResponsiveUtils.getResponsiveFontSize(context, 24),
                 ),
                 title: Text(
                   context.translate("tts_camera"),
                   style: themeProvider.themeData.textTheme.bodyMedium,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(
+                      ResponsiveUtils.getResponsiveSize(context, 12)),
                 ),
                 tileColor: themeProvider.themeData.cardColor,
                 onTap: () {
@@ -751,18 +813,20 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   );
                 },
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 12)),
               ListTile(
                 leading: Icon(
                   Icons.photo_library_rounded,
                   color: themeProvider.themeData.primaryColor,
+                  size: ResponsiveUtils.getResponsiveFontSize(context, 24),
                 ),
                 title: Text(
                   context.translate("tts_gallery"),
                   style: themeProvider.themeData.textTheme.bodyMedium,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(
+                      ResponsiveUtils.getResponsiveSize(context, 12)),
                 ),
                 tileColor: themeProvider.themeData.cardColor,
                 onTap: () {
@@ -770,7 +834,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   _pickMultipleImages(themeProvider);
                 },
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 16)),
             ],
           ),
         ),
@@ -802,10 +866,12 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
       barrierDismissible: false,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(
+              ResponsiveUtils.getResponsiveSize(context, 16)),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding:
+              EdgeInsets.all(ResponsiveUtils.getResponsiveSize(context, 24)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -817,9 +883,9 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 24)),
               const CircularProgressIndicator(),
-              const SizedBox(height: 16),
+              SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 16)),
               Text(
                 context.translate("tts_extracting_text"),
                 style: TextStyle(
@@ -857,10 +923,12 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
       builder: (context) => Dialog(
         backgroundColor: themeProvider.themeData.primaryColor,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(
+              ResponsiveUtils.getResponsiveSize(context, 16)),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding:
+              EdgeInsets.all(ResponsiveUtils.getResponsiveSize(context, 16)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -872,7 +940,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                   fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 16)),
               Text(
                 context
                     .translate("tts_batch_process_message")
@@ -883,7 +951,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 24)),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -894,10 +962,14 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     style: FilledButton.styleFrom(
                       backgroundColor: ColorsPalette.red,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(
+                            ResponsiveUtils.getResponsiveSize(context, 8)),
                       ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal:
+                              ResponsiveUtils.getResponsiveSize(context, 8),
+                          vertical:
+                              ResponsiveUtils.getResponsiveSize(context, 8)),
                     ),
                     child: Text(
                       context.translate("tts_cancel"),
@@ -909,7 +981,8 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(
+                      width: ResponsiveUtils.getResponsiveSize(context, 8)),
                   FilledButton(
                     onPressed: () {
                       confirmBatch = true;
@@ -918,10 +991,14 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                     style: FilledButton.styleFrom(
                       backgroundColor: ColorsPalette.green,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(
+                            ResponsiveUtils.getResponsiveSize(context, 8)),
                       ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal:
+                              ResponsiveUtils.getResponsiveSize(context, 8),
+                          vertical:
+                              ResponsiveUtils.getResponsiveSize(context, 8)),
                     ),
                     child: Text(
                       context.translate("tts_proceed"),
@@ -957,10 +1034,12 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
         builder: (context, setState) {
           return Dialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(
+                  ResponsiveUtils.getResponsiveSize(context, 16)),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(
+                  ResponsiveUtils.getResponsiveSize(context, 24)),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -974,13 +1053,16 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen> {
                           ResponsiveUtils.getResponsiveFontSize(context, 20),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(
+                      height: ResponsiveUtils.getResponsiveSize(context, 24)),
                   LinearProgressIndicator(
                     value: _currentProcessingIndex / _selectedImages.length,
-                    minHeight: 8,
-                    borderRadius: BorderRadius.circular(4),
+                    minHeight: ResponsiveUtils.getResponsiveSize(context, 8),
+                    borderRadius: BorderRadius.circular(
+                        ResponsiveUtils.getResponsiveSize(context, 4)),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(
+                      height: ResponsiveUtils.getResponsiveSize(context, 16)),
                   Text(
                     context
                         .translate("tts_processing_image_count")

@@ -126,7 +126,7 @@ class PreferencesUtils {
 
   static Future<String> getTTSVoice() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString("TTS_selectedVoice") ?? "fil-ph-x-fie-local";
+    return prefs.getString("TTS_selectedVoice") ?? "fil-ph-x-fic-local";
   }
 
   static Future<void> storeTTSLanguage(String language) async {
