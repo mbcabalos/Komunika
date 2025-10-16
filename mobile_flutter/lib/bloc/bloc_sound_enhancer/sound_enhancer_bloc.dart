@@ -4,16 +4,15 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'dart:developer' as developer;
 import 'package:equatable/equatable.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:komunika/services/live-service-handler/fft_helper.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
-import 'package:komunika/services/live-service-handler/sound_enhancer_service.dart';
 import 'package:komunika/services/live-service-handler/speexdsp_helper.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:komunika/services/live-service-handler/native_audio_recorder.dart';
-import 'package:complex/complex.dart';
 
 part 'sound_enhancer_event.dart';
 part 'sound_enhancer_state.dart';
@@ -26,6 +25,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       StreamController<String>();
   final SocketService socketService;
   SpeexDSP? _denoiser;
+  static const platform = MethodChannel('com.komunika.app/recorder');
 
   bool recording = false;
   bool _transcribing = false;
@@ -38,7 +38,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       : super(SoundEnhancerLoadingState()) {
     // Event handlers
     on<SoundEnhancerLoadingEvent>(_onLoadingEvent);
-    on<RequestPermissionEvent>(_onRequestPermission);
+    // on<RequestPermissionEvent>(_onRequestPermission);
     on<StartRecordingEvent>(_onStartRecording);
     on<StopRecordingEvent>(_onStopRecording);
     on<StartTranscriptionEvent>(_onStartTranscription);
@@ -129,6 +129,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
           emit(SoundEnhancerErrorState(message: "Native stream error: $e"));
         },
       );
+      await platform.invokeMethod('startService');
 
       recording = true;
       developer.log("Native recording started with gain: $_currentGain");
@@ -286,6 +287,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       await _player.stopPlayer();
       await _audioStreamController?.close();
       recording = false;
+      await platform.invokeMethod('startService');
 
       // Emit zero bars to reset visualizer
       emit(SoundEnhancerSpectrumState(List.filled(20, 0.0)));

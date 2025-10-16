@@ -5,6 +5,7 @@ import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:headset_connection_event/headset_event.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class SoundAmplifierCard extends StatefulWidget {
   final ThemeProvider themeProvider;
@@ -253,10 +254,49 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard>
                           _showHeadsetDialog();
                           return;
                         }
+
                         widget.onMicModeChanged(index);
+
                         if (index == 0) {
                           widget.soundEnhancerBloc.add(StopRecordingEvent());
-                        } else if (index == 1) {
+                          return;
+                        }
+                        if (index == 1) {
+                          // --- 1) Microphone permission ---
+                          var micStatus = await Permission.microphone.status;
+                          if (!micStatus.isGranted) {
+                            micStatus = await Permission.microphone.request();
+                            if (!micStatus.isGranted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        Text("Microphone permission denied")),
+                              );
+                              // revert toggle back to 0
+                              widget.onMicModeChanged(0);
+                              return;
+                            }
+                          }
+
+                          // --- 2) Notification permission (Android 13+) ---
+                          var notifStatus =
+                              await Permission.notification.status;
+                          if (!notifStatus.isGranted) {
+                            notifStatus =
+                                await Permission.notification.request();
+                            if (!notifStatus.isGranted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        Text("Notification permission denied")),
+                              );
+                              // revert toggle back to 0
+                              widget.onMicModeChanged(0);
+                              return;
+                            }
+                          }
+
+                          // All checks passed -> start recording
                           widget.soundEnhancerBloc.add(StartRecordingEvent());
                         }
                       },

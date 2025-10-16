@@ -16,8 +16,12 @@
 <uses-permission android:name="android.permission.CAMERA" />
 <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
 <uses-permission android:name="android.permission.BLUETOOTH_SCAN"/>
-<uses-feature android:name="android.hardware.camera" />
-<uses-feature android:name="android.hardware.camera.autofocus" />
+<uses-feature android:name="android.hardware.camera"/>
+<uses-feature android:name="android.hardware.camera.autofocus"/>
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+
 
 
     <application
@@ -72,23 +76,7 @@
             <service
                 android:name=".ForegroundService"
                 android:exported="true"
-                android:foregroundServiceType="mediaProjection"
-                android:permission="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
-
-            <service
-                android:name=".SoundEnhancerService"
-                android:enabled="true"
-                android:exported="false"
-                android:foregroundServiceType="microphone|mediaPlayback" />
-
-            <service
-                android:name=".FloatingWindowService"
-                android:exported="false"
-                android:permission="android.permission.SYSTEM_ALERT_WINDOW">
-                <intent-filter>
-                    <action android:name="android.intent.action.VIEW" />
-                </intent-filter>
-            </service>
+                android:foregroundServiceType="mediaPlayback|microphone" />
 
             <receiver
                 android:name=".FloatingWindowService$updateTextReceiver"
