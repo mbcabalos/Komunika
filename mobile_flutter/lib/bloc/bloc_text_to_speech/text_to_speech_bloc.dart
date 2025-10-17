@@ -55,7 +55,7 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
         compressQuality: 100,
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: "\n Crop Image",
+            toolbarTitle: "Crop Image",
             toolbarColor: ColorsPalette.accent,
             toolbarWidgetColor: ColorsPalette.white,
             initAspectRatio: CropAspectRatioPreset.square,
@@ -70,7 +70,7 @@ class TextToSpeechBloc extends Bloc<TextToSpeechEvent, TextToSpeechState> {
             activeControlsWidgetColor: ColorsPalette.accent,
           ),
           IOSUiSettings(
-            title: "\n Crop Image",
+            title: "Crop Image",
             aspectRatioPresets: [
               CropAspectRatioPreset.original,
               CropAspectRatioPreset.square,

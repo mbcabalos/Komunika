@@ -71,7 +71,7 @@ dependencies:
   # Camera & Image Processing
   camera: ^0.11.1 # Camera access
   image_picker: ^1.1.2 # Pick images/videos from gallery or camera
-  image_cropper: ^9.1.0 # Crop selected images
+  image_cropper: ^11.0.0 # Crop selected images
   google_mlkit_text_recognition: ^0.15.0 # OCR (Optical Character Recognition)
 
   # Networking

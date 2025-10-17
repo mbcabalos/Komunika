@@ -25,7 +25,7 @@ class ForegroundService : Service() {
         notificationManager.createNotificationChannel(channel)
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Mic Enhancer Running")
+            .setContentTitle("Sound Enhancer Running")
             .setContentText("Enhancing live sound...")
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .build()
