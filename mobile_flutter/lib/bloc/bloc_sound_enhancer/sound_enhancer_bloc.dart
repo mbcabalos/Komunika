@@ -21,7 +21,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   final FlutterSoundPlayer _player = FlutterSoundPlayer();
   StreamController<Uint8List>? _audioStreamController;
-  final StreamController<String> _transcriptionController =
+  StreamController<String> _transcriptionController =
       StreamController<String>();
   final SocketService socketService;
   SpeexDSP? _denoiser;
@@ -62,6 +62,9 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   }
 
   void _setupSocketListeners() {
+    socketService.socket?.off("transcription_result");
+    socketService.socket?.off("transcription_preview");
+
     socketService.socket?.on("transcription_result", (data) {
       if (data != null && data["text"] != null) {
         _transcriptionController.add(data["text"]);
@@ -421,6 +424,19 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   }
 
   void _onClearText(ClearTextEvent event, Emitter<SoundEnhancerState> emit) {
+    socketService.socket?.off("transcription_result");
+    socketService.socket?.off("transcription_preview");
+
+    try {
+      _transcriptionController.close();
+    } catch (e) {
+      developer.log("Error closing transcription controller: $e");
+    }
+
+    _transcriptionController = StreamController<String>.broadcast();
+
+    _setupSocketListeners();
+
     emit(TranscriptionUpdatedState(""));
   }
 }

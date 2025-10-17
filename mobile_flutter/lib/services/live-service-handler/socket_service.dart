@@ -8,14 +8,12 @@ class SocketService {
   static final SocketService _instance = SocketService._internal();
   factory SocketService() => _instance;
   String socketUrl = Endpoint.socketUrl;
-
   IO.Socket? socket;
   bool isSocketInitialized = false;
   Stream<String> get transcriptionStream => _transcriptionController.stream;
-
   SocketService._internal();
-
   final _transcriptionController = StreamController<String>.broadcast();
+  bool get isConnected => socket?.connected == true && isSocketInitialized;
 
   Future<void> initSocket() async {
     String serverUrl = socketUrl;
