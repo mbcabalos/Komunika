@@ -1,166 +1,96 @@
-import io
-import wave
-from flask import json
+import json
+import base64
 import numpy as np
-import speech_recognition as sr
+import noisereduce as nr
+from flask import request
 from flask_socketio import SocketIO
 from vosk import Model, KaldiRecognizer
+from concurrent.futures import ThreadPoolExecutor
 
-import time
+# Globals for reuse
+client_recognizers = {}
+executor = ThreadPoolExecutor(max_workers=4)
 
-socketio = SocketIO()
-print("Hello")
-from vosk import Model
+def register_transcription_events(socketio: SocketIO):
+    """
+    Register real-time audio transcription socket events.
+    """
+    print("🎧 Initializing audio transcription module...")
 
-# vosk_model_path = r"D:\VS Code for Flutter\Large Project\Komunika\backend_python\models\vosk-model-tl-ph-generic-0.6"
-vosk_model_path = "models/vosk-model-tl-ph-generic-0.6"
+    # Load Vosk model once globally
+    vosk_model_path = "models/vosk-model-tl-ph-generic-0.6"
+    try:
+        model = Model(vosk_model_path)
+        print("✅ Vosk model loaded successfully!")
+    except Exception as e:
+        print(f"❌ Model loading failed: {e}")
+        return
 
-try:
-    model = Model(vosk_model_path)
-    print("✅ Model loaded successfully!")
-except Exception as e:
-    print(f"❌ Model loading failed: {e}")
+    def denoise_audio(raw_audio, sample_rate=16000):
+        audio_np = np.frombuffer(raw_audio, dtype=np.int16)
+        if len(audio_np) == 0:
+            return b""
+        cleaned_audio_np = nr.reduce_noise(y=audio_np, sr=sample_rate)
+        return cleaned_audio_np.tobytes()
 
+    @socketio.on("connect")
+    def handle_connect():
+        sid = request.sid
+        recognizer = KaldiRecognizer(model, 16000)
+        recognizer.SetWords(True)
+        client_recognizers[sid] = recognizer
+        print(f"🟢 Client connected: {sid}")
+        socketio.emit("server_status", {"status": "connected"}, room=sid)
 
-recognizer = sr.Recognizer()
-recognizer = KaldiRecognizer(model, 16000)
-recognizer.SetWords(True)
-audio_buffer = bytearray()  # ✅ Collect chunks in a buffer
+    @socketio.on("disconnect")
+    def handle_disconnect():
+        sid = request.sid
+        client_recognizers.pop(sid, None)
+        print(f"🔴 Client disconnected: {sid}")
 
-def denoise_audio(raw_audio, sample_rate=16000):
-
-    # Convert raw audio bytes to a numpy array
-    audio_np = np.frombuffer(raw_audio, dtype=np.int16)
-
-    # Apply noise reduction using noisereduce library
-    cleaned_audio_np = nr.reduce_noise(y=audio_np, sr=sample_rate)
-
-    # Convert cleaned audio numpy array back to bytes
-    cleaned_audio = cleaned_audio_np.tobytes()
-
-    return cleaned_audio
-
-def register_transcription_events(socketio):
     @socketio.on("audio_stream")
     def handle_audio_stream(audio_data):
+        sid = request.sid
+        # print(f"🎧 Received audio from {sid}")
+
+        if sid not in client_recognizers:
+            print(f"⚠️ No recognizer found for sid {sid}")
+            socketio.emit("server_error", {"message": "Recognizer not initialized"}, room=sid)
+            return
+
+        # Decode base64 if needed
+        if isinstance(audio_data, str):
+            try:
+                audio_data = base64.b64decode(audio_data)
+            except Exception as e:
+                print(f"❌ Base64 decode failed: {e}")
+                return
+
+        # Process asynchronously
+        executor.submit(process_audio_chunk, sid, audio_data)
+
+    def process_audio_chunk(sid, audio_data):
         try:
-            if recognizer.AcceptWaveform(audio_data):
-                # ✅ Process and send interim results
+            recognizer = client_recognizers.get(sid)
+            if not recognizer:
+                print(f"⚠️ Recognizer missing for sid {sid}")
+                return
+
+            denoised_audio = denoise_audio(audio_data)
+
+            if recognizer.AcceptWaveform(denoised_audio):
                 result = json.loads(recognizer.Result())
                 text = result.get("text", "").strip()
-
                 if text:
-                    print(f"📝 Partial Transcription: {text}")
-                    socketio.emit("transcription_result", {"text": text})
-
+                    # print(f"📝 Final: {text}")
+                    socketio.emit("transcription_result", {"text": text}, room=sid)
             else:
-                # ✅ Send continuous partial transcriptions
-                partial_result = json.loads(recognizer.PartialResult())
-                partial_text = partial_result.get("partial", "").strip()
-
+                partial = json.loads(recognizer.PartialResult())
+                partial_text = partial.get("partial", "").strip()
                 if partial_text:
-                    print(f"🔄 Streaming Transcription: {partial_text}")
-                    socketio.emit("transcription_preview", {"live_text": partial_text})
+                    # print(f"🔄 Partial: {partial_text}")
+                    socketio.emit("transcription_preview", {"live_text": partial_text}, room=sid)
 
         except Exception as e:
             print(f"❌ Error processing audio: {e}")
-            socketio.emit("server_error", {"message": str(e)})
-
-
-    @socketio.on("audio_upload")  
-    def handle_audio_upload(audio_data):
-        try:
-            print("📥 Received audio file for transcription...")
-
-            # Convert received bytes to a WAV file
-            wav_data = io.BytesIO(audio_data)
-            with wave.open(wav_data, "wb") as wav_file:
-                wav_file.setnchannels(1)
-                wav_file.setsampwidth(2)  
-                wav_file.setframerate(16000)  
-                wav_file.writeframes(audio_data)
-
-            # Transcribe audio
-            recognizer = KaldiRecognizer(model, 16000)
-            text = ""
-
-            wav_data.seek(0)  # Reset pointer
-            with wave.open(wav_data, "rb") as wf:
-                while True:
-                    data = wf.readframes(3000)
-                    if len(data) == 0:
-                        break
-                    if recognizer.AcceptWaveform(data):
-                        result = json.loads(recognizer.Result())
-                        text += " " + result.get("text", "")
-
-            # Final transcription result
-            final_result = json.loads(recognizer.FinalResult())
-            text += " " + final_result.get("text", "")
-
-            text = text.strip() if text.strip() else ""
-            print(f"📝 Transcription: {text}")
-
-            # Send result to frontend
-            if text != "" and text != "":
-                socketio.emit("transcription_result", {"text": text})
-            else:
-                print("Audio is empty or no speech detected")
-
-        except Exception as e:
-            print(f"❌ Error processing audio: {e}")
-            socketio.emit("server_error", {"message": str(e)})
-
-    @socketio.on("caption_stream")
-    def handle_audio_stream(audio_data):
-        global audio_buffer
-
-        # Append new chunk
-        audio_buffer.extend(audio_data)
-
-        # Process every 3 seconds of audio (16-bit PCM, 16 kHz, mono)
-        if len(audio_buffer) >= 16000 * 2 * 3:  # 3 seconds of audio
-            try:
-                # Convert raw PCM to WAV
-                wav_data = io.BytesIO()
-                with wave.open(wav_data, "wb") as wav_file:
-                    wav_file.setnchannels(1)  # Mono
-                    wav_file.setsampwidth(2)  # 16-bit
-                    wav_file.setframerate(16000)  # 16 kHz
-                    wav_file.writeframes(bytes(audio_buffer))
-
-                # Reset buffer
-                audio_buffer = bytearray()
-
-                # Seek to start
-                wav_data.seek(0)
-
-                # Transcribe using Vosk
-                recognizer = KaldiRecognizer(model, 16000)
-                text = ""
-
-                with wave.open(wav_data, "rb") as wf:
-                    while True:
-                        data = wf.readframes(3000)  # Read 3000 frames at a time
-                        if len(data) == 0:
-                            break
-                        if recognizer.AcceptWaveform(data):
-                            result = json.loads(recognizer.Result())
-                            text += " " + result.get("text", "")
-
-                # Get final text result
-                final_result = json.loads(recognizer.FinalResult())
-                text += " " + final_result.get("text", "")
-
-                # Clean up the transcription
-                text = text.strip() if text.strip() else ""
-
-                print(f"📝 Transcription: {text}")
-                if text != "" and text != "":
-                    socketio.emit("caption_result", {"text": text})
-                else:
-                    print("Audio is empty or no speech detected")
-
-            except Exception as e:
-                print(f"❌ Error processing audio: {e}")
-                socketio.emit("server_error", {"message": str(e)})
+            socketio.emit("server_error", {"message": str(e)}, room=sid)
