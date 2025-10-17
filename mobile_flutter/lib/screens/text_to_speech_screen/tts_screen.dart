@@ -40,6 +40,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
   GlobalKey keyVoicePlayX = GlobalKey();
   GlobalKey keyImagePicker = GlobalKey();
   List<TargetFocus> ttsTargets = [];
+  String _textFieldHint = "";
 
   // TTS Control Variables
   double rate = 0.5;
@@ -118,6 +119,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
     selectedlanguage = await PreferencesUtils.getTTSLanguage();
     rate = await PreferencesUtils.getTTSRate();
     historyMode = await PreferencesUtils.getTTSHistoryMode();
+    _textFieldHint = context.translate("tts_hint2");
   }
 
   Future<void> checkWalkthrough() async {
@@ -280,7 +282,17 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
   Future<void> _speak() async {
     final text = _textController.text.trim();
     if (text.isEmpty) {
-      showCustomSnackBar(context, "Text field is empty!", ColorsPalette.red);
+      setState(() {
+        _textFieldHint = context.translate("tts_hint_empty");
+      });
+      // Add a small delay to reset hint back after a few seconds (optional)
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _textFieldHint = context.translate("tts_hint2");
+          });
+        }
+      });
       return;
     }
 
@@ -442,6 +454,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
                         currentlyPlaying = false;
                       });
                     },
+                    textFieldHint: _textFieldHint,
                   ),
                 ),
 
@@ -454,6 +467,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
 
             // Positioned widget for the scanner button
             Positioned(
+              key: keyImagePicker,
               bottom: ResponsiveUtils.getResponsiveSize(context, 0),
               right: ResponsiveUtils.getResponsiveSize(context, 16),
               child: GestureDetector(

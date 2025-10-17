@@ -1,0 +1,260 @@
+import 'package:flutter/material.dart';
+import 'package:komunika/utils/app_localization_translate.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:komunika/utils/colors.dart';
+import 'package:komunika/utils/responsive.dart';
+import 'package:komunika/utils/themes.dart';
+
+class SpeechToTextCard extends StatefulWidget {
+  final ThemeProvider themeProvider;
+
+  const SpeechToTextCard({super.key, required this.themeProvider});
+
+  @override
+  State<SpeechToTextCard> createState() => _SpeechToTextCardState();
+}
+
+class _SpeechToTextCardState extends State<SpeechToTextCard> {
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isEnabled = true;
+  bool _isCollapsed = true;
+  bool _isListening = false;
+  bool _isContinuous = false;
+  String _lastTranscription = "";
+  final TextEditingController contentController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _speech.stop();
+    contentController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      color: widget.themeProvider.themeData.cardColor,
+      margin: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.getResponsiveSize(context, 8),
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(
+          ResponsiveUtils.getResponsiveSize(context, 12),
+        ),
+      ),
+      child: Column(
+        children: [
+          if (_isEnabled)
+            AnimatedCrossFade(
+              firstChild: _buildCollapsedCard(),
+              secondChild: _buildExpandedCard(),
+              crossFadeState: !_isCollapsed
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 200),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCollapsedCard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            context.translate("sound_enhancer_transcription"),
+            style: TextStyle(
+              color: widget.themeProvider.themeData.textTheme.bodyMedium?.color,
+              fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.expand_more),
+            onPressed: () => setState(() => _isCollapsed = false),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpandedCard() {
+    Color micColor = Colors.grey;
+    if (_isListening && _isContinuous) {
+      micColor = Colors.blueAccent;
+    } else if (_isListening && !_isContinuous) {
+      micColor = Colors.redAccent;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                context.translate("sound_enhancer_transcription"),
+                style: TextStyle(
+                  color:
+                      widget.themeProvider.themeData.textTheme.bodyMedium?.color,
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.expand_less),
+                onPressed: () => setState(() => _isCollapsed = true),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.5,
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  controller: _scrollController,
+                  reverse: true,
+                  child: Text(
+                    contentController.text.isEmpty
+                        ? "Speak something..."
+                        : contentController.text,
+                    style: TextStyle(
+                      color: widget
+                          .themeProvider.themeData.textTheme.bodyMedium?.color,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 16),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    width: 35,
+                    height: 35,
+                    decoration: BoxDecoration(
+                      color: ColorsPalette.grey.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: IconButton(
+                      icon:
+                          const Icon(Icons.clear, size: 16, color: Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                          contentController.clear();
+                          _lastTranscription = "";
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // MIC BUTTON
+          GestureDetector(
+            onLongPressStart: (_) => _startHoldToTalk(),
+            onLongPressEnd: (_) => _stopHoldToTalk(),
+            child: FloatingActionButton(
+              backgroundColor: micColor,
+              onPressed: _toggleContinuousListening,
+              child: const Icon(Icons.mic, color: Colors.white),
+            ),
+          ),
+
+          const SizedBox(height: 6),
+          Text(
+            _isListening
+                ? (_isContinuous
+                    ? "🟦 Continuous Listening..."
+                    : "🟥 Hold-to-Talk Active...")
+                : "⚫ Tap for Continuous / Hold for Short Talk",
+            style: TextStyle(color: Colors.grey[300]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ---- LISTENING MODES ----
+  Future<void> _toggleContinuousListening() async {
+    _isContinuous = true;
+    if (_isListening) {
+      await _stopListening();
+    } else {
+      await _startListening();
+    }
+  }
+
+  Future<void> _startHoldToTalk() async {
+    _isContinuous = false;
+    if (_isListening && _isContinuous) {
+      await _stopListening();
+    }
+    await _startListening();
+  }
+
+  Future<void> _stopHoldToTalk() async {
+    await _stopListening();
+  }
+
+  /// ---- LISTENING CORE ----
+  Future<void> _startListening() async {
+    bool available = await _speech.initialize(
+      onStatus: (status) {
+        if (status == 'done' && _isContinuous && _isListening) {
+          _restartListening();
+        }
+      },
+      onError: (error) {
+        if (_isContinuous && _isListening) _restartListening();
+      },
+    );
+
+    if (available) {
+      setState(() => _isListening = true);
+
+      _speech.listen(
+        listenMode: stt.ListenMode.dictation,
+        partialResults: true,
+        cancelOnError: false,
+        onResult: (result) {
+          setState(() {
+            if (result.finalResult) {
+              _lastTranscription += "${result.recognizedWords}. ";
+              contentController.text = _lastTranscription;
+            } else {
+              contentController.text =
+                  "$_lastTranscription${result.recognizedWords}";
+            }
+
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_scrollController.hasClients) {
+                _scrollController.jumpTo(
+                  _scrollController.position.maxScrollExtent,
+                );
+              }
+            });
+          });
+        },
+      );
+    }
+  }
+
+  Future<void> _stopListening() async {
+    await _speech.stop();
+    setState(() => _isListening = false);
+  }
+
+  Future<void> _restartListening() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (_isListening) await _startListening();
+  }
+}

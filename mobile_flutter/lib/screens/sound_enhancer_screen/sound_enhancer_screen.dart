@@ -42,7 +42,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
     super.initState();
     _textController.clear();
     _initialize();
-    // PreferencesUtils.resetWalkthrough();
+    PreferencesUtils.resetWalkthrough();
     checkWalkthrough();
   }
 
@@ -57,7 +57,9 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
 
     if (!isDone) {
       _initTargets();
-      _showTutorial();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showTutorial();
+      });
     }
   }
 
@@ -251,29 +253,25 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
-
-            // 👇 Wrap visualization in a BlocBuilder to react to amplitude
             BlocBuilder<SoundEnhancerBloc, SoundEnhancerState>(
               builder: (context, state) {
                 List<double> bars = List.filled(20, 0.2);
                 bool isActive = false;
 
                 if (state is SoundEnhancerSpectrumState) {
-
                   bars = state.spectrum;
                   isActive = true;
                 }
 
                 return SoundVisualizationCard(
+                  key: keyVisualization,
                   themeProvider: themeProvider,
                   isActive: isActive,
                   barHeights: bars,
                 );
               },
             ),
-
             SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 16)),
-
             SoundAmplifierCard(
               key: keyAmplifier,
               themeProvider: themeProvider,
@@ -285,7 +283,6 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
                 });
               },
             ),
-
             if (_micMode != 0)
               SpeechToTextCard(
                 themeProvider: themeProvider,

@@ -14,6 +14,7 @@ class TextAreaCard extends StatefulWidget {
   final TextEditingController contentController;
   final VoidCallback? onClear;
   final String historyMode;
+  final String textFieldHint;
 
   const TextAreaCard({
     super.key,
@@ -23,6 +24,7 @@ class TextAreaCard extends StatefulWidget {
     required this.contentController,
     this.onClear,
     required this.historyMode,
+    required this.textFieldHint,
   });
 
   @override
@@ -35,7 +37,7 @@ class _TextAreaCardState extends State<TextAreaCard> {
   final int maxLines = 15;
   final bool showExpandButton = true;
   final FocusNode _focusNode = FocusNode();
-  static const int maxCharacters = 500;
+  static const int maxCharacters = 1000;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -99,7 +101,7 @@ class _TextAreaCardState extends State<TextAreaCard> {
                           ResponsiveUtils.getResponsiveFontSize(context, 20),
                     ),
                     decoration: InputDecoration(
-                      hintText: context.translate('tts_hint2'),
+                      hintText: widget.textFieldHint,
                       hintStyle: TextStyle(
                         color: Colors.grey,
                         fontSize:
@@ -307,7 +309,7 @@ class _TextAreaCardState extends State<TextAreaCard> {
                                 .themeProvider.themeData.textTheme.bodyMedium,
                             decoration: InputDecoration(
                               border: InputBorder.none,
-                              hintText: context.translate('tts_hint2'),
+                              hintText: widget.textFieldHint,
                               hintStyle: TextStyle(
                                 color: Colors.grey,
                                 fontSize: ResponsiveUtils.getResponsiveFontSize(

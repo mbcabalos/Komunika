@@ -52,6 +52,7 @@
   "tts_title": "Teksto sa Boses",
   "tts_hint1": "Pamagat",
   "tts_hint2": "Mag-type ng Anuman...",
+  "tts_hint_empty": "Walang laman ang Text Field.",
   "tts_image_processing_title": "Pagproseso ng Imahe",
   "tts_select_source": "Pumili ng Pinagmulan ng Imahe",
   "tts_camera": "Kunan ng Larawan",

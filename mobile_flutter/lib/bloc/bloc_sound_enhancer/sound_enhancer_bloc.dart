@@ -282,12 +282,11 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       StopRecordingEvent event, Emitter<SoundEnhancerState> emit) async {
     try {
       // ✅ Stop Android background service
-      // await SoundEnhancerService.stopService();
       await NativeAudioRecorder.stop();
       await _player.stopPlayer();
       await _audioStreamController?.close();
       recording = false;
-      await platform.invokeMethod('startService');
+      await platform.invokeMethod('stopService');
 
       // Emit zero bars to reset visualizer
       emit(SoundEnhancerSpectrumState(List.filled(20, 0.0)));
