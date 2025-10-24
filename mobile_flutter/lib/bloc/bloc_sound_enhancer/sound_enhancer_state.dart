@@ -40,9 +40,10 @@ class SoundEnhancerErrorState extends SoundEnhancerState {
 
 class SoundEnhancerSpectrumState extends SoundEnhancerState {
   final List<double> spectrum;
+  final double decibel;
 
-  SoundEnhancerSpectrumState(this.spectrum);
+  SoundEnhancerSpectrumState(this.spectrum, {required this.decibel});
 
   @override
-  List<Object?> get props => [spectrum];
+  List<Object?> get props => [spectrum, decibel];
 }

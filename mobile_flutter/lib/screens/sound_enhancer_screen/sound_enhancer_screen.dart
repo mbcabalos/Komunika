@@ -5,6 +5,7 @@ import 'package:komunika/screens/history_screen/history_screen.dart';
 import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:komunika/widgets/global_widgets/app_bar.dart';
+import 'package:komunika/widgets/sound_enhancer_widgets/noise_meter_card.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_visualization_card.dart';
 import 'package:komunika/widgets/sound_enhancer_widgets/sound_amplifier_card.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
@@ -29,6 +30,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
   final TextEditingController _textController = TextEditingController();
   GlobalKey keyAmplifier = GlobalKey();
   GlobalKey keyVisualization = GlobalKey();
+  GlobalKey keyNoisemeter = GlobalKey();
   GlobalKey keySpeechToText = GlobalKey();
 
   List<TargetFocus> targets = [];
@@ -42,7 +44,7 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
     super.initState();
     _textController.clear();
     _initialize();
-    // PreferencesUtils.resetWalkthrough();
+    PreferencesUtils.resetWalkthrough();
     checkWalkthrough();
   }
 
@@ -57,7 +59,9 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
 
     if (!isDone) {
       _initTargets();
-      _showTutorial();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showTutorial();
+      });
     }
   }
 
@@ -85,6 +89,38 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
                 SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
                 Text(
                   "(FILIPINO) Ito ay nagpapakita ng tunog.",
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 16)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Noise Meter",
+        keyTarget: keyNoisemeter,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "(ENGLISH) This card shows the noise level.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  ),
+                ),
+                SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
+                Text(
+                  "(FILIPINO) Ito ay nagpapakita ng antas ng ingay.",
                   style: TextStyle(
                       color: Colors.white70,
                       fontSize:
@@ -251,29 +287,44 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 8)),
-
-            // 👇 Wrap visualization in a BlocBuilder to react to amplitude
             BlocBuilder<SoundEnhancerBloc, SoundEnhancerState>(
               builder: (context, state) {
                 List<double> bars = List.filled(20, 0.2);
+                double db = 90;
                 bool isActive = false;
 
                 if (state is SoundEnhancerSpectrumState) {
-
                   bars = state.spectrum;
+                  db = state.decibel;
                   isActive = true;
+                  print("DB from state: $db");
                 }
 
-                return SoundVisualizationCard(
-                  themeProvider: themeProvider,
-                  isActive: isActive,
-                  barHeights: bars,
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Sound bars visualizer
+                    SoundVisualizationCard(
+                      key: keyVisualization,
+                      themeProvider: themeProvider,
+                      isActive: isActive,
+                      barHeights: bars,
+                    ),
+
+                    SizedBox(
+                        height: ResponsiveUtils.getResponsiveSize(context, 16)),
+
+                    // Noise meterR
+                    NoiseMeterWidget(
+                      key: keyNoisemeter,
+                      db: db,
+                      isActive: isActive,
+                    ),
+                  ],
                 );
               },
             ),
-
             SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 16)),
-
             SoundAmplifierCard(
               key: keyAmplifier,
               themeProvider: themeProvider,
@@ -285,7 +336,6 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
                 });
               },
             ),
-
             if (_micMode != 0)
               SpeechToTextCard(
                 themeProvider: themeProvider,

@@ -75,6 +75,7 @@ class SoundFrequencyBarsChangedEvent extends SoundEnhancerEvent {
 
 class SoundBarsUpdatedEvent extends SoundEnhancerEvent {
   final List<double> spectrum;
-  SoundBarsUpdatedEvent(this.spectrum);
-}
+  final double decibel;
 
+  SoundBarsUpdatedEvent(this.spectrum, {required this.decibel});
+}

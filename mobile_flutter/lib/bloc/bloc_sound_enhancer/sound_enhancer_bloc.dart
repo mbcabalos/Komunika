@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -7,12 +8,15 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sound/flutter_sound.dart';
-import 'package:komunika/services/live-service-handler/fft_helper.dart';
+import 'package:komunika/services/audio-service-handler/fft_helper.dart';
+import 'package:komunika/services/audio-service-handler/native_audio_recorder.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
-import 'package:komunika/services/live-service-handler/speexdsp_helper.dart';
+import 'package:komunika/services/audio-service-handler/speexdsp_helper.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:komunika/services/live-service-handler/native_audio_recorder.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:path_provider/path_provider.dart';
 
 part 'sound_enhancer_event.dart';
 part 'sound_enhancer_state.dart';
@@ -21,7 +25,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   final FlutterSoundPlayer _player = FlutterSoundPlayer();
   StreamController<Uint8List>? _audioStreamController;
-  final StreamController<String> _transcriptionController =
+  StreamController<String> _transcriptionController =
       StreamController<String>();
   final SocketService socketService;
   SpeexDSP? _denoiser;
@@ -32,8 +36,9 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   bool _enableDenoise = false;
   double _currentGain = 1.0;
   double _balance = 0.5;
+  double _smoothedDb = -90.0;
+  double micCalibration = 60.0; // adjust per device
   List<int> _monitorBuffer = [];
-
   SoundEnhancerBloc(this.socketService, SpeexDSP speexDenoiser)
       : super(SoundEnhancerLoadingState()) {
     // Event handlers
@@ -53,8 +58,12 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     on<LivePreviewTranscriptionEvent>(_onLivePreview);
     on<ClearTextEvent>(_onClearText);
     on<SoundBarsUpdatedEvent>((event, emit) {
-      emit(SoundEnhancerSpectrumState(event.spectrum));
+      emit(SoundEnhancerSpectrumState(
+        event.spectrum,
+        decibel: event.decibel,
+      ));
     });
+
     // Initializations
     _denoiser = SpeexDSP();
     _loadNoiseReductionPref();
@@ -62,6 +71,9 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   }
 
   void _setupSocketListeners() {
+    socketService.socket?.off("transcription_result");
+    socketService.socket?.off("transcription_preview");
+
     socketService.socket?.on("transcription_result", (data) {
       if (data != null && data["text"] != null) {
         _transcriptionController.add(data["text"]);
@@ -110,25 +122,19 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
         numChannels: 2,
       );
 
-      NativeAudioRecorder.audioStream.listen(
-        (Uint8List buffer) {
-          // ---- Local monitor path (toggleable) ----
-          if (_denoiser == null) return;
-
-          final processedBytes = _processAudioChunk(buffer);
-          final stereoBytes = _convertToStereo(processedBytes);
-          _player.foodSink?.add(FoodData(stereoBytes));
-          print("PCM bytes length recorder: ${buffer.length}");
-
-          _updateSpectrum(processedBytes);
-
-          _handleAudioChunk(buffer);
-        },
-        onError: (e) {
-          developer.log("Native audio stream error: $e");
-          emit(SoundEnhancerErrorState(message: "Native stream error: $e"));
-        },
-      );
+      NativeAudioRecorder.audioStream.listen((Uint8List buffer) {
+        if (_denoiser == null) return;
+        final pcm = Int16List.view(buffer.buffer);
+        // 5️⃣ Update spectrum / processed audio
+        final processedBytes = _processAudioChunk(buffer);
+        final stereoBytes = _convertToStereo(processedBytes);
+        _player.foodSink?.add(FoodData(stereoBytes));
+        _handleAudioChunk(buffer);
+        _updateAudio(
+          processedBuffer: processedBytes,
+          rawBuffer: buffer, // pass PCM16 for any additional processing
+        );
+      });
       await platform.invokeMethod('startService');
 
       recording = true;
@@ -140,12 +146,75 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
 
   // --- Audio Processing Methods ---
 
-  void _updateSpectrum(Uint8List pcmBytes) {
+  void _updateAudio({
+    required Uint8List processedBuffer, // For spectrum visualization
+    required Uint8List rawBuffer, // For noise meter
+  }) {
     try {
-      if (pcmBytes.isEmpty) return;
+      // --- Spectrum ---
+      final barHeights = _updateSpectrum(processedBuffer);
+
+      // --- Noise level in dB ---
+      double db = computeDbSpl(rawBuffer);
+      _smoothedDb = db;
+
+      // --- Map to 0..1 for visualization ---
+      double level = normalizeRms(db);
+
+      // --- Emit event ---
+      print("Normalized DB: $level");
+      add(SoundBarsUpdatedEvent(barHeights, decibel: db));
+    } catch (e) {
+      developer.log("Audio processing error: $e");
+    }
+  }
+
+  double computeDbSpl(Uint8List rawBytes, {double micCalibration = 0.0}) {
+    final samples = Int16List.view(rawBytes.buffer);
+    if (samples.isEmpty) return 0.0;
+
+    // 🟢 Separate channels (interleaved stereo -> mono)
+    final mono = <double>[];
+    for (int i = 0; i < samples.length; i += 2) {
+      // Average left/right to mono
+      mono.add((samples[i] + samples[i + 1]) / 2.0);
+    }
+
+    // ✅ Remove DC bias
+    final mean = mono.reduce((a, b) => a + b) / mono.length;
+    final adjusted = mono.map((s) => s - mean).toList();
+
+    // 1️⃣ RMS
+    double sumSquares = 0.0;
+    for (var s in adjusted) {
+      sumSquares += s * s;
+    }
+    final rms = sqrt(sumSquares / adjusted.length);
+
+    // 2️⃣ Normalize to [-1,1]
+    final normRms = rms / 32768.0;
+
+    // 3️⃣ Convert to dB SPL (ref = 20 µPa)
+    final db = 20 * log(normRms / 0.00002) / ln10 + micCalibration;
+
+    return db.clamp(0.0, 120.0);
+  }
+
+  double normalizeRms(double rms) {
+    const minRms = 0.25;
+    const maxRms = 1.0;
+    final normalized = (rms - minRms) / (maxRms - minRms);
+    return normalized.clamp(0.0, 1.0);
+  }
+
+  /// Computes spectrum bars from processed PCM
+  List<double> _updateSpectrum(Uint8List pcmBytes) {
+    try {
+      if (pcmBytes.isEmpty) return List.filled(20, 0.0);
+
       List<double> samples = pcmToDouble(pcmBytes);
 
-      // Ensure we have at least fftSize samples (zero-pad if needed)
+      // Ensure we have at least fftSize samples
       int fftSize = 1024;
       if (samples.length < fftSize) {
         samples = List<double>.from(samples)
@@ -156,9 +225,10 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       List<double> spectrum = computeFFT(fftInput);
 
       final barHeights = mapSpectrumToBars(spectrum, 20);
-      add(SoundBarsUpdatedEvent(barHeights));
+      return barHeights;
     } catch (e) {
       developer.log("FFT computation error: $e");
+      return List.filled(20, 0.0);
     }
   }
 
@@ -282,15 +352,17 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       StopRecordingEvent event, Emitter<SoundEnhancerState> emit) async {
     try {
       // ✅ Stop Android background service
-      // await SoundEnhancerService.stopService();
       await NativeAudioRecorder.stop();
       await _player.stopPlayer();
       await _audioStreamController?.close();
       recording = false;
-      await platform.invokeMethod('startService');
+      await platform.invokeMethod('stopService');
 
       // Emit zero bars to reset visualizer
-      emit(SoundEnhancerSpectrumState(List.filled(20, 0.0)));
+      emit(SoundEnhancerSpectrumState(
+        List.filled(20, 0.0),
+        decibel: 90,
+      ));
     } catch (e) {
       emit(SoundEnhancerErrorState(message: "Stopping failed: $e"));
     }
@@ -362,44 +434,160 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
 
   // --- Helper Methods ---
 
+  // void _handleAudioChunk(Uint8List buffer) async {
+  //   try {
+  //     if (!_transcribing) return;
+
+  //     // Ensure socket is initialized
+  //     if (!socketService.isSocketInitialized) {
+  //       developer.log("WebSocket not connected, attempting reconnect...");
+  //       await socketService.reconnect();
+  //     }
+
+  //     if (socketService.isSocketInitialized) {
+  //       // ✅ Send audio chunk
+  //       socketService.sendAudio(buffer);
+  //     } else {
+  //       developer.log(
+  //           "WebSocket not connected after reconnect, audio chunk dropped.");
+  //     }
+  //   } catch (e) {
+  //     developer.log("Error handling audio chunk: $e");
+  //   }
+  // }
+  List<int> _chunkBuffer = [];
+
+  // Prevent concurrent uploads causing duplicate POSTs
+  bool _isUploading = false;
+
   void _handleAudioChunk(Uint8List buffer) async {
-    try {
-      if (!_transcribing) return;
+    if (!_transcribing) return;
 
-      // Ensure socket is initialized
-      if (!socketService.isSocketInitialized) {
-        developer.log("WebSocket not connected, attempting reconnect...");
-        await socketService.reconnect();
+    // accumulate incoming pcm
+    _chunkBuffer.addAll(buffer);
+
+    // send when we have ~5 seconds (mono 16k,16-bit)
+    const int threshold = 16000 * 2 * 5;
+    if (_chunkBuffer.length >= threshold && !_isUploading) {
+      _isUploading = true;
+
+      // Snapshot buffer and clear quickly to avoid races
+      final snapshot = Uint8List.fromList(_chunkBuffer);
+      _chunkBuffer.clear();
+
+      // Fire-and-wait upload (no concurrent uploads)
+      try {
+        await _sendBufferedAudioFromPcm(snapshot);
+      } catch (e, st) {
+        developer.log("Upload failed: $e\n$st");
+      } finally {
+        // small cooldown to avoid immediate retrigger from remaining events
+        await Future.delayed(Duration(milliseconds: 200));
+        _isUploading = false;
       }
+    }
+  }
 
-      if (socketService.isSocketInitialized) {
-        // ✅ Send audio chunk
-        socketService.sendAudio(buffer);
-      } else {
+  // New API: upload provided PCM snapshot (atomic from caller)
+  Future<void> _sendBufferedAudioFromPcm(Uint8List pcm) async {
+    try {
+      if (pcm.isEmpty) return;
+
+      // minimum length for Whisper / avoid "audio too short" errors
+      const minBytes = 16000 * 2 ~/ 10; // ~0.1s
+      if (pcm.length < minBytes) {
         developer.log(
-            "WebSocket not connected after reconnect, audio chunk dropped.");
+            "Provided PCM too short (${pcm.length} bytes), skipping upload.");
+        return;
       }
-    } catch (e) {
-      developer.log("Error handling audio chunk: $e");
+
+      final wavBytes =
+          _pcm16ToWav(pcm, sampleRate: 16000, channels: 1, bytesPerSample: 2);
+
+      // debug: write out a WAV file to inspect (remove in production)
+      try {
+        final tempDir = await getTemporaryDirectory();
+        final ts = DateTime.now().millisecondsSinceEpoch;
+        final path = '${tempDir.path}/komunika_chunk_$ts.wav';
+        final f = File(path);
+        await f.writeAsBytes(wavBytes, flush: true);
+        developer
+            .log('WAV written for inspection: $path  size=${wavBytes.length}');
+      } catch (_) {}
+
+      final uri = Uri.parse("http://192.168.1.133:5000/transcribe");
+      final request = http.MultipartRequest('POST', uri);
+      request.files.add(http.MultipartFile.fromBytes(
+        'audio',
+        wavBytes,
+        filename: 'audio.wav',
+        contentType: MediaType('audio', 'wav'),
+      ));
+
+      final streamed = await request.send().timeout(Duration(seconds: 90));
+      final resp = await http.Response.fromStream(streamed);
+      developer.log('Whisper server HTTP ${resp.statusCode}');
+      if (resp.statusCode == 200) {
+        final decoded = jsonDecode(resp.body);
+        developer.log('Whisper response: ${resp.body}');
+        if (decoded["text"] != null && decoded["text"].isNotEmpty) {
+          add(NewTranscriptionEvent(decoded["text"]));
+        }
+      } else {
+        developer
+            .log("Whisper server returned ${resp.statusCode}: ${resp.body}");
+      }
+    } catch (e, st) {
+      developer.log("Buffered Whisper upload failed: $e\n$st");
+      rethrow;
     }
   }
 
-  Future<void> sendAudioToBackend(File audioFile) async {
-    try {
-      List<int> audioBytes = await audioFile.readAsBytes();
-      socketService.sendAudioFile(Uint8List.fromList(audioBytes));
-      await audioFile.delete();
-      developer.log("Audio sent to backend");
-    } catch (e) {
-      developer.log("Error sending audio to backend: $e");
+  // helper: build WAV RIFF header + pcm data (16-bit little-endian)
+  Uint8List _pcm16ToWav(Uint8List pcmBytes,
+      {required int sampleRate,
+      required int channels,
+      required int bytesPerSample}) {
+    final int byteRate = sampleRate * channels * bytesPerSample;
+    final int blockAlign = channels * bytesPerSample;
+    final int subchunk2Size = pcmBytes.length;
+    final int chunkSize = 36 + subchunk2Size;
+
+    final out = BytesBuilder();
+
+    // RIFF header
+    out.add(ascii.encode('RIFF'));
+    out.add(_intToBytesLE(chunkSize, 4));
+    out.add(ascii.encode('WAVE'));
+
+    // fmt subchunk
+    out.add(ascii.encode('fmt '));
+    out.add(_intToBytesLE(16, 4)); // subchunk1 size
+    out.add(_intToBytesLE(1, 2)); // PCM format
+    out.add(_intToBytesLE(channels, 2));
+    out.add(_intToBytesLE(sampleRate, 4));
+    out.add(_intToBytesLE(byteRate, 4));
+    out.add(_intToBytesLE(blockAlign, 2));
+    out.add(_intToBytesLE(bytesPerSample * 8, 2)); // bitsPerSample
+
+    // data subchunk
+    out.add(ascii.encode('data'));
+    out.add(_intToBytesLE(subchunk2Size, 4));
+    out.add(pcmBytes);
+
+    return out.toBytes();
+  }
+
+  List<int> _intToBytesLE(int value, int byteCount) {
+    final bytes = <int>[];
+    for (int i = 0; i < byteCount; i++) {
+      bytes.add((value >> (8 * i)) & 0xFF);
     }
+    return bytes;
   }
 
-  void _startNewStream() {
-    _audioStreamController?.close();
-    _audioStreamController = StreamController<Uint8List>.broadcast();
-  }
-
+  // Remove any PreferencesUtils.getWhisperServerUrl usage — fixed URL above
+  // ...existing code...
   @override
   Future<void> close() async {
     await _recorder.closeRecorder();
@@ -422,6 +610,19 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   }
 
   void _onClearText(ClearTextEvent event, Emitter<SoundEnhancerState> emit) {
+    socketService.socket?.off("transcription_result");
+    socketService.socket?.off("transcription_preview");
+
+    try {
+      _transcriptionController.close();
+    } catch (e) {
+      developer.log("Error closing transcription controller: $e");
+    }
+
+    _transcriptionController = StreamController<String>.broadcast();
+
+    _setupSocketListeners();
+
     emit(TranscriptionUpdatedState(""));
   }
 }
