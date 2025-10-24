@@ -7,7 +7,7 @@ import 'package:komunika/screens/sound_enhancer_screen/sound_enhancer_screen.dar
 import 'package:komunika/screens/text_to_speech_screen/tts_screen.dart';
 import 'package:komunika/services/api/global_repository_impl.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
-import 'package:komunika/services/live-service-handler/speexdsp_helper.dart';
+import 'package:komunika/services/audio-service-handler/speexdsp_helper.dart';
 import 'package:komunika/services/repositories/database_helper.dart';
 import 'package:komunika/utils/themes.dart';
 

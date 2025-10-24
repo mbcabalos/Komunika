@@ -8,12 +8,12 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sound/flutter_sound.dart';
-import 'package:komunika/services/live-service-handler/fft_helper.dart';
+import 'package:komunika/services/audio-service-handler/fft_helper.dart';
+import 'package:komunika/services/audio-service-handler/native_audio_recorder.dart';
 import 'package:komunika/services/live-service-handler/socket_service.dart';
-import 'package:komunika/services/live-service-handler/speexdsp_helper.dart';
+import 'package:komunika/services/audio-service-handler/speexdsp_helper.dart';
 import 'package:komunika/utils/shared_prefs.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:komunika/services/live-service-handler/native_audio_recorder.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:path_provider/path_provider.dart';
@@ -36,8 +36,9 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
   bool _enableDenoise = false;
   double _currentGain = 1.0;
   double _balance = 0.5;
+  double _smoothedDb = -90.0;
+  double micCalibration = 60.0; // adjust per device
   List<int> _monitorBuffer = [];
-
   SoundEnhancerBloc(this.socketService, SpeexDSP speexDenoiser)
       : super(SoundEnhancerLoadingState()) {
     // Event handlers
@@ -57,8 +58,12 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     on<LivePreviewTranscriptionEvent>(_onLivePreview);
     on<ClearTextEvent>(_onClearText);
     on<SoundBarsUpdatedEvent>((event, emit) {
-      emit(SoundEnhancerSpectrumState(event.spectrum));
+      emit(SoundEnhancerSpectrumState(
+        event.spectrum,
+        decibel: event.decibel,
+      ));
     });
+
     // Initializations
     _denoiser = SpeexDSP();
     _loadNoiseReductionPref();
@@ -117,25 +122,19 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
         numChannels: 2,
       );
 
-      NativeAudioRecorder.audioStream.listen(
-        (Uint8List buffer) {
-          // ---- Local monitor path (toggleable) ----
-          if (_denoiser == null) return;
-
-          final processedBytes = _processAudioChunk(buffer);
-          final stereoBytes = _convertToStereo(processedBytes);
-          _player.foodSink?.add(FoodData(stereoBytes));
-          print("PCM bytes length recorder: ${buffer.length}");
-
-          _updateSpectrum(processedBytes);
-
-          _handleAudioChunk(processedBytes);
-        },
-        onError: (e) {
-          developer.log("Native audio stream error: $e");
-          emit(SoundEnhancerErrorState(message: "Native stream error: $e"));
-        },
-      );
+      NativeAudioRecorder.audioStream.listen((Uint8List buffer) {
+        if (_denoiser == null) return;
+        final pcm = Int16List.view(buffer.buffer);
+        // 5️⃣ Update spectrum / processed audio
+        final processedBytes = _processAudioChunk(buffer);
+        final stereoBytes = _convertToStereo(processedBytes);
+        _player.foodSink?.add(FoodData(stereoBytes));
+        _handleAudioChunk(buffer);
+        _updateAudio(
+          processedBuffer: processedBytes,
+          rawBuffer: buffer, // pass PCM16 for any additional processing
+        );
+      });
       await platform.invokeMethod('startService');
 
       recording = true;
@@ -147,12 +146,75 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
 
   // --- Audio Processing Methods ---
 
-  void _updateSpectrum(Uint8List pcmBytes) {
+  void _updateAudio({
+    required Uint8List processedBuffer, // For spectrum visualization
+    required Uint8List rawBuffer, // For noise meter
+  }) {
     try {
-      if (pcmBytes.isEmpty) return;
+      // --- Spectrum ---
+      final barHeights = _updateSpectrum(processedBuffer);
+
+      // --- Noise level in dB ---
+      double db = computeDbSpl(rawBuffer);
+      _smoothedDb = db;
+
+      // --- Map to 0..1 for visualization ---
+      double level = normalizeRms(db);
+
+      // --- Emit event ---
+      print("Normalized DB: $level");
+      add(SoundBarsUpdatedEvent(barHeights, decibel: db));
+    } catch (e) {
+      developer.log("Audio processing error: $e");
+    }
+  }
+
+  double computeDbSpl(Uint8List rawBytes, {double micCalibration = 0.0}) {
+    final samples = Int16List.view(rawBytes.buffer);
+    if (samples.isEmpty) return 0.0;
+
+    // 🟢 Separate channels (interleaved stereo -> mono)
+    final mono = <double>[];
+    for (int i = 0; i < samples.length; i += 2) {
+      // Average left/right to mono
+      mono.add((samples[i] + samples[i + 1]) / 2.0);
+    }
+
+    // ✅ Remove DC bias
+    final mean = mono.reduce((a, b) => a + b) / mono.length;
+    final adjusted = mono.map((s) => s - mean).toList();
+
+    // 1️⃣ RMS
+    double sumSquares = 0.0;
+    for (var s in adjusted) {
+      sumSquares += s * s;
+    }
+    final rms = sqrt(sumSquares / adjusted.length);
+
+    // 2️⃣ Normalize to [-1,1]
+    final normRms = rms / 32768.0;
+
+    // 3️⃣ Convert to dB SPL (ref = 20 µPa)
+    final db = 20 * log(normRms / 0.00002) / ln10 + micCalibration;
+
+    return db.clamp(0.0, 120.0);
+  }
+
+  double normalizeRms(double rms) {
+    const minRms = 0.25;
+    const maxRms = 1.0;
+    final normalized = (rms - minRms) / (maxRms - minRms);
+    return normalized.clamp(0.0, 1.0);
+  }
+
+  /// Computes spectrum bars from processed PCM
+  List<double> _updateSpectrum(Uint8List pcmBytes) {
+    try {
+      if (pcmBytes.isEmpty) return List.filled(20, 0.0);
+
       List<double> samples = pcmToDouble(pcmBytes);
 
-      // Ensure we have at least fftSize samples (zero-pad if needed)
+      // Ensure we have at least fftSize samples
       int fftSize = 1024;
       if (samples.length < fftSize) {
         samples = List<double>.from(samples)
@@ -163,9 +225,10 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       List<double> spectrum = computeFFT(fftInput);
 
       final barHeights = mapSpectrumToBars(spectrum, 20);
-      add(SoundBarsUpdatedEvent(barHeights));
+      return barHeights;
     } catch (e) {
       developer.log("FFT computation error: $e");
+      return List.filled(20, 0.0);
     }
   }
 
@@ -296,7 +359,10 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       await platform.invokeMethod('stopService');
 
       // Emit zero bars to reset visualizer
-      emit(SoundEnhancerSpectrumState(List.filled(20, 0.0)));
+      emit(SoundEnhancerSpectrumState(
+        List.filled(20, 0.0),
+        decibel: 90,
+      ));
     } catch (e) {
       emit(SoundEnhancerErrorState(message: "Stopping failed: $e"));
     }
