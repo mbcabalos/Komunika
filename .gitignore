@@ -12,4 +12,5 @@ mobile_flutter\lib\services\endpoint.dart
 backend_python/311venvB/
 backend_python/311venvMain/
 *.pyc
+backend_python/.env
 
