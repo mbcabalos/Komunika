@@ -31,6 +31,7 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard>
   double _audioBalanceLevel = 0.5;
   bool isNoiseSupressorActive = false;
   bool isAGCActive = false;
+  bool isVADActive = false;
   bool _isHeadsetConnected = false;
   final _headsetEvent = HeadsetEvent();
   HeadsetState? _headsetState;
@@ -131,12 +132,18 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard>
         PreferencesUtils.getNoiseReductionEnabled(),
         PreferencesUtils.getAGCEnabled(),
         PreferencesUtils.getAmplifierVolume(),
+        PreferencesUtils.getVADEnabled(),
       ]);
       if (mounted) {
         setState(() {
           isNoiseSupressorActive = prefs[0] as bool;
           isAGCActive = prefs[1] as bool;
           _amplifierVolumeLevel = prefs[2] as double;
+          if (isNoiseSupressorActive) {
+            isVADActive = prefs[3] as bool;
+          } else {
+            isVADActive = false;
+          }
         });
       }
       widget.soundEnhancerBloc.add(
@@ -314,6 +321,10 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard>
                     onChanged: (bool enabled) {
                       setState(() {
                         isNoiseSupressorActive = enabled;
+                        if (!enabled) {
+                          isVADActive = false;
+                          widget.soundEnhancerBloc.add(StopVADEvent());
+                        }
                       });
                       if (enabled) {
                         widget.soundEnhancerBloc
@@ -324,8 +335,30 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard>
                     },
                   ),
 
+                  const SizedBox(height: 12),
+                  Opacity(
+                    opacity: isNoiseSupressorActive ? 1.0 : 0.5,
+                    child: IgnorePointer(
+                      ignoring: !isNoiseSupressorActive,
+                      child: buildSwitchRow(
+                        context.translate("Voice Activity Detection"),
+                        isVADActive,
+                        onChanged: (bool enabled) {
+                          setState(() {
+                            isVADActive = enabled;
+                          });
+
+                          if (enabled) {
+                            widget.soundEnhancerBloc.add(StartVADEvent());
+                          } else {
+                            widget.soundEnhancerBloc.add(StopVADEvent());
+                          }
+                        },
+                      ),
+                    ),
+                  ),
                   // AGC Toggle
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   buildSwitchRow(
                     context.translate("AGC (Automatic Gain Control)"),
                     isAGCActive,

@@ -45,6 +45,10 @@ class StartAGCEvent extends SoundEnhancerEvent {}
 
 class StopAGCEvent extends SoundEnhancerEvent {}
 
+class StartVADEvent extends SoundEnhancerEvent {}
+
+class StopVADEvent extends SoundEnhancerEvent {}
+
 class SetAmplificationEvent extends SoundEnhancerEvent {
   final double gain;
   SetAmplificationEvent(this.gain);

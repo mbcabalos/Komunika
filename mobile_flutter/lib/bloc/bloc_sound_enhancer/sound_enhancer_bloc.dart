@@ -52,6 +52,8 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     on<SetAudioBalanceLevel>(_onSetAudioBalance);
     on<StartNoiseSupressorEvent>(_onStartNoiseSupressor);
     on<StopNoiseSupressorEvent>(_onStopNoiseSupressor);
+    on<StartVADEvent>(_onStartVAD);
+    on<StopVADEvent>(_onStopVAD);
     on<StartAGCEvent>(_onStartAGC);
     on<StopAGCEvent>(_onStopAGC);
     on<NewTranscriptionEvent>(_onNewTranscription);
@@ -416,6 +418,20 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     _denoiser?.disableNoiseSuppress();
   }
 
+  Future<void> _onStartVAD(
+      StartVADEvent event, Emitter<SoundEnhancerState> emit) async {
+    _enableDenoise = true;
+    await PreferencesUtils.storeVADEnabled(true);
+    _denoiser?.enableVad();
+  }
+
+  Future<void> _onStopVAD(
+      StopVADEvent event, Emitter<SoundEnhancerState> emit) async {
+    _enableDenoise = false;
+    await PreferencesUtils.storeVADEnabled(false);
+    _denoiser?.disableVad();
+  }
+
   Future<void> _onStartAGC(
       StartAGCEvent event, Emitter<SoundEnhancerState> emit) async {
     await PreferencesUtils.storeAGCEnabled(true);
@@ -432,29 +448,6 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
     _enableDenoise = await PreferencesUtils.getNoiseReductionEnabled();
   }
 
-  // --- Helper Methods ---
-
-  // void _handleAudioChunk(Uint8List buffer) async {
-  //   try {
-  //     if (!_transcribing) return;
-
-  //     // Ensure socket is initialized
-  //     if (!socketService.isSocketInitialized) {
-  //       developer.log("WebSocket not connected, attempting reconnect...");
-  //       await socketService.reconnect();
-  //     }
-
-  //     if (socketService.isSocketInitialized) {
-  //       // ✅ Send audio chunk
-  //       socketService.sendAudio(buffer);
-  //     } else {
-  //       developer.log(
-  //           "WebSocket not connected after reconnect, audio chunk dropped.");
-  //     }
-  //   } catch (e) {
-  //     developer.log("Error handling audio chunk: $e");
-  //   }
-  // }
   List<int> _chunkBuffer = [];
 
   // Prevent concurrent uploads causing duplicate POSTs
@@ -515,7 +508,8 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
             .log('WAV written for inspection: $path  size=${wavBytes.length}');
       } catch (_) {}
 
-      final uri = Uri.parse("http://192.168.1.133:5000/transcribe");
+      final uri = Uri.parse(
+          "https://isomerically-concludable-iva.ngrok-free.dev/transcribe");
       final request = http.MultipartRequest('POST', uri);
       request.files.add(http.MultipartFile.fromBytes(
         'audio',
