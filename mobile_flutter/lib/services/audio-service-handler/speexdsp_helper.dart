@@ -30,8 +30,8 @@ class SpeexDSP {
     _setCtlInt(SPEEX_PREPROCESS_SET_AGC, 0);
     _setCtlFloat(SPEEX_PREPROCESS_SET_AGC_LEVEL, agcLevel);
     _setCtlInt(SPEEX_PREPROCESS_SET_VAD, 0);
-    _setCtlFloat(SPEEX_PREPROCESS_SET_PROB_START, 1.0);
-    _setCtlFloat(SPEEX_PREPROCESS_SET_PROB_CONTINUE, 1.0);
+    _setCtlFloat(SPEEX_PREPROCESS_SET_PROB_START, 0.7);
+    _setCtlFloat(SPEEX_PREPROCESS_SET_PROB_CONTINUE, 0.7);
   }
 
   // -------------------- Feature Toggles --------------------
@@ -97,15 +97,29 @@ class SpeexDSP {
     // ✅ Only enable VAD if Denoise is ON
     final effectiveVad = applyVad && applyDenoise;
 
+    // 🟦 Debug info
+    print(
+        "[DSP] Processing frame | AGC: $applyAgc | Denoise: $applyDenoise | VAD: $applyVad (Effective: $effectiveVad)");
+
     _setCtlInt(SPEEX_PREPROCESS_SET_AGC, applyAgc ? 1 : 0);
     _setCtlInt(SPEEX_PREPROCESS_SET_DENOISE, applyDenoise ? 1 : 0);
     _setCtlInt(SPEEX_PREPROCESS_SET_VAD, effectiveVad ? 1 : 0);
 
+    // 🔹 Run preprocessor
     final vadFlag = speexPreprocessRun(_state, ptr);
     final isSpeech = vadFlag != 0;
 
+    if (effectiveVad) {
+      if (isSpeech) {
+        print("[DSP][VAD] Speech detected ✅");
+      } else {
+        print("[DSP][VAD] No speech detected — frame muted ❌");
+      }
+    } else if (applyVad && !applyDenoise) {
+      print("[DSP][VAD] Skipped — Denoise is OFF (VAD requires it)");
+    }
+
     if (effectiveVad && !isSpeech) {
-      print("[DSP][VAD] Muted non-speech frame");
       calloc.free(ptr);
       return List<int>.filled(frameSize, 0);
     }
@@ -123,15 +137,8 @@ class SpeexDSP {
 
   // -------------------- VAD Check --------------------
   bool isSpeechFrame(List<int> frame) {
-    if (!_noiseSuppressEnabled) {
-      print("[DSP][VAD] Skipped — noise suppression is OFF");
-      return true; // treat as always speech
-    }
-
-    if (!_vadEnabled) {
-      print("[DSP][VAD] Skipped — VAD not enabled");
-      return true;
-    }
+    if (!_noiseSuppressEnabled) return true;
+    if (!_vadEnabled) return true;
 
     if (frame.length != frameSize) {
       throw ArgumentError("Expected $frameSize samples");

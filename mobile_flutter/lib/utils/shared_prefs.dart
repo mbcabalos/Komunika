@@ -88,6 +88,16 @@ class PreferencesUtils {
     return prefs.getBool("isNoiseReductionEnabled") ?? false;
   }
 
+  static Future<void> storeVADEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("isVADEnabled", enabled);
+  }
+
+  static Future<bool> getVADEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool("isVADEnabled") ?? false;
+  }
+
   static Future<void> storeAGCEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool("isAGCEnabled", enabled);
