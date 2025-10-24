@@ -46,10 +46,15 @@
   "sound_enhancer_transcription": "Transcription",
   "sound_enhancer_transcription_hint": "Message...",
   "sound_enhancer_transcription_translated_text": "Translated Text",
+  "server_not_connected": "Server Not Connected",
+  "server_not_connected_message": "Unable to connect to transcription server. Please check your internet connection and try again.",
+  "reconnect": "Reconnect",
+
 
   "tts_title": "Text to Speech",
   "tts_hint1": "Title",
   "tts_hint2": "Type here...",
+  "tts_hint_empty": "The Text Field is empty.",
   "tts_image_processing_title": "Image Processing",
   "tts_select_source": "Select Image Source",
   "tts_camera": "Take Photo",

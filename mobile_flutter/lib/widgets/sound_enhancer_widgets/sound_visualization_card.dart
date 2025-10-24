@@ -35,7 +35,7 @@ class SoundVisualizationCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(context.translate('sound_visualization'),
+                Text(context.translate('sound_enhancer_visualization'),
                     style: theme.textTheme.titleMedium),
                 Icon(
                   isActive ? Icons.mic : Icons.mic_off,

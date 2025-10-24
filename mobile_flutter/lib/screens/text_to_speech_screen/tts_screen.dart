@@ -40,6 +40,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
   GlobalKey keyVoicePlayX = GlobalKey();
   GlobalKey keyImagePicker = GlobalKey();
   List<TargetFocus> ttsTargets = [];
+  String _textFieldHint = "";
 
   // TTS Control Variables
   double rate = 0.5;
@@ -96,6 +97,33 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
 
   late TtsHelper ttsHelper;
 
+  // Voice availability checker methods
+  bool _isVoiceAvailable(String? voice) {
+    if (voice == null) return false;
+    // For now, we'll assume all voices are available
+    // In a real implementation, you would check against FlutterTts.getVoices()
+    return _voiceOptions.any((option) => option["voice"] == voice);
+  }
+
+  void _checkCurrentVoiceAvailability() {
+    if (!_isVoiceAvailable(selectedVoice)) {
+      // If current voice is not available, reset to first available voice
+      final availableVoice = _voiceOptions.firstWhere(
+        (option) => _isVoiceAvailable(option["voice"]),
+        orElse: () => _voiceOptions.first,
+      );
+
+      setState(() {
+        selectedlanguage = availableVoice["language"];
+        selectedVoice = availableVoice["voice"];
+      });
+
+      // Save the new selection
+      PreferencesUtils.storeTTSVoice(availableVoice["voice"]!);
+      PreferencesUtils.storeTTSLanguage(availableVoice["language"]!);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -118,6 +146,17 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
     selectedlanguage = await PreferencesUtils.getTTSLanguage();
     rate = await PreferencesUtils.getTTSRate();
     historyMode = await PreferencesUtils.getTTSHistoryMode();
+    _textFieldHint = context.translate("tts_hint2");
+
+    // Check if current voice is available
+    _checkCurrentVoiceAvailability();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Check voice availability when screen comes into focus
+    _checkCurrentVoiceAvailability();
   }
 
   Future<void> checkWalkthrough() async {
@@ -280,7 +319,17 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
   Future<void> _speak() async {
     final text = _textController.text.trim();
     if (text.isEmpty) {
-      showCustomSnackBar(context, "Text field is empty!", ColorsPalette.red);
+      setState(() {
+        _textFieldHint = context.translate("tts_hint_empty");
+      });
+      // Add a small delay to reset hint back after a few seconds (optional)
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _textFieldHint = context.translate("tts_hint2");
+          });
+        }
+      });
       return;
     }
 
@@ -332,6 +381,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
     if (mounted) {
       setState(() {
         _initialize();
+        _checkCurrentVoiceAvailability();
       });
     }
   }
@@ -442,6 +492,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
                         currentlyPlaying = false;
                       });
                     },
+                    textFieldHint: _textFieldHint,
                   ),
                 ),
 
@@ -454,6 +505,7 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
 
             // Positioned widget for the scanner button
             Positioned(
+              key: keyImagePicker,
               bottom: ResponsiveUtils.getResponsiveSize(context, 0),
               right: ResponsiveUtils.getResponsiveSize(context, 16),
               child: GestureDetector(
@@ -657,16 +709,20 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
   Widget _buildVoiceOption(
       Map<String, String> option, ThemeProvider themeProvider) {
     final isSelected = selectedVoice == option["voice"];
+    final isAvailable = _isVoiceAvailable(option["voice"]);
+
     return GestureDetector(
-      onTap: () async {
-        setState(() {
-          selectedlanguage = option["language"];
-          selectedVoice = option["voice"];
-        });
-        await PreferencesUtils.storeTTSVoice(option["voice"]!);
-        await PreferencesUtils.storeTTSLanguage(option["language"]!);
-        Navigator.pop(context);
-      },
+      onTap: isAvailable
+          ? () async {
+              setState(() {
+                selectedlanguage = option["language"];
+                selectedVoice = option["voice"];
+              });
+              await PreferencesUtils.storeTTSVoice(option["voice"]!);
+              await PreferencesUtils.storeTTSLanguage(option["language"]!);
+              Navigator.pop(context);
+            }
+          : null, // Disable tap if voice is not available
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -678,25 +734,63 @@ class TextToSpeechScreenState extends State<TextToSpeechScreen>
               ),
               shape: BoxShape.circle,
             ),
-            child: CircleAvatar(
-              radius: ResponsiveUtils.getResponsiveSize(context, 28),
-              backgroundImage: AssetImage(option["image"]!),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircleAvatar(
+                  radius: ResponsiveUtils.getResponsiveSize(context, 28),
+                  backgroundImage: AssetImage(option["image"]!),
+                ),
+                if (!isAvailable) // Show overlay if voice is not available
+                  Container(
+                    width: ResponsiveUtils.getResponsiveSize(context, 56),
+                    height: ResponsiveUtils.getResponsiveSize(context, 56),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.block,
+                      color: Colors.white,
+                      size: ResponsiveUtils.getResponsiveSize(context, 24),
+                    ),
+                  ),
+              ],
             ),
           ),
           SizedBox(height: ResponsiveUtils.getResponsiveSize(context, 6)),
           Flexible(
-            child: Text(
-              option["label"]!,
-              maxLines: 2,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected
-                    ? Colors.blue
-                    : themeProvider.themeData.textTheme.bodyMedium?.color,
-                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 12),
-              ),
+            child: Column(
+              children: [
+                Text(
+                  option["label"]!,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected
+                        ? Colors.blue
+                        : isAvailable
+                            ? themeProvider
+                                .themeData.textTheme.bodyMedium?.color
+                            : Colors.grey, // Grey out unavailable voices
+                    fontSize:
+                        ResponsiveUtils.getResponsiveFontSize(context, 12),
+                  ),
+                ),
+                if (!isAvailable) // Show "Not Available" text
+                  Text(
+                    "Not Available",
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize:
+                          ResponsiveUtils.getResponsiveFontSize(context, 10),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+              ],
             ),
           ),
         ],

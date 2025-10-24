@@ -6,6 +6,7 @@ import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
+import 'package:komunika/utils/shared_prefs.dart'; // added
 
 class TextAreaCard extends StatefulWidget {
   final ThemeProvider themeProvider;
@@ -14,6 +15,7 @@ class TextAreaCard extends StatefulWidget {
   final TextEditingController contentController;
   final VoidCallback? onClear;
   final String historyMode;
+  final String textFieldHint;
 
   const TextAreaCard({
     super.key,
@@ -23,6 +25,7 @@ class TextAreaCard extends StatefulWidget {
     required this.contentController,
     this.onClear,
     required this.historyMode,
+    required this.textFieldHint,
   });
 
   @override
@@ -35,8 +38,11 @@ class _TextAreaCardState extends State<TextAreaCard> {
   final int maxLines = 15;
   final bool showExpandButton = true;
   final FocusNode _focusNode = FocusNode();
-  static const int maxCharacters = 500;
+  static const int maxCharacters = 1000;
   final ScrollController _scrollController = ScrollController();
+
+  // Font size state
+  double _fontSize = 14.0;
 
   @override
   void initState() {
@@ -44,6 +50,20 @@ class _TextAreaCardState extends State<TextAreaCard> {
     widget.contentController.addListener(() {
       setState(() {}); // refresh counter
     });
+    _loadFontSize();
+  }
+
+  Future<void> _loadFontSize() async {
+    try {
+      final f = await PreferencesUtils.getTTSFontSize();
+      setState(() => _fontSize = f);
+    } catch (_) {}
+  }
+
+  Future<void> _changeFontSize(double delta) async {
+    final newSize = (_fontSize + delta).clamp(10.0, 28.0);
+    await PreferencesUtils.storeTTSFontSize(newSize);
+    setState(() => _fontSize = newSize);
   }
 
   @override
@@ -85,46 +105,61 @@ class _TextAreaCardState extends State<TextAreaCard> {
                     ResponsiveUtils.getResponsiveSize(context, 3)),
                 child: SingleChildScrollView(
                   controller: _scrollController,
-                  child: TextField(
-                    focusNode: _focusNode,
-                    controller: widget.contentController,
-                    readOnly: _readOnly,
-                    inputFormatters: [
-                      LengthLimitingTextInputFormatter(maxCharacters)
-                    ],
-                    style: TextStyle(
-                      color: widget
-                          .themeProvider.themeData.textTheme.bodyMedium?.color,
-                      fontSize:
-                          ResponsiveUtils.getResponsiveFontSize(context, 20),
-                    ),
-                    decoration: InputDecoration(
-                      hintText: context.translate('tts_hint2'),
-                      hintStyle: TextStyle(
-                        color: Colors.grey,
-                        fontSize:
-                            ResponsiveUtils.getResponsiveFontSize(context, 16),
+                  child: Builder(builder: (context) {
+                    final double baseFont = 14.0;
+                    final double lineHeightFactor = 1.4; // lines spacing
+                    final double verticalPadding =
+                        ResponsiveUtils.getResponsiveSize(context, 16);
+                    final double fixedHeight =
+                        (baseFont * lineHeightFactor) * maxLines +
+                            verticalPadding * 13;
+
+                    return SizedBox(
+                      height: fixedHeight,
+                      child: TextField(
+                        focusNode: _focusNode,
+                        controller: widget.contentController,
+                        readOnly: _readOnly,
+                        scrollController: _scrollController,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(maxCharacters)
+                        ],
+                        style: TextStyle(
+                          color: widget.themeProvider.themeData.textTheme
+                              .bodyMedium?.color,
+                          fontSize:
+                              _fontSize, // adjustable but does not affect height
+                        ),
+                        decoration: InputDecoration(
+                          hintText: widget.textFieldHint,
+                          hintStyle: TextStyle(
+                            color: Colors.grey,
+                            fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                context, 16),
+                          ),
+                          border: InputBorder.none,
+                          fillColor: Colors.transparent,
+                          filled: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal:
+                                ResponsiveUtils.getResponsiveSize(context, 12),
+                            vertical: verticalPadding,
+                          ),
+                        ),
+                        textAlignVertical: TextAlignVertical.top,
+                        minLines: maxLines,
+                        maxLines: maxLines, // fixed 15 lines visible
+                        expands: false,
+                        keyboardType: TextInputType.multiline,
+                        onEditingComplete: () {
+                          setState(() {
+                            _readOnly = true;
+                          });
+                          _focusNode.unfocus();
+                        },
                       ),
-                      border: InputBorder.none,
-                      fillColor: Colors.transparent,
-                      filled: true,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal:
-                            ResponsiveUtils.getResponsiveSize(context, 12),
-                        vertical:
-                            ResponsiveUtils.getResponsiveSize(context, 16),
-                      ),
-                    ),
-                    textAlignVertical: TextAlignVertical.center,
-                    maxLines: maxLines,
-                    keyboardType: TextInputType.multiline,
-                    onEditingComplete: () {
-                      setState(() {
-                        _readOnly = true;
-                      });
-                      _focusNode.unfocus();
-                    },
-                  ),
+                    );
+                  }),
                 ),
               ),
             ),
@@ -173,19 +208,57 @@ class _TextAreaCardState extends State<TextAreaCard> {
               ),
             ),
 
-          // Manual save button
-          if (widget.historyMode == 'Manual')
-            Positioned(
-              bottom: ResponsiveUtils.getResponsiveSize(context, 8),
-              right: ResponsiveUtils.getResponsiveSize(context, 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                      width: ResponsiveUtils.getResponsiveSize(context, 8)),
+          // Bottom-right controls: decrease / increase / (optional check) / clear
+          Positioned(
+            bottom: ResponsiveUtils.getResponsiveSize(context, 8),
+            right: ResponsiveUtils.getResponsiveSize(context, 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Decrease font
+                Container(
+                  width: ResponsiveUtils.getResponsiveSize(context, 30),
+                  height: ResponsiveUtils.getResponsiveSize(context, 30),
+                  margin: EdgeInsets.only(right: 6),
+                  decoration: BoxDecoration(
+                    color: ColorsPalette.grey.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(
+                        ResponsiveUtils.getResponsiveSize(context, 15)),
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.remove,
+                        size:
+                            ResponsiveUtils.getResponsiveFontSize(context, 15),
+                        color: Colors.grey),
+                    onPressed: () => _changeFontSize(-1.0),
+                  ),
+                ),
+
+                // Increase font
+                Container(
+                  width: ResponsiveUtils.getResponsiveSize(context, 30),
+                  height: ResponsiveUtils.getResponsiveSize(context, 30),
+                  margin: EdgeInsets.only(right: 6),
+                  decoration: BoxDecoration(
+                    color: ColorsPalette.grey.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(
+                        ResponsiveUtils.getResponsiveSize(context, 15)),
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.add,
+                        size:
+                            ResponsiveUtils.getResponsiveFontSize(context, 15),
+                        color: Colors.grey),
+                    onPressed: () => _changeFontSize(1.0),
+                  ),
+                ),
+
+                // Manual save button (same row, no extra spacing needed)
+                if (widget.historyMode == 'Manual')
                   Container(
                     width: ResponsiveUtils.getResponsiveSize(context, 30),
                     height: ResponsiveUtils.getResponsiveSize(context, 30),
+                    margin: EdgeInsets.only(right: 6),
                     decoration: BoxDecoration(
                       color: ColorsPalette.grey.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(
@@ -201,38 +274,32 @@ class _TextAreaCardState extends State<TextAreaCard> {
                       },
                     ),
                   ),
-                ],
-              ),
-            ),
 
-          // Clear button
-          Positioned(
-            bottom: ResponsiveUtils.getResponsiveSize(context, 8),
-            right: ResponsiveUtils.getResponsiveSize(context, 8) +
-                (widget.historyMode == 'Manual'
-                    ? ResponsiveUtils.getResponsiveSize(context, 37)
-                    : 0),
-            child: Container(
-              width: ResponsiveUtils.getResponsiveSize(context, 30),
-              height: ResponsiveUtils.getResponsiveSize(context, 30),
-              decoration: BoxDecoration(
-                color: ColorsPalette.grey.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(
-                    ResponsiveUtils.getResponsiveSize(context, 15)),
-              ),
-              child: IconButton(
-                icon: Icon(Icons.clear,
-                    size: ResponsiveUtils.getResponsiveFontSize(context, 15),
-                    color: Colors.grey),
-                onPressed: () {
-                  if (widget.historyMode == 'Auto' &&
-                      widget.contentController.text.isNotEmpty) {
-                    widget.dbHelper
-                        .saveTextToSpeechHistory(widget.contentController.text);
-                  }
-                  if (widget.onClear != null) widget.onClear!();
-                },
-              ),
+                // Clear button
+                Container(
+                  width: ResponsiveUtils.getResponsiveSize(context, 30),
+                  height: ResponsiveUtils.getResponsiveSize(context, 30),
+                  decoration: BoxDecoration(
+                    color: ColorsPalette.grey.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(
+                        ResponsiveUtils.getResponsiveSize(context, 15)),
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.clear,
+                        size:
+                            ResponsiveUtils.getResponsiveFontSize(context, 15),
+                        color: Colors.grey),
+                    onPressed: () {
+                      if (widget.historyMode == 'Auto' &&
+                          widget.contentController.text.isNotEmpty) {
+                        widget.dbHelper.saveTextToSpeechHistory(
+                            widget.contentController.text);
+                      }
+                      if (widget.onClear != null) widget.onClear!();
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -307,7 +374,7 @@ class _TextAreaCardState extends State<TextAreaCard> {
                                 .themeProvider.themeData.textTheme.bodyMedium,
                             decoration: InputDecoration(
                               border: InputBorder.none,
-                              hintText: context.translate('tts_hint2'),
+                              hintText: widget.textFieldHint,
                               hintStyle: TextStyle(
                                 color: Colors.grey,
                                 fontSize: ResponsiveUtils.getResponsiveFontSize(

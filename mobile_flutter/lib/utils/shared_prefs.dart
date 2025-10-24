@@ -148,4 +148,28 @@ class PreferencesUtils {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getDouble("TTS_selectedRate") ?? 0.5;
   }
+
+  // ================== Text area font sizes (TTS / STT) ==================
+  static const String _ttsTextAreaFontKey = "tts_text_area_font_size";
+  static const String _sttTextAreaFontKey = "stt_text_area_font_size";
+
+  static Future<void> storeTTSFontSize(double size) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_ttsTextAreaFontKey, size);
+  }
+
+  static Future<double> getTTSFontSize() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_ttsTextAreaFontKey) ?? 14.0;
+  }
+
+  static Future<void> storeSTTFontSize(double size) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_sttTextAreaFontKey, size);
+  }
+
+  static Future<double> getSTTFontSize() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_sttTextAreaFontKey) ?? 14.0;
+  }
 }

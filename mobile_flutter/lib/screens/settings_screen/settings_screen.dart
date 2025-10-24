@@ -28,7 +28,6 @@ class SettingScreenState extends State<SettingScreen> {
   bool ttsEnabled = false;
   String sttHistoryMode = "Auto";
   String ttsHistoryMode = "Auto";
-  final List<String> historyModes = ["Auto", "Manual", "None"];
   GlobalKey customizationKey = GlobalKey();
   GlobalKey historyKey = GlobalKey();
   GlobalKey helpSupportKey = GlobalKey();
@@ -216,6 +215,7 @@ class SettingScreenState extends State<SettingScreen> {
                       title: context.translate('settings_theme'),
                       trailing: DropdownButton<String>(
                         value: selectedTheme,
+                        dropdownColor: themeProvider.themeData.cardColor,
                         onChanged: (String? newValue) async {
                           setState(() {
                             selectedTheme = newValue!;
@@ -224,12 +224,21 @@ class SettingScreenState extends State<SettingScreen> {
                           await PreferencesUtils.storeTheme(
                               newValue.toString());
                         },
-                        items: <String>['System','Light', 'Dark']
-                            .map<DropdownMenuItem<String>>((String value) {
+                        items: (selectedLanguage == 'Filipino'
+                                ? ['Sistema', 'Maliwanag', 'Madilim']
+                                : ['System', 'Light', 'Dark'])
+                            .asMap()
+                            .entries
+                            .map<DropdownMenuItem<String>>((entry) {
+                          final index = entry.key;
+                          final displayText = entry.value;
+                          final internalValue =
+                              ['System', 'Light', 'Dark'][index];
+
                           return DropdownMenuItem<String>(
-                            value: value,
+                            value: internalValue,
                             child: Text(
-                              value,
+                              displayText,
                               style: TextStyle(
                                 fontSize: ResponsiveUtils.getResponsiveFontSize(
                                     context, 14),
@@ -248,6 +257,7 @@ class SettingScreenState extends State<SettingScreen> {
                       title: context.translate('settings_language'),
                       trailing: DropdownButton<String>(
                         value: selectedLanguage,
+                        dropdownColor: themeProvider.themeData.cardColor,
                         onChanged: (String? newValue) async {
                           setState(() {
                             selectedLanguage = newValue!;
@@ -259,10 +269,15 @@ class SettingScreenState extends State<SettingScreen> {
                               : const Locale('en', 'US');
                           MyApp.setLocale(context, newLocale);
                         },
-                        items: <String>['English', 'Filipino']
+                        items: (selectedLanguage == 'Filipino'
+                                ? ['Ingles', 'Filipino']
+                                : ['English', 'Filipino'])
                             .map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
-                            value: value,
+                            value: (selectedLanguage == 'Filipino' &&
+                                    value == 'Ingles')
+                                ? 'English'
+                                : value,
                             child: Text(
                               value,
                               style: TextStyle(
@@ -292,27 +307,39 @@ class SettingScreenState extends State<SettingScreen> {
                       title: context.translate('settings_speech_to_text'),
                       trailing: DropdownButton<String>(
                         value: sttHistoryMode,
+                        dropdownColor: themeProvider.themeData.cardColor,
                         onChanged: (String? newValue) async {
                           sttHistoryMode = newValue!;
                           await PreferencesUtils.storeSTTHistoryMode(
                               sttHistoryMode);
                           setState(() {});
                         },
-                        items: historyModes
-                            .map((mode) => DropdownMenuItem<String>(
-                                  value: mode,
-                                  child: Text(
-                                    context.translate(mode),
-                                    style: TextStyle(
-                                      fontSize:
-                                          ResponsiveUtils.getResponsiveFontSize(
-                                              context, 14),
-                                      color: themeProvider.themeData.textTheme
-                                          .bodyMedium?.color,
-                                    ),
-                                  ),
-                                ))
-                            .toList(),
+                        items: (selectedLanguage == 'Filipino'
+                                ? ['Awtomatiko', 'Manwal', 'Wala']
+                                : ['Auto', 'Manual', 'None'])
+                            .asMap()
+                            .entries
+                            .map<DropdownMenuItem<String>>((entry) {
+                          final index = entry.key;
+                          final displayText = entry.value;
+
+                          // keep the internal values constant
+                          final internalValue =
+                              ['Auto', 'Manual', 'None'][index];
+
+                          return DropdownMenuItem<String>(
+                            value: internalValue,
+                            child: Text(
+                              displayText,
+                              style: TextStyle(
+                                fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                    context, 14),
+                                color: themeProvider
+                                    .themeData.textTheme.bodyMedium?.color,
+                              ),
+                            ),
+                          );
+                        }).toList(),
                         underline: Container(),
                       ),
                     ),
@@ -322,27 +349,37 @@ class SettingScreenState extends State<SettingScreen> {
                       title: context.translate('settings_text_to_speech'),
                       trailing: DropdownButton<String>(
                         value: ttsHistoryMode,
+                        dropdownColor: themeProvider.themeData.cardColor,
                         onChanged: (String? newValue) async {
                           ttsHistoryMode = newValue!;
                           await PreferencesUtils.storeTTSHistoryMode(
                               ttsHistoryMode);
                           setState(() {});
                         },
-                        items: historyModes
-                            .map((mode) => DropdownMenuItem<String>(
-                                  value: mode,
-                                  child: Text(
-                                    context.translate(mode),
-                                    style: TextStyle(
-                                      fontSize:
-                                          ResponsiveUtils.getResponsiveFontSize(
-                                              context, 14),
-                                      color: themeProvider.themeData.textTheme
-                                          .bodyMedium?.color,
-                                    ),
-                                  ),
-                                ))
-                            .toList(),
+                        items: (selectedLanguage == 'Filipino'
+                                ? ['Awtomatiko', 'Manwal', 'Wala']
+                                : ['Auto', 'Manual', 'None'])
+                            .asMap()
+                            .entries
+                            .map<DropdownMenuItem<String>>((entry) {
+                          final index = entry.key;
+                          final displayText = entry.value;
+                          final internalValue =
+                              ['Auto', 'Manual', 'None'][index];
+
+                          return DropdownMenuItem<String>(
+                            value: internalValue,
+                            child: Text(
+                              displayText,
+                              style: TextStyle(
+                                fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                    context, 14),
+                                color: themeProvider
+                                    .themeData.textTheme.bodyMedium?.color,
+                              ),
+                            ),
+                          );
+                        }).toList(),
                         underline: Container(),
                       ),
                     ),
