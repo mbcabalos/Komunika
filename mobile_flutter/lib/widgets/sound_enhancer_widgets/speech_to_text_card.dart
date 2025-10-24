@@ -6,6 +6,7 @@ import 'package:komunika/utils/app_localization_translate.dart';
 import 'package:komunika/utils/colors.dart';
 import 'package:komunika/utils/responsive.dart';
 import 'package:komunika/utils/themes.dart';
+import 'package:komunika/utils/shared_prefs.dart';
 
 class SpeechToTextCard extends StatefulWidget {
   final ThemeProvider themeProvider;
@@ -33,15 +34,34 @@ class SpeechToTextCard extends StatefulWidget {
 
 class _SpeechToTextCardState extends State<SpeechToTextCard> {
   final dbHelper = DatabaseHelper();
-  bool _isCollapsed = true; // Start collapsed by default
+  bool _isCollapsed = true;
   String _lastTranscription = "";
+  double _fontSize = 14.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFontSize();
+  }
+
+  Future<void> _loadFontSize() async {
+    final f = await PreferencesUtils.getSTTFontSize();
+    setState(() => _fontSize = f);
+  }
+
+  void _changeFontSize(double delta) async {
+    final newSize = (_fontSize + delta).clamp(10.0, 28.0);
+    await PreferencesUtils.storeSTTFontSize(newSize);
+    setState(() => _fontSize = newSize);
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Only show the card if micMode == 1
     if (widget.micMode != 1) {
       return const SizedBox.shrink();
     }
+
+    print("History Mode in Widget: ${widget.historyMode}");
     return Card(
       elevation: 4,
       color: widget.themeProvider.themeData.cardColor,
@@ -55,7 +75,6 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
       ),
       child: Column(
         children: [
-          // Transcription Toggle
           buildSwitchRow(
             context.translate("sound_enhancer_transcription"),
             widget.isTranscriptionEnabled,
@@ -70,17 +89,20 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
               }
             },
           ),
-          if (widget.isTranscriptionEnabled)
-            AnimatedCrossFade(
-              firstChild: _buildCollapsedCard(),
-              secondChild: _buildExpandedCard(),
-              crossFadeState: widget.isTranscriptionEnabled && !_isCollapsed
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
-              duration: const Duration(milliseconds: 200),
-            ),
+          if (widget.isTranscriptionEnabled) _buildTranscriptionContent(),
         ],
       ),
+    );
+  }
+
+  Widget _buildTranscriptionContent() {
+    return AnimatedCrossFade(
+      firstChild: _buildCollapsedCard(),
+      secondChild: _buildExpandedCard(),
+      crossFadeState: widget.isTranscriptionEnabled && !_isCollapsed
+          ? CrossFadeState.showSecond
+          : CrossFadeState.showFirst,
+      duration: const Duration(milliseconds: 200),
     );
   }
 
@@ -131,114 +153,135 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
           ),
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.5,
-            child: Stack(
-              children: [
-                BlocBuilder<SoundEnhancerBloc, SoundEnhancerState>(
-                  builder: (context, state) {
-                    if (state is LivePreviewTranscriptionState) {
-                      widget.contentController.text =
-                          _lastTranscription + state.text;
-                      widget.contentController.selection =
-                          TextSelection.fromPosition(
-                        TextPosition(
-                            offset: widget.contentController.text.length),
-                      );
-                    }
-                    if (state is TranscriptionUpdatedState) {
-                      widget.contentController.text =
-                          _lastTranscription + state.text;
-                      _lastTranscription = widget.contentController.text;
-                      widget.soundEnhancerBloc.add(ClearTextEvent());
-                    }
-
-                    return TextField(
-                      readOnly: true,
-                      controller: widget.contentController,
-                      style: TextStyle(
-                        color: widget.themeProvider.themeData.textTheme
-                            .bodyMedium?.color,
-                        fontSize:
-                            ResponsiveUtils.getResponsiveFontSize(context, 16),
-                      ),
-                      decoration: InputDecoration(
-                        hintText: context
-                            .translate("sound_enhancer_transcription_hint"),
-                        border: InputBorder.none,
-                        fillColor: Colors.transparent,
-                        filled: true,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal:
-                              ResponsiveUtils.getResponsiveSize(context, 8),
-                          vertical:
-                              ResponsiveUtils.getResponsiveSize(context, 16),
-                        ),
-                      ),
-                      textAlignVertical: TextAlignVertical.center,
-                      maxLines: null,
-                      keyboardType: TextInputType.multiline,
-                    );
-                  },
-                ),
-
-                // History mode buttons
-                if (widget.historyMode == 'Manual')
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(width: 8),
-                        Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: ColorsPalette.grey.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.check,
-                                size: 15, color: Colors.grey),
-                            onPressed: () {
-                              _showSaveConfirmationDialog();
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                Positioned(
-                  bottom: 0,
-                  right: 0 + (widget.historyMode == 'Manual' ? 37 : 0),
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: ColorsPalette.grey.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: IconButton(
-                      icon:
-                          const Icon(Icons.clear, size: 15, color: Colors.grey),
-                      onPressed: () {
-                        if (widget.historyMode == 'Auto' &&
-                            widget.contentController.text.isNotEmpty) {
-                          _lastTranscription = "";
-                          dbHelper.saveSpeechToTextHistory(
-                              widget.contentController.text);
-                        }
-                        widget.contentController.clear();
-                        widget.soundEnhancerBloc.add(ClearTextEvent());
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            child: _buildTranscriptionArea(),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTranscriptionArea() {
+    return Stack(
+      children: [
+        BlocBuilder<SoundEnhancerBloc, SoundEnhancerState>(
+          builder: (context, state) {
+            if (state is LivePreviewTranscriptionState) {
+              widget.contentController.text = _lastTranscription + state.text;
+              widget.contentController.selection = TextSelection.fromPosition(
+                TextPosition(offset: widget.contentController.text.length),
+              );
+            }
+            if (state is TranscriptionUpdatedState) {
+              widget.contentController.text = _lastTranscription + state.text;
+              _lastTranscription = widget.contentController.text;
+              widget.soundEnhancerBloc.add(ClearTextEvent());
+            }
+
+            return TextField(
+              readOnly: true,
+              controller: widget.contentController,
+              style: TextStyle(
+                color:
+                    widget.themeProvider.themeData.textTheme.bodyMedium?.color,
+                fontSize: _fontSize,
+              ),
+              decoration: InputDecoration(
+                hintText:
+                    context.translate("sound_enhancer_transcription_hint"),
+                border: InputBorder.none,
+                fillColor: Colors.transparent,
+                filled: true,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: ResponsiveUtils.getResponsiveSize(context, 8),
+                  vertical: ResponsiveUtils.getResponsiveSize(context, 16),
+                ),
+              ),
+              textAlignVertical: TextAlignVertical.center,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+            );
+          },
+        ),
+
+        // ✅ Always show buttons
+        Positioned(
+          bottom: 0,
+          right: 0,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Decrease font
+              Container(
+                width: 30,
+                height: 30,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: ColorsPalette.grey.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.remove, size: 15, color: Colors.grey),
+                  onPressed: () => _changeFontSize(-1.0),
+                ),
+              ),
+
+              // Increase font
+              Container(
+                width: 30,
+                height: 30,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: ColorsPalette.grey.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.add, size: 15, color: Colors.grey),
+                  onPressed: () => _changeFontSize(1.0),
+                ),
+              ),
+
+              // Save button (manual mode)
+              if (widget.historyMode.toLowerCase() == 'manual')
+                Container(
+                  width: 30,
+                  height: 30,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: ColorsPalette.grey.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.check, size: 15, color: Colors.grey),
+                    onPressed: () => _showSaveConfirmationDialog(),
+                  ),
+                ),
+
+              // Clear button
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: ColorsPalette.grey.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.clear, size: 15, color: Colors.grey),
+                  onPressed: () {
+                    if (widget.historyMode.toLowerCase() == 'auto' &&
+                        widget.contentController.text.isNotEmpty) {
+                      _lastTranscription = "";
+                      dbHelper.saveSpeechToTextHistory(
+                          widget.contentController.text);
+                    }
+                    widget.contentController.clear();
+                    widget.soundEnhancerBloc.add(ClearTextEvent());
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -289,7 +332,6 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
   }
 
   Future<void> _showSaveConfirmationDialog() async {
-    bool confirmSave = false;
     final themeProvider = widget.themeProvider;
 
     await showDialog(
@@ -326,9 +368,7 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   FilledButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    onPressed: () => Navigator.of(context).pop(false),
                     style: FilledButton.styleFrom(
                       backgroundColor: ColorsPalette.red,
                       shape: RoundedRectangleBorder(
@@ -349,10 +389,7 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
-                    onPressed: () {
-                      confirmSave = true;
-                      Navigator.pop(context);
-                    },
+                    onPressed: () => Navigator.of(context).pop(true),
                     style: FilledButton.styleFrom(
                       backgroundColor: ColorsPalette.green,
                       shape: RoundedRectangleBorder(
@@ -377,14 +414,18 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
           ),
         ),
       ),
-    );
-
-    if (confirmSave && mounted) {
-      if (widget.contentController.text.isNotEmpty) {
-        dbHelper.saveSpeechToTextHistory(widget.contentController.text);
+    ).then((value) {
+      if (value == true && mounted) {
+        if (widget.contentController.text.isNotEmpty) {
+          dbHelper.saveSpeechToTextHistory(widget.contentController.text);
+          print('Text saved manually: ${widget.contentController.text}');
+          setState(() {
+            _lastTranscription = "";
+            widget.contentController.clear();
+          });
+          widget.soundEnhancerBloc.add(ClearTextEvent());
+        }
       }
-      widget.contentController.clear();
-      Navigator.pop(context);
-    }
+    });
   }
 }

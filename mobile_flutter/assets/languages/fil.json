@@ -48,6 +48,9 @@
   "sound_enhancer_transcription": "Transkripsyon",
   "sound_enhancer_transcription_hint": "Mensahe...",
   "sound_enhancer_transcription_translated_text": "Isinaling Teksto",
+  "server_not_connected": "Hindi Nakakonekta ang Server",
+  "server_not_connected_message": "Hindi makakonekta sa transcription server. Pakisuri ang iyong koneksyon sa internet at subukan muli.",
+  "reconnect": "Muling Konektahin",
 
   "tts_title": "Teksto sa Boses",
   "tts_hint1": "Pamagat",

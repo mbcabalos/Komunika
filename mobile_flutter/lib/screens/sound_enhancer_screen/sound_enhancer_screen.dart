@@ -42,14 +42,16 @@ class SoundEnhancerScreenState extends State<SoundEnhancerScreen> {
     super.initState();
     _textController.clear();
     _initialize();
-    PreferencesUtils.resetWalkthrough();
+    // PreferencesUtils.resetWalkthrough();
     checkWalkthrough();
   }
 
   Future<void> _initialize() async {
+    historyMode = await PreferencesUtils.getSTTHistoryMode();
     widget.soundEnhancerBloc.add(SoundEnhancerLoadingEvent());
     widget.soundEnhancerBloc.add(RequestPermissionEvent());
-    historyMode = await PreferencesUtils.getSTTHistoryMode();
+    
+    print(  "History Mode: $historyMode");
   }
 
   Future<void> checkWalkthrough() async {
