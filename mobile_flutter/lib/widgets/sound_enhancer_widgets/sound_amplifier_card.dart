@@ -257,10 +257,10 @@ class _SoundAmplifierCardState extends State<SoundAmplifierCard>
                         ),
                       ],
                       onPressed: (index) async {
-                        // if (index == 1 && !_isAnyHeadsetConnected) {
-                        //   _showHeadsetDialog();
-                        //   return;
-                        // }
+                        if (index == 1 && !_isAnyHeadsetConnected) {
+                          _showHeadsetDialog();
+                          return;
+                        }
 
                         widget.onMicModeChanged(index);
 

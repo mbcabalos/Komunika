@@ -13,6 +13,9 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import android.media.audiofx.AutomaticGainControl
+import android.media.audiofx.AcousticEchoCanceler
+
 
 class MainActivity : FlutterActivity() {
 
@@ -79,13 +82,34 @@ class MainActivity : FlutterActivity() {
         val audioFormat = AudioFormat.ENCODING_PCM_16BIT
         val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
 
-        audioRecord = AudioRecord(
-            MediaRecorder.AudioSource.MIC,
-            sampleRate,
-            channelConfig,
-            audioFormat,
-            bufferSize
-        )
+        // Try to use UNPROCESSED source if available
+        val audioSource = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            MediaRecorder.AudioSource.UNPROCESSED
+        } else {
+            MediaRecorder.AudioSource.VOICE_RECOGNITION // fallback for older devices
+        }
+
+        audioRecord = try {
+            AudioRecord(
+                audioSource,
+                sampleRate,
+                channelConfig,
+                audioFormat,
+                bufferSize
+            )
+        } catch (e: Exception) {
+            Log.w("AudioRecord", "UNPROCESSED not supported, falling back to MIC", e)
+            AudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                sampleRate,
+                channelConfig,
+                audioFormat,
+                bufferSize
+            )
+        }
+
+        // Disable system effects: AGC, NS, AEC
+        // disableAudioEffects(audioRecord!!)
 
         val buffer = ByteArray(bufferSize)
         val mainHandler = Handler(Looper.getMainLooper())
@@ -110,7 +134,39 @@ class MainActivity : FlutterActivity() {
         }
         audioThread?.start()
 
-        Log.d("AudioRecord", "🎙 Microphone recording started")
+        Log.d("AudioRecord", "🎙 Microphone recording started (source=$audioSource)")
+    }
+
+    private fun disableAudioEffects(audioRecord: AudioRecord) {
+    val audioSessionId = audioRecord.audioSessionId
+
+        try {
+            if (AutomaticGainControl.isAvailable()) {
+                AutomaticGainControl.create(audioSessionId)?.apply {
+                    enabled = false
+                    release()
+                    Log.d("AudioEffect", "AGC disabled")
+                }
+            }
+
+            if (NoiseSuppressor.isAvailable()) {
+                NoiseSuppressor.create(audioSessionId)?.apply {
+                    enabled = false
+                    release()
+                    Log.d("AudioEffect", "NoiseSuppressor disabled")
+                }
+            }
+
+            if (AcousticEchoCanceler.isAvailable()) {
+                AcousticEchoCanceler.create(audioSessionId)?.apply {
+                    enabled = false
+                    release()
+                    Log.d("AudioEffect", "AEC disabled")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("AudioEffect", "Error disabling audio effects", e)
+        }
     }
 
     // 🛑 Stop microphone recording

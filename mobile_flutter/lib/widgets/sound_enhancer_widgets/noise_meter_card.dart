@@ -12,11 +12,11 @@ class NoiseMeterWidget extends StatelessWidget {
 
   /// Normalize inverted dB range (your real mic gives ~89 quiet → 76 loud)
   double normalizeDb(double db) {
-    const minDb = 89.0; // quietest (highest numeric value)
-    const maxDb = 76.0; // loudest (lowest numeric value)
+    const minDb = 70.0; // loudest (lowest numeric value)
+    const maxDb = 110.0; // quietest (highest numeric value)
 
-    // invert mapping: 89 → 0.0, 76 → 1.0
-    final normalized = (minDb - db) / (minDb - maxDb);
+    // Map db to 0.0 → 1.0
+    final normalized = (db - minDb) / (maxDb - minDb);
     return normalized.clamp(0.0, 1.0);
   }
 

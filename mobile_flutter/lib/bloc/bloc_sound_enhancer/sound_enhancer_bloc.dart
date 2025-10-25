@@ -363,7 +363,7 @@ class SoundEnhancerBloc extends Bloc<SoundEnhancerEvent, SoundEnhancerState> {
       // Emit zero bars to reset visualizer
       emit(SoundEnhancerSpectrumState(
         List.filled(20, 0.0),
-        decibel: 90,
+        decibel: -90,
       ));
     } catch (e) {
       emit(SoundEnhancerErrorState(message: "Stopping failed: $e"));

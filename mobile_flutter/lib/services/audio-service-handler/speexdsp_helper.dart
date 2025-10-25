@@ -98,8 +98,8 @@ class SpeexDSP {
     final effectiveVad = applyVad && applyDenoise;
 
     // 🟦 Debug info
-    print(
-        "[DSP] Processing frame | AGC: $applyAgc | Denoise: $applyDenoise | VAD: $applyVad (Effective: $effectiveVad)");
+    // print(
+    //     "[DSP] Processing frame | AGC: $applyAgc | Denoise: $applyDenoise | VAD: $applyVad (Effective: $effectiveVad)");
 
     _setCtlInt(SPEEX_PREPROCESS_SET_AGC, applyAgc ? 1 : 0);
     _setCtlInt(SPEEX_PREPROCESS_SET_DENOISE, applyDenoise ? 1 : 0);
@@ -109,15 +109,15 @@ class SpeexDSP {
     final vadFlag = speexPreprocessRun(_state, ptr);
     final isSpeech = vadFlag != 0;
 
-    if (effectiveVad) {
-      if (isSpeech) {
-        print("[DSP][VAD] Speech detected ✅");
-      } else {
-        print("[DSP][VAD] No speech detected — frame muted ❌");
-      }
-    } else if (applyVad && !applyDenoise) {
-      print("[DSP][VAD] Skipped — Denoise is OFF (VAD requires it)");
-    }
+    // if (effectiveVad) {
+    //   if (isSpeech) {
+    //     print("[DSP][VAD] Speech detected ✅");
+    //   } else {
+    //     print("[DSP][VAD] No speech detected — frame muted ❌");
+    //   }
+    // } else if (applyVad && !applyDenoise) {
+    //   print("[DSP][VAD] Skipped — Denoise is OFF (VAD requires it)");
+    // }
 
     if (effectiveVad && !isSpeech) {
       calloc.free(ptr);
